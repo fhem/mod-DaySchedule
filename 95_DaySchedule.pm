@@ -1948,9 +1948,10 @@ sub Compute($;$$) {
     $S->{MonthRemainD}     = $D->{monthremdays};
     $S->{".YearProgress"}  = $D->{yearprogress};
     $S->{".MonthProgress"} = $D->{monthprogress};
-    $S->{YearProgress}     = FHEM::Astro::_round( $S->{".YearProgress"}*100, 0 )." %";
+    $S->{YearProgress} =
+      FHEM::Astro::_round( $S->{".YearProgress"} * 100, 0 ) . " %";
     $S->{MonthProgress} =
-      FHEM::Astro::_round( $S->{".MonthProgress"}*100, 0 )." %";
+      FHEM::Astro::_round( $S->{".MonthProgress"} * 100, 0 ) . " %";
 
     AddToSchedule( $S, $A->{".SunTransit"}, "SunTransit" )
       if ( grep ( /^SunTransit/, @schedsch ) );
@@ -2545,7 +2546,7 @@ sub Compute($;$$) {
 
             # future of today
             else {
-                unless ( defined( $A->{".SchedNextT"} ) ) {
+                unless ( defined( $S->{".SchedNextT"} ) ) {
                     $S->{".SchedNextT"} = $e == 24. ? 0 : $e;
                     $S->{SchedNextT} = $e == 0.
                       || $e == 24. ? '00:00:00' : FHEM::Astro::HHMMSS($e);
@@ -2625,12 +2626,23 @@ sub Update($@) {
         }
         my $k = ".$comp";
         $k = '.DaySeasonalHrTNext' if ( $comp eq 'SeasonalHr' );
-        next
-          unless ( defined( $Astro{$k} ) && $Astro{$k} =~ /^\d+(?:\.\d+)?$/ );
-        my $t =
-          timelocal( 0, 0, 0, ( localtime($now) )[ 3, 4, 5 ] ) +
-          $Astro{$k} * 3600.;
-        $t += 86400. if ( $t < $now );    # that is for tomorrow
+        my $t;
+        if ( defined( $Astro{$k} ) && $Astro{$k} =~ /^\d+(?:\.\d+)?$/ ) {
+            $t =
+              timelocal( 0, 0, 0, ( localtime($now) )[ 3, 4, 5 ] ) +
+              $Astro{$k} * 3600.;
+            $t += 86400. if ( $t < $now );    # that is for tomorrow
+        }
+        elsif ( defined( $Schedule{$k} ) && $Schedule{$k} =~ /^\d+(?:\.\d+)?$/ )
+        {
+            $t =
+              timelocal( 0, 0, 0, ( localtime($now) )[ 3, 4, 5 ] ) +
+              $Schedule{$k} * 3600.;
+            $t += 86400. if ( $t < $now );    # that is for tomorrow
+        }
+        else {
+            next;
+        }
         push @next, $t;
     }
 
