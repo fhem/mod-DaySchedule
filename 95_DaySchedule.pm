@@ -25,15 +25,12 @@ use warnings;
 use POSIX;
 
 use GPUtils qw(GP_Import);
-use Math::Trig;
 use Time::HiRes qw(gettimeofday);
 use Time::Local;
+use UConv;
 use Data::Dumper;
 
 require "95_Astro.pm" unless ( defined( *{"main::Astro_Initialize"} ) );
-
-my $DEG = pi / 180.0;
-my $RAD = 180. / pi;
 
 my %Astro;
 my %Schedule;
@@ -44,8 +41,9 @@ our $VERSION = "v0.0.1";
 my %sets = ( "update" => "noArg", );
 
 my %gets = (
-    "json" => undef,
-    "text" => undef,
+    "json"    => undef,
+    "text"    => undef,
+    "version" => undef,
 );
 
 my %attrs = (
@@ -62,7 +60,7 @@ my %attrs = (
     "recomputeAt" =>
 "multiple-strict,MoonRise,MoonSet,MoonTransit,NewDay,SeasonalHr,SunRise,SunSet,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
     "schedule" =>
-"multiple-strict,MoonPhaseS,MoonRise,MoonSet,MoonSign,MoonTransit,ObsDate,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,DaySeasonalHr,SunRise,SunSet,SunSign,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
+"multiple-strict,MoonPhaseS,MoonRise,MoonSet,MoonSign,MoonTransit,ObsDate,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,DaySeasonalHr,Daytime,SunRise,SunSet,SunSign,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
     "seasonalHrs" => undef,
     "timezone"    => undef,
 );
@@ -133,24 +131,6 @@ our %transtable = (
         "earlyfall"   => "Early Fall",
         "fullfall"    => "Full Fall",
         "latefall"    => "Late Fall",
-
-        #
-        "cpn"   => [ "North",           "N" ],
-        "cpnne" => [ "North-Northeast", "NNE" ],
-        "cpne"  => [ "North-East",      "NE" ],
-        "cpene" => [ "East-Northeast",  "ENE" ],
-        "cpe"   => [ "East",            "E" ],
-        "cpese" => [ "East-Southeast",  "ESE" ],
-        "cpse"  => [ "Southeast",       "SE" ],
-        "cpsse" => [ "South-Southeast", "SSE" ],
-        "cps"   => [ "South",           "S" ],
-        "cpssw" => [ "South-Southwest", "SSW" ],
-        "cpsw"  => [ "Southwest",       "SW" ],
-        "cpwsw" => [ "West-Southwest",  "WSW" ],
-        "cpw"   => [ "West",            "W" ],
-        "cpwnw" => [ "West-Northwest",  "WNW" ],
-        "cpnw"  => [ "Northwest",       "NW" ],
-        "cpnnw" => [ "North-Northwest", "NNW" ],
     },
 
     DE => {
@@ -172,7 +152,7 @@ our %transtable = (
         #
         "dayphase"          => "Tageszeit",
         "dusk"              => "Abenddämmerung",
-        "earlyevening"      => "früher Abend",
+        "earlyevening"      => "Früher Abend",
         "evening"           => "Abend",
         "lateevening"       => "Später Abend",
         "earlynight"        => "Frühe Nacht",
@@ -213,24 +193,6 @@ our %transtable = (
         "earlyfall"   => "Frühherbst",
         "fullfall"    => "Vollherbst",
         "latefall"    => "Spätherbst",
-
-        #
-        "cpn"   => [ "Norden",        "N" ],
-        "cpnne" => [ "Nord-Nordost",  "NNO" ],
-        "cpne"  => [ "Nord-Ost",      "NO" ],
-        "cpene" => [ "Ost-Nordost",   "ONO" ],
-        "cpe"   => [ "Ost",           "O" ],
-        "cpese" => [ "Ost-Südost",   "OSO" ],
-        "cpse"  => [ "Südost",       "SO" ],
-        "cpsse" => [ "Süd-Südost",  "SSO" ],
-        "cps"   => [ "Süd",          "S" ],
-        "cpssw" => [ "Süd-Südwest", "SSW" ],
-        "cpsw"  => [ "Südwest",      "SW" ],
-        "cpwsw" => [ "West-Südwest", "WSW" ],
-        "cpw"   => [ "West",          "W" ],
-        "cpwnw" => [ "West-Nordwest", "WNW" ],
-        "cpnw"  => [ "Nordwest",      "NW" ],
-        "cpnnw" => [ "Nord-Nordwest", "NNW" ],
     },
 
     ES => {
@@ -293,24 +255,6 @@ our %transtable = (
         "earlyfall"   => "Inicio del otoño",
         "fullfall"    => "Otoño completo",
         "latefall"    => "Finales de otoño",
-
-        #
-        "cpn"   => [ "Norte",          "N" ],
-        "cpnne" => [ "Norte-Noreste",  "NNE" ],
-        "cpne"  => [ "Noreste",        "NE" ],
-        "cpene" => [ "Este-Noreste",   "ENE" ],
-        "cpe"   => [ "Este",           "E" ],
-        "cpese" => [ "Este-Sureste",   "ESE" ],
-        "cpse"  => [ "Sureste",        "SE" ],
-        "cpsse" => [ "Sur-Sureste",    "SSE" ],
-        "cps"   => [ "Sur",            "S" ],
-        "cpssw" => [ "Sudoeste",       "SDO" ],
-        "cpsw"  => [ "Sur-Oeste",      "SO" ],
-        "cpwsw" => [ "Oeste-Suroeste", "OSO" ],
-        "cpw"   => [ "Oeste",          "O" ],
-        "cpwnw" => [ "Oeste-Noroeste", "ONO" ],
-        "cpnw"  => [ "Noroeste",       "NO" ],
-        "cpnnw" => [ "Norte-Noroeste", "NNE" ],
     },
 
     FR => {
@@ -373,24 +317,6 @@ our %transtable = (
         "earlyfall"   => "Avant de l'automne",
         "fullfall"    => "Automne",
         "latefall"    => "Fin de l'automne",
-
-        #
-        "cpn"   => [ "Nord",             "N" ],
-        "cpnne" => [ "Nord-Nord-Est",    "NNE" ],
-        "cpne"  => [ "Nord-Est",         "NE" ],
-        "cpene" => [ "Est-Nord-Est",     "ENE" ],
-        "cpe"   => [ "Est",              "E" ],
-        "cpese" => [ "Est-Sud-Est",      "ESE" ],
-        "cpse"  => [ "Sud-Est",          "SE" ],
-        "cpsse" => [ "Sud-Sud-Est",      "SSE" ],
-        "cps"   => [ "Sud",              "S" ],
-        "cpssw" => [ "Sud-Sud-Ouest",    "SSW" ],
-        "cpsw"  => [ "Sud-Ouest",        "SW" ],
-        "cpwsw" => [ "Ouest-Sud-Ouest",  "OSO" ],
-        "cpw"   => [ "Ouest",            "O" ],
-        "cpwnw" => [ "Ouest-Nord-Ouest", "ONO" ],
-        "cpnw"  => [ "Nord-Ouest",       "NO" ],
-        "cpnnw" => [ "Nord-Nord-Ouest",  "NNO" ],
     },
 
     IT => {
@@ -453,24 +379,6 @@ our %transtable = (
         "earlyfall"   => "Inizio autunno",
         "fullfall"    => "Piena caduta",
         "latefall"    => "Tardo autunno",
-
-        #
-        "cpn"   => [ "Nord",             "N" ],
-        "cpnne" => [ "Nord-Nord-Est",    "NNE" ],
-        "cpne"  => [ "Nord-Est",         "NE" ],
-        "cpene" => [ "Est-Nord-Est",     "ENE" ],
-        "cpe"   => [ "Est",              "E" ],
-        "cpese" => [ "Est-Sud-Est",      "ESE" ],
-        "cpse"  => [ "Sud-Est",          "SE" ],
-        "cpsse" => [ "Sud-Sud-Est",      "SSE" ],
-        "cps"   => [ "Sud",              "S" ],
-        "cpssw" => [ "Sud-Sud-Ovest",    "SSO" ],
-        "cpsw"  => [ "Sud-Ovest",        "SO" ],
-        "cpwsw" => [ "Ovest-Sud-Ovest",  "OSO" ],
-        "cpw"   => [ "Ovest",            "O" ],
-        "cpwnw" => [ "Ovest-Nord-Ovest", "ONO" ],
-        "cpnw"  => [ "Nord-Ovest",       "NO" ],
-        "cpnnw" => [ "Nord-Nord-Ovest",  "NNO" ],
     },
 
     NL => {
@@ -533,24 +441,6 @@ our %transtable = (
         "earlyfall"   => "Vroeg Herfst",
         "fullfall"    => "Herfst",
         "latefall"    => "Laat Herfst",
-
-        #
-        "cpn"   => [ "Noorden",           "N" ],
-        "cpnne" => [ "Noord-Noordoosten", "NNO" ],
-        "cpne"  => [ "Noordoosten",       "NO" ],
-        "cpene" => [ "Oost-Noordoost",    "ONO" ],
-        "cpe"   => [ "Oosten",            "O" ],
-        "cpese" => [ "Oost-Zuidoost",     "OZO" ],
-        "cpse"  => [ "Zuidoosten",        "ZO" ],
-        "cpsse" => [ "Zuid-Zuidoost",     "ZZO" ],
-        "cps"   => [ "Zuiden",            "Z" ],
-        "cpssw" => [ "Zuid-Zuidwest",     "ZZW" ],
-        "cpsw"  => [ "Zuidwest",          "ZW" ],
-        "cpwsw" => [ "West-Zuidwest",     "WZW" ],
-        "cpw"   => [ "West",              "W" ],
-        "cpwnw" => [ "West-Noord-West",   "WNW" ],
-        "cpnw"  => [ "Noord-West",        "NW" ],
-        "cpnnw" => [ "Noord-Noord-West",  "NNW" ],
     },
 
     PL => {
@@ -613,24 +503,6 @@ our %transtable = (
         "earlyfall"   => "Wczesna jesień",
         "fullfall"    => "Pełna jesień",
         "latefall"    => "Późną jesienią",
-
-        #
-        "cpn"   => [ "Północ",                        "N" ],
-        "cpnne" => [ "Północny-Północny-Wschód",   "NNE" ],
-        "cpne"  => [ "Północny-Wschód",              "NE" ],
-        "cpene" => [ "Wschód-Północny-Wschód",      "ENE" ],
-        "cpe"   => [ "Wschód",                         "E" ],
-        "cpese" => [ "Wschód-Południowy-Wschód",     "ESE" ],
-        "cpse"  => [ "Południowy-Południowy-Wschód", "SE" ],
-        "cpsse" => [ "Południowy-Wschód",             "SSE" ],
-        "cps"   => [ "Południe",                       "S" ],
-        "cpssw" => [ "Południowo-Południowy-Zachód", "SSW" ],
-        "cpsw"  => [ "Południowy-Zachód",             "SW" ],
-        "cpwsw" => [ "Zachód-Południowy-Zachód",     "WSW" ],
-        "cpw"   => [ "Zachód",                         "W" ],
-        "cpwnw" => [ "Zachód-Północny-Zachód",      "WNW" ],
-        "cpnw"  => [ "Północny-Zachód",              "NW" ],
-        "cpnnw" => [ "Północno-Północny-Zachód",   "NNW" ],
     }
 );
 
@@ -749,22 +621,6 @@ our @dayphases = (
     "firstdusk",
 );
 
-my %roman = (
-    1       => 'I',
-    5       => 'V',
-    10      => 'X',
-    50      => 'L',
-    100     => 'C',
-    500     => 'D',
-    1000    => 'M',
-    5000    => '(V)',
-    10000   => '(X)',
-    50000   => '(L)',
-    100000  => '(C)',
-    500000  => '(D)',
-    1000000 => '(M)',
-);
-
 our %seasonmn = (
     "spring" => [ 3,  5 ],     #01.03. - 31.5.
     "summer" => [ 6,  8 ],     #01.06. - 31.8.
@@ -781,11 +637,6 @@ our @seasonsp = (
 our %seasonppos = (
     earlyspring => [ 37.136633, -8.817837 ],    #South-West Portugal
     earlyfall   => [ 60.161880, 24.937267 ],    #South Finland / Helsinki
-);
-
-our @compasspoint = (
-    "cpn", "cpnne", "cpne", "cpene", "cpe", "cpese", "cpse", "cpsse",
-    "cps", "cpssw", "cpsw", "cpwsw", "cpw", "cpwnw", "cpnw", "cpnnw"
 );
 
 # Run before package compilation
@@ -941,7 +792,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"[DaySchedule] $do $name attribute $key must be a float number >= 0 meters"
+                  "$do $name attribute $key must be a float number >= 0 meters"
                   unless ( $value =~ m/^(\d+(?:\.\d+)?)$/ && $1 >= 0. );
             };
 
@@ -949,8 +800,7 @@ sub Attr(@) {
             $key eq "disable" and do {
 
                 # check value
-                return
-                  "[DaySchedule] $do $name attribute $key can only be 1 or 0"
+                return "$do $name attribute $key can only be 1 or 0"
                   unless ( $value =~ m/^(1|0)$/ );
                 readingsSingleUpdate( $hash, "state",
                     $value ? "inactive" : "Initialized", $init_done );
@@ -961,7 +811,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"[DaySchedule] $do $name attribute $key must be in format <month>-<day> while <month> can only be 08 or 09"
+"$do $name attribute $key must be in format <month>-<day> while <month> can only be 08 or 09"
                   unless ( $value =~ m/^(0[8-9])-(0[1-9]|[12]\d|30|31)$/ );
             };
 
@@ -970,7 +820,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"[DaySchedule] $do $name attribute $key must be in format <month>-<day> while <month> can only be 02 or 03"
+"$do $name attribute $key must be in format <month>-<day> while <month> can only be 02 or 03"
                   unless ( $value =~ m/^(0[2-3])-(0[1-9]|[12]\d|30|31)$/ );
             };
 
@@ -979,7 +829,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"[DaySchedule] $do $name attribute $key must be a float number >= -45 and <= 45 degrees"
+"$do $name attribute $key must be a float number >= -45 and <= 45 degrees"
                   unless (
                        $value =~ m/^(-?\d+(?:\.\d+)?)(?::(-?\d+(?:\.\d+)?))?$/
                     && $1 >= -45.
@@ -991,8 +841,7 @@ sub Attr(@) {
             $key eq "interval" and do {
 
                 # check value
-                return
-                  "[DaySchedule] $do $name attribute $key must be >= 0 seconds"
+                return "$do $name attribute $key must be >= 0 seconds"
                   unless ( $value =~ m/^\d+$/ );
 
                 # update timer
@@ -1004,7 +853,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"[DaySchedule] $do $name attribute $key must be float number >= -90 and <= 90 degrees"
+"$do $name attribute $key must be float number >= -90 and <= 90 degrees"
                   unless ( $value =~ m/^(-?\d+(?:\.\d+)?)$/
                     && $1 >= -90.
                     && $1 <= 90. );
@@ -1015,7 +864,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"[DaySchedule] $do $name attribute $key must be float number >= -180 and <= 180 degrees"
+"$do $name attribute $key must be float number >= -180 and <= 180 degrees"
                   unless ( $value =~ m/^(-?\d+(?:\.\d+)?)$/
                     && $1 >= -180.
                     && $1 <= 180. );
@@ -1027,8 +876,7 @@ sub Attr(@) {
                 shift @skel;
 
                 # check value 1/2
-                return
-"[DaySchedule] $do $name attribute $key must be one or many of "
+                return "$do $name attribute $key must be one or many of "
                   . join( ',', @skel )
                   if ( !$value || $value eq "" );
 
@@ -1036,7 +884,7 @@ sub Attr(@) {
                 my @vals = split( ',', $value );
                 foreach my $val (@vals) {
                     return
-"[DaySchedule] $do $name attribute value $val is invalid, must be one or many of "
+"$do $name attribute value $val is invalid, must be one or many of "
                       . join( ',', @skel )
                       unless ( grep( m/^$val$/, @skel ) );
                 }
@@ -1049,8 +897,7 @@ sub Attr(@) {
                 shift @skel;
 
                 # check value 1/2
-                return
-"[DaySchedule] $do $name attribute $key must be one or many of "
+                return "$do $name attribute $key must be one or many of "
                   . join( ',', @skel )
                   if ( !$value || $value eq "" );
 
@@ -1058,7 +905,7 @@ sub Attr(@) {
                 my @vals = split( ',', $value );
                 foreach my $val (@vals) {
                     return
-"[DaySchedule] $do $name attribute value $val is invalid, must be one or many of "
+"$do $name attribute value $val is invalid, must be one or many of "
                       . join( ',', @skel )
                       unless ( grep( m/^$val$/, @skel ) );
                 }
@@ -1069,7 +916,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"[DaySchedule] $do $name attribute $key must be an integer number >= 1 and <= 24 hours"
+"$do $name attribute $key must be an integer number >= 1 and <= 24 hours"
                   unless ( $value =~ m/^(\d+)(?::(\d+))?$/
                     && $1 >= 1.
                     && $1 <= 24.
@@ -1109,15 +956,14 @@ sub Set($@) {
     my $name = shift @$a;
 
     if ( $a->[0] eq "update" ) {
-        return "[FHEM::DaySchedule::Set] $name is disabled"
+        return "$name is disabled"
           if ( IsDisabled($name) );
         RemoveInternalTimer($hash);
         InternalTimer( gettimeofday() + 1,
             "FHEM::DaySchedule::Update", $hash, 1 );
     }
     else {
-        return
-"[FHEM::DaySchedule::Set] $name with unknown argument $a->[0], choose one of "
+        return "$name with unknown argument $a->[0], choose one of "
           . join( " ",
             map { defined( $sets{$_} ) ? "$_:$sets{$_}" : $_ }
             sort keys %sets );
@@ -1159,15 +1005,30 @@ sub Get($@) {
             AttrVal( "global", "timezone", undef )
         )
     );
+    my $locale = AttrVal(
+        $name,
+        "lc_numeric",
+        AttrVal(
+            AttrVal( $name, "AstroDevice", "global" ),
+            "lc_numeric",
+            AttrVal( "global", "lc_numeric", undef )
+        )
+    );
+    if ( $h && ref($h) ) {
+        $tz     = $h->{timezone}   if ( defined( $h->{timezone} ) );
+        $locale = $h->{lc_numeric} if ( defined( $h->{lc_numeric} ) );
+    }
 
     # fill %Astro if it is still empty after restart
     Compute( $hash, undef, $h )
       if ( scalar keys %Astro == 0 || scalar keys %Schedule == 0 );
 
     # second parameter may be a reading
-    if (   ( int(@$a) > 1 )
-        && exists( $Astro{ $a->[1] } )
-        && !ref( $Astro{ $a->[1] } ) )
+    if (
+        ( int(@$a) > 1 )
+        && ( ( exists( $Astro{ $a->[1] } ) && !ref( $Astro{ $a->[1] } ) )
+            || exists( $Schedule{ $a->[1] } ) && !ref( $Schedule{ $a->[1] } ) )
+      )
     {
         $wantsreading = 1;
     }
@@ -1176,7 +1037,8 @@ sub Get($@) {
     if (
         (
             int(@$a) > 4 + $wantsreading
-            && $a->[ 4 + $wantsreading ] =~ /^\+?([-+]\d+|yesterday|tomorrow)$/i
+            && $a->[ 4 + $wantsreading ] =~
+            /^\+?([-+]\d+|yesterday|tomorrow)$/i
         )
         || ( int(@$a) > 3 + $wantsreading
             && $a->[ 3 + $wantsreading ] =~
@@ -1220,7 +1082,7 @@ sub Get($@) {
         }
         else {
             return
-"[FHEM::DaySchedule::Get] $name has improper time specification $str, use YYYY-MM-DD [HH:MM:SS] [-1|yesterday|+1|tomorrow]";
+"$name has improper time specification $str, use YYYY-MM-DD [HH:MM:SS] [-1|yesterday|+1|tomorrow]";
         }
     }
     else {
@@ -1262,184 +1124,67 @@ sub Get($@) {
 
     }
     elsif ( $a->[0] eq "text" ) {
-        Compute( $hash, undef, $h );
+        my $ret;
 
-        my $lang = uc(
-            AttrVal(
-                $name,
-                "language",
-                AttrVal(
-                    AttrVal( $name, "AstroDevice", "global" ),
-                    "language",
-                    AttrVal( "global", "language", "EN" )
-                )
-            )
-        );
-        my $old_locale = setlocale(LC_NUMERIC);
-        setlocale( LC_NUMERIC, lc($lang) . "_" . uc($lang) . ".UTF-8" );
-
-        use locale;
-
-        if ( $wantsreading == 1 ) {
-            return $Astro{ $a->[1] };
-        }
-        else {
-
-            my $ret = sprintf( "%s %s %s",
-                $astrott->{"date"}, $Astro{ObsDate}, $Astro{ObsTime} );
-            $ret .= " (" . $astrott->{"dst"} . ")" if ( $Astro{ObsIsDST} == 1 );
-            $ret .= sprintf( ", %s %2d\n",
-                $astrott->{"timezone"},
-                $Astro{ObsTimezone} );
-            $ret .= sprintf(
-                "%s "
-                  . (
-                         $Schedule{DaySeasonalHrsDay} > 9
-                      || $Schedule{DaySeasonalHrsNight} > 9 ? "%3d" : "%2d"
-                  ),
-                (
-                    (
-                             $Schedule{DaySeasonalHrsDay} == 12
-                          && $Schedule{DaySeasonalHr} > 0.
+        # Use Astro subroutine if it was about an Astro value
+        if ( !$wantsreading
+            || ( $wantsreading && defined( $Astro{ $a->[1] } ) ) )
+        {
+            my $AstroDev = AttrVal( $name, "AstroDevice", "" );
+            if ( IsDevice( $AstroDev, "Astro" ) ) {
+                foreach (
+                    qw(
+                    altitude
+                    horizon
+                    language
+                    latitude
+                    lc_numeric
+                    longitude
+                    timezone
                     )
-                      || $Schedule{DaySeasonalHrsNight} == 12
-                      && $Schedule{DaySeasonalHr} < 0.
-                    ? $tt->{"temporalhour"}
-                    : $tt->{"seasonalhour"}
+                  )
+                {
+                    $h->{$_} = $attr{$name}{$_}
+                      if ( defined( $attr{$name} )
+                        && defined( $attr{$name}{$_} )
+                        && $attr{$name}{$_} ne ""
+                        && !defined( $h->{$_} ) );
+                }
+            }
+
+            unshift @$a, $name;
+            $ret = Astro_Get(
+                (
+                    IsDevice( $AstroDev, "Astro" )
+                    ? $defs{$AstroDev}
+                    : $hash
                 ),
-                $Schedule{DaySeasonalHr}
+                $a, $h
             );
-            $ret .= sprintf(
-                "%s%s\n",
-                (
-                    $Schedule{Daytime} ne "---"
-                    ? ( ", " . $tt->{"dayphase"}, ": " . $Schedule{Daytime} )
-                    : ( "", "" )
-                )
-            );
-            $ret .= sprintf(
-                "%s %.2f %s, %3d %s, %3d %s",
-                $astrott->{"jdate"},
-                $Astro{ObsJD},
-                $astrott->{"days"},
-                $Astro{ObsDayofyear},
-                $astrott->{"dayofyear"},
-                $Schedule{YearRemainD},
-                (
-                      $Schedule{YearRemainD} == 1
-                    ? $tt->{"dayremaining"}
-                    : $tt->{"daysremaining"}
-                )
-            );
-            $ret .= (
-                $Schedule{YearIsLY} == 1
-                ? sprintf( ", %s\n", $tt->{"leapyear"} )
-                : "\n"
-            );
-            $ret .=
-              sprintf( "%s: %s\n", $astrott->{"season"}, $Astro{ObsSeason} );
-            $ret .=
-              sprintf( "%s: %s\n", $tt->{"metseason"}, $Schedule{SeasonMeteo} );
-            $ret .=
-              sprintf( "%s: %s\n", $tt->{"phenseason"}, $Schedule{SeasonPheno} )
-              if ( exists( $Schedule{SeasonPheno} ) );
-            $ret .= sprintf(
-                "%s %.5f° %s, %.5f° %s, %.0f m %s\n",
-                $astrott->{"coord"},     $Astro{ObsLat},
-                $astrott->{"latitude"},  $Astro{ObsLon},
-                $astrott->{"longitude"}, $Astro{ObsAlt},
-                $astrott->{"altitude"}
-            );
-            $ret .= sprintf( "%s %s\n\n", $astrott->{"lmst"}, $Astro{ObsLMST} );
-            $ret .= "\n" . $astrott->{"sun"} . "\n";
-            $ret .= sprintf(
-                "%s %s   %s %s   %s %s\n",
-                $astrott->{"rise"},    $Astro{SunRise},
-                $astrott->{"set"},     $Astro{SunSet},
-                $astrott->{"transit"}, $Astro{SunTransit}
-            );
-            $ret .= sprintf(
-                "%s %s h   %s %s h\n",
-                $astrott->{"hoursofsunlight"}, $Astro{SunHrsVisible},
-                $astrott->{"hoursofnight"},    $Astro{SunHrsInvisible}
-            );
-            $ret .= sprintf( "%s %s  -  %s\n",
-                $astrott->{"twilightcivil"},
-                $Astro{CivilTwilightMorning},
-                $Astro{CivilTwilightEvening} );
-            $ret .= sprintf( "%s %s  -  %s\n",
-                $astrott->{"twilightnautic"},
-                $Astro{NauticTwilightMorning},
-                $Astro{NauticTwilightEvening} );
-            $ret .= sprintf( "%s %s  -  %s\n",
-                $astrott->{"twilightastro"},
-                $Astro{AstroTwilightMorning},
-                $Astro{AstroTwilightEvening} );
-            $ret .= sprintf(
-                "%s: %.0f km %s (%.0f km %s)\n",
-                $astrott->{"distance"}, $Astro{SunDistance},
-                $astrott->{"toce"},     $Astro{SunDistanceObserver},
-                $astrott->{"toobs"}
-            );
-            $ret .= sprintf(
-"%s:  %s %2.1f°, %s %s h, %s %2.1f°; %s %2.1f°, %s %2.1f°\n",
-                $astrott->{"position"}, $astrott->{"lonecl"},
-                $Astro{SunLon},         $astrott->{"ra"},
-                $Astro{SunRa},          $astrott->{"dec"},
-                $Astro{SunDec},         $astrott->{"az"},
-                $Astro{SunAz},          $astrott->{"alt"},
-                $Astro{SunAlt}
-            );
-            $ret .= sprintf(
-                "%s %2.1f', %s %s\n\n",
-                $astrott->{"diameter"}, $Astro{SunDiameter},
-                $astrott->{"sign"},     $Astro{SunSign}
-            );
-            $ret .= "\n" . $astrott->{"moon"} . "\n";
-            $ret .= sprintf(
-                "%s %s   %s %s   %s %s\n",
-                $astrott->{"rise"},    $Astro{MoonRise},
-                $astrott->{"set"},     $Astro{MoonSet},
-                $astrott->{"transit"}, $Astro{MoonTransit}
-            );
-            $ret .= sprintf( "%s %s\n",
-                $astrott->{"hoursofvisibility"},
-                $Astro{MoonHrsVisible} );
-            $ret .= sprintf(
-                "%s: %.0f km %s (%.0f km %s)\n",
-                $astrott->{"distance"}, $Astro{MoonDistance},
-                $astrott->{"toce"},     $Astro{MoonDistanceObserver},
-                $astrott->{"toobs"}
-            );
-            $ret .= sprintf(
-"%s:  %s %2.1f°, %s %2.1f°; %s %s h, %s %2.1f°; %s %2.1f°, %s %2.1f°\n",
-                $astrott->{"position"}, $astrott->{"lonecl"},
-                $Astro{MoonLon},        $astrott->{"latecl"},
-                $Astro{MoonLat},        $astrott->{"ra"},
-                $Astro{MoonRa},         $astrott->{"dec"},
-                $Astro{MoonDec},        $astrott->{"az"},
-                $Astro{MoonAz},         $astrott->{"alt"},
-                $Astro{MoonAlt}
-            );
-            $ret .= sprintf(
-                "%s %2.1f', %s %2.1f°, %s %1.2f = %s, %s %s\n",
-                $astrott->{"diameter"}, $Astro{MoonDiameter},
-                $astrott->{"age"},      $Astro{MoonAge},
-                $astrott->{"phase"},    $Astro{MoonPhaseN},
-                $Astro{MoonPhaseS},     $astrott->{"sign"},
-                $Astro{MoonSign}
-            );
+
+            # Add schedule
+            my $txt = "Test: Test";
+            $ret =~ s/^((?:[^\n]+\n){1})([\s\S]*)$/$1$txt\n$2/;
 
             return $ret;
         }
 
+        Compute( $hash, undef, $h );
+
+        my $old_locale = setlocale(LC_NUMERIC);
+        setlocale( LC_NUMERIC, $locale ) if ($locale);
+
+        use locale ':not_characters';
+
+        $ret = $Schedule{ $a->[1] };
+
         setlocale( LC_NUMERIC, "" );
         setlocale( LC_NUMERIC, $old_locale );
         no locale;
+        return $ret;
     }
     else {
-        return
-"[FHEM::DaySchedule::Get] $name with unknown argument $a->[0], choose one of "
+        return "$name with unknown argument $a->[0], choose one of "
           . join( " ",
             map { defined( $gets{$_} ) ? "$_:$gets{$_}" : $_ }
             sort keys %gets );
@@ -1530,123 +1275,6 @@ sub _LoadPackagesWrapper {
     $json->shrink;
 }
 
-sub DistOnEarth($$$$) {
-    my ( $lat1, $lng1, $lat2, $lng2 ) = @_;
-
-    my $aearth = 6378.137;    # GRS80/WGS84 semi major axis of earth ellipsoid
-
-    $lat1 *= $DEG;
-    $lng1 *= $DEG;
-    $lat2 *= $DEG;
-    $lng2 *= $DEG;
-
-    my $dlat = $lat2 - $lat1;
-    my $dlng = $lng2 - $lng1;
-    my $a =
-      sin( $dlat / 2 ) * sin( $dlat / 2 ) +
-      cos($lat1) * cos($lat2) * sin( $dlng / 2 ) * sin( $dlng / 2 );
-    my $c = 2 * atan2( sqrt($a), sqrt( 1 - $a ) );
-    my $dist = $aearth * $c;
-
-    return $dist;
-}
-
-sub DaysOfMonth ($$) {
-    my ( $y, $m ) = @_;
-    if ( $m < 8. ) {
-        if ( $m % 2 ) {
-            return 31.;
-        }
-        else {
-            return 28. + IsLeapYear($y)
-              if ( $m == 2. );
-            return 30.;
-        }
-    }
-    elsif ( $m % 2. ) {
-        return 30.;
-    }
-    else {
-        return 31.;
-    }
-}
-
-sub IsLeapYear ($) {
-    my $y = shift;
-    return 0 if $y % 4;
-    return 1 if $y % 100;
-    return 0 if $y % 400;
-    return 1;
-}
-
-sub Deg2CP($;$$) {
-    my ( $deg, $txt, $lang ) = @_;
-    my $i = floor( ( ( $deg + 11.25 ) % 360 ) / 22.5 );
-    return $i unless ( defined($txt) );
-    return $compasspoint[$i] if ( $txt eq '0' );
-
-    $lang = uc( AttrVal( "global", "language", "EN" ) ) unless ($lang);
-    if ( exists( $transtable{ uc($lang) } ) ) {
-        $tt = $transtable{ uc($lang) };
-    }
-    else {
-        $tt = $transtable{EN};
-    }
-    return $tt->{ $compasspoint[$i] }[1] if ( $txt eq '2' );
-    return $tt->{ $compasspoint[$i] }[0];
-}
-
-sub Arabic2Roman ($) {
-    my ($n) = @_;
-    my %items = ();
-    my @r;
-    return "" if ( !$n || $n eq "" || $n !~ m/^\d+(?:\.\d+)?$/ || $n == 0. );
-    return $n
-      if ( $n >= 1000001. );    # numbers above cannot be displayed/converted
-
-    for my $v ( sort { $b <=> $a } keys %roman ) {
-        my $c = int( $n / $v );
-        next unless ($c);
-        $items{ $roman{$v} } = $c;
-        $n -= $v * $c;
-    }
-
-    my @th = sort { $a <=> $b } keys %roman;
-
-    for ( my $i = 0 ; $i < @th ; $i++ ) {
-        my $v = $th[$i];
-        next if ( $v >= 1000000. );    # numbers above have no greater icon
-        my $k = $roman{$v};
-        my $c = $items{$k};
-        next unless ($c);
-
-        my $gv = $th[ $i + 1. ];
-        my $gk = $roman{$gv};
-
-        if ( $c == 4 || ( $gv / $v == $c ) ) {
-            $items{$gk}++;
-            $c = $gv - $c * $v;
-            $items{$k} = $c * -1;
-
-        }
-    }
-
-    for my $v ( sort { $b <=> $a } keys %roman ) {
-        my $l = $roman{$v};
-        my $c = $items{$l};
-        next unless ($c);
-
-        if ( $c > 0 ) {
-            push @r, $l for ( 1 .. $c );
-        }
-        else {
-            push @r, ( $l, pop @r );
-        }
-    }
-
-    return join '', @r;
-}
-
 sub SetTime (;$$$) {
     my ( $time, $tz, $dayOffset ) = @_;
 
@@ -1686,12 +1314,14 @@ sub SetTime (;$$$) {
     # half broken in windows
     $D->{dayofyear} = 1 * strftime( "%j", localtime($time) );
 
-    $D->{weekofyear}    = 1 * strftime( "%V", localtime($time) );
-    $D->{isly}          = IsLeapYear($year);
-    $D->{yearremdays}   = 365. + $D->{isly} - $D->{dayofyear};
-    $D->{yearprogress}  = $D->{dayofyear} / ( 365. + $D->{isly} );
-    $D->{monthremdays}  = DaysOfMonth( $D->{year}, $D->{month} ) - $D->{day};
-    $D->{monthprogress} = $D->{day} / DaysOfMonth( $D->{year}, $D->{month} );
+    $D->{weekofyear}   = 1 * strftime( "%V", localtime($time) );
+    $D->{isly}         = UConv::IsLeapYear($year);
+    $D->{yearremdays}  = 365. + $D->{isly} - $D->{dayofyear};
+    $D->{yearprogress} = $D->{dayofyear} / ( 365. + $D->{isly} );
+    $D->{monthremdays} =
+      UConv::DaysOfMonth( $D->{year}, $D->{month} ) - $D->{day};
+    $D->{monthprogress} =
+      $D->{day} / UConv::DaysOfMonth( $D->{year}, $D->{month} );
 
     # add info from X days before+after
     if ($dayOffset) {
@@ -1784,7 +1414,7 @@ sub Compute($;$$) {
       );
 
     # prepare Astro attributes
-    if ( IsDevice($AstroDev) ) {
+    if ( IsDevice( $AstroDev, "Astro" ) ) {
         foreach (
             qw(
             altitude
@@ -1797,15 +1427,11 @@ sub Compute($;$$) {
             )
           )
         {
-
-            if (   defined( $attr{$AstroDev} )
-                && defined( $attr{$AstroDev}{$_} )
-                && $attr{$AstroDev}{$_} ne ""
-                && !defined( $attr{$name}{$_} )
-                && !defined( $params->{$_} ) )
-            {
-                $params->{$_} = $attr{$AstroDev}{$_};
-            }
+            $params->{$_} = $attr{$name}{$_}
+              if ( defined( $attr{$name} )
+                && defined( $attr{$name}{$_} )
+                && $attr{$name}{$_} ne ""
+                && !defined( $params->{$_} ) );
         }
     }
 
@@ -1814,7 +1440,7 @@ sub Compute($;$$) {
     if ($dayOffset) {
         $A = $json->decode(
             Astro_Get(
-                ( IsDevice($AstroDev) ? $defs{$AstroDev} : $hash ),
+                ( IsDevice( $AstroDev, "Astro" ) ? $defs{$AstroDev} : $hash ),
                 [
                     $name, "json",
                     sprintf(
@@ -1831,7 +1457,11 @@ sub Compute($;$$) {
         %Astro = %{
             $json->decode(
                 Astro_Get(
-                    ( IsDevice($AstroDev) ? $defs{$AstroDev} : $hash ),
+                    (
+                        IsDevice( $AstroDev, "Astro" )
+                        ? $defs{$AstroDev}
+                        : $hash
+                    ),
                     [
                         $name, "json",
                         sprintf(
@@ -1852,7 +1482,8 @@ sub Compute($;$$) {
     if ( defined( $params->{"earlyspring"} ) ) {
         $earlyspring = $params->{"earlyspring"};
     }
-    elsif ( defined( $attr{$name} ) && defined( $attr{$name}{"earlyspring"} ) )
+    elsif (defined( $attr{$name} )
+        && defined( $attr{$name}{"earlyspring"} ) )
     {
         $earlyspring = $attr{$name}{"earlyspring"};
     }
@@ -1927,20 +1558,25 @@ sub Compute($;$$) {
         $St = \%Schedule unless ($t);
         $St = $Schedule{$t} if ( $t && defined( $Schedule{$t} ) );
     }
-
-    $S->{SunCompassI}  = Deg2CP( $A->{".SunAz"} );
-    $S->{SunCompass}   = $tt->{ Deg2CP( $A->{".SunAz"}, 0 ) }[0];
-    $S->{SunCompassS}  = $tt->{ Deg2CP( $A->{".SunAz"}, 0 ) }[1];
-    $S->{MoonCompassI} = Deg2CP( $A->{".MoonAz"} );
-    $S->{MoonCompass}  = $tt->{ Deg2CP( $A->{".MoonAz"}, 0 ) }[0];
-    $S->{MoonCompassS} = $tt->{ Deg2CP( $A->{".MoonAz"}, 0 ) }[1];
+    $S->{SunCompassI} =
+      UConv::direction2compasspoint( $A->{".SunAz"}, 0, $lang );
+    $S->{SunCompassS} =
+      UConv::direction2compasspoint( $A->{".SunAz"}, 1, $lang );
+    $S->{SunCompass} =
+      UConv::direction2compasspoint( $A->{".SunAz"}, 2, $lang );
+    $S->{MoonCompassI} =
+      UConv::direction2compasspoint( $A->{".MoonAz"}, 0, $lang );
+    $S->{MoonCompassS} =
+      UConv::direction2compasspoint( $A->{".MoonAz"}, 1, $lang );
+    $S->{MoonCompass} =
+      UConv::direction2compasspoint( $A->{".MoonAz"}, 2, $lang );
     $S->{ObsTimeR} =
-      Arabic2Roman( $D->{hour} <= 12. ? $D->{hour} : $D->{hour} - 12. )
+      UConv::arabic2roman( $D->{hour} <= 12. ? $D->{hour} : $D->{hour} - 12. )
       . (
         $D->{min} == 0.
         ? ( $D->{sec} == 0 ? "" : ":" )
-        : ":" . Arabic2Roman( $D->{min} )
-      ) . ( $D->{sec} == 0. ? "" : ":" . Arabic2Roman( $D->{sec} ) );
+        : ":" . UConv::arabic2roman( $D->{min} )
+      ) . ( $D->{sec} == 0. ? "" : ":" . UConv::arabic2roman( $D->{sec} ) );
     $S->{Weekofyear}       = $D->{weekofyear};
     $S->{".isdstnoon"}     = $D->{isdstnoon};
     $S->{YearIsLY}         = $D->{isly};
@@ -1949,9 +1585,9 @@ sub Compute($;$$) {
     $S->{".YearProgress"}  = $D->{yearprogress};
     $S->{".MonthProgress"} = $D->{monthprogress};
     $S->{YearProgress} =
-      FHEM::Astro::_round( $S->{".YearProgress"} * 100, 0 ) . " %";
+      FHEM::Astro::_round( $S->{".YearProgress"} * 100, 0 );
     $S->{MonthProgress} =
-      FHEM::Astro::_round( $S->{".MonthProgress"} * 100, 0 ) . " %";
+      FHEM::Astro::_round( $S->{".MonthProgress"} * 100, 0 );
 
     AddToSchedule( $S, $A->{".SunTransit"}, "SunTransit" )
       if ( grep ( /^SunTransit/, @schedsch ) );
@@ -2073,10 +1709,18 @@ sub Compute($;$$) {
         my $d = ( $nightparts + 1 - $idp * -1. ) * $nightpartlen;
         $d += $A->{".SunSet"} if ( $A->{".SunSet"} ne '---' );
         $d -= 24. if ( $d >= 24. );
+
         AddToSchedule( $S, $d, "DaySeasonalHr -" . ( ( $idp + 1. ) * -1. ) )
           if ( grep ( /^DaySeasonalHr/, @schedsch ) );
-        if ( $D->{timeday} >= $d )
-        {    # if time passed us already, we want it for tomorrow
+        AddToSchedule( $S, $d, "Daytime " . $tt->{ $dayphases[ 13. + $idp ] } )
+          if ( grep ( /^Daytime/, @schedsch ) && $nightparts == 12. );
+        AddToSchedule( $S, $d,
+            "Daytime Vigilia "
+              . UConv::arabic2roman( $idp + $nightparts + 2. ) )
+          if ( grep ( /^Daytime/, @schedsch ) && $nightparts == 4. );
+
+        # if time passed us already, we want it for tomorrow
+        if ( $D->{timeday} >= $d ) {
             if ( ref($At) && ref($St) ) {
                 $d = ( $nightparts + 1 - $idp * -1. ) *
                   $St->{".DaySeasonalHrLenNight"};
@@ -2104,10 +1748,19 @@ sub Compute($;$$) {
         my $d = $idp * $daypartlen;
         $d += $A->{".SunRise"} if ( $A->{".SunRise"} ne '---' );
         $d -= 24. if ( $d >= 24. );
+
         AddToSchedule( $S, $d, "DaySeasonalHr " . ( $idp + 1. ) )
           if ( grep ( /^DaySeasonalHr/, @schedsch ) );
-        if ( $D->{timeday} >= $d )
-        {    # if time passed us already, we want it for tomorrow
+        AddToSchedule( $S, $d, "Daytime " . $tt->{ $dayphases[ 12. + $idp ] } )
+          if ( grep ( /^Daytime/, @schedsch )
+            && $dayparts == 12.
+            && !$daypartsIsRoman );
+        AddToSchedule( $S, $d,
+            "Daytime Hora " . UConv::arabic2roman( $idp + 1. ) )
+          if ( grep ( /^Daytime/, @schedsch ) && $daypartsIsRoman );
+
+        # if time passed us already, we want it for tomorrow
+        if ( $D->{timeday} >= $d ) {
             if ( ref($At) && ref($St) ) {
                 $d = $idp * $St->{".DaySeasonalHrLenDay"};
                 $d += $At->{".SunRise"} if ( $At->{".SunRise"} ne '---' );
@@ -2143,7 +1796,8 @@ sub Compute($;$$) {
       $daypartnext == 0. ? '00:00:00' : FHEM::Astro::HHMMSS($daypartnext);
     $S->{DaySeasonalHr} = $daypart;
     $S->{DaySeasonalHrR} =
-      Arabic2Roman( $daypart < 0 ? ( $nightparts + 1. + $daypart ) : $daypart );
+      UConv::arabic2roman(
+        $daypart < 0 ? ( $nightparts + 1. + $daypart ) : $daypart );
 
     # Daytime
     #  modern classification
@@ -2164,7 +1818,7 @@ sub Compute($;$$) {
         $S->{DaytimeN} = $dayphase;
         $S->{Daytime} =
           ( $daypart < 0. ? 'Vigilia ' : 'Hora ' )
-          . Arabic2Roman(
+          . UConv::arabic2roman(
             $daypart < 0 ? $daypart + $nightparts + 1. : $daypart );
     }
 
@@ -2206,19 +1860,19 @@ sub Compute($;$$) {
 
         #      waiting for summer
         if ( $D->{month} < 6.0 ) {
-            my $distObs = DistOnEarth(
+            my $distObs = UConv::distance(
                 $A->{ObsLat}, $A->{ObsLon},
                 $seasonppos{earlyspring}[0],
                 $seasonppos{earlyspring}[1],
             );
-            my $distTotal = DistOnEarth(
+            my $distTotal = UConv::distance(
                 $seasonppos{earlyspring}[0], $seasonppos{earlyspring}[1],
                 $seasonppos{earlyfall}[0],   $seasonppos{earlyfall}[1],
             );
             my $timeBeg =
               time_str2num( $D->{year} . '-' . $earlyspring . ' 00:00:00' );
             $timeBeg -= 86400.0 #starts 1 day earlier after 28.2. in a leap year
-              if ( IsLeapYear( $D->{year} )
+              if ( UConv::IsLeapYear( $D->{year} )
                 && $earlyspring =~ m/^(\d+)-(\d+)$/
                 && ( $1 == 3 || $2 == 29 ) );
             my $timeNow =
@@ -2255,19 +1909,19 @@ sub Compute($;$$) {
 
         #     waiting for winter
         if ( $D->{month} >= 8.0 && $D->{month} < 12.0 ) {
-            my $distObs = DistOnEarth(
+            my $distObs = UConv::distance(
                 $A->{ObsLat}, $A->{ObsLon},
                 $seasonppos{earlyfall}[0],
                 $seasonppos{earlyfall}[1],
             );
-            my $distTotal = DistOnEarth(
+            my $distTotal = UConv::distance(
                 $seasonppos{earlyfall}[0],   $seasonppos{earlyfall}[1],
                 $seasonppos{earlyspring}[0], $seasonppos{earlyspring}[1],
             );
             my $timeBeg =
               time_str2num( $D->{year} . '-' . $earlyfall . ' 00:00:00' );
             $timeBeg -= 86400.0    #starts 1 day earlier in a leap year
-              if ( IsLeapYear( $D->{year} ) );
+              if ( UConv::IsLeapYear( $D->{year} ) );
             my $timeNow =
               time_str2num( $D->{year} . '-'
                   . $D->{month} . '-'
@@ -2330,23 +1984,23 @@ sub Compute($;$$) {
     }
 
     # Change indicators for event day and day before
-    $S->{DayChangedSeason}      = 0 unless ( $S->{DayChangedSeason} );
-    $S->{DayChangedSeasonMeteo} = 0 unless ( $S->{DayChangedSeasonMeteo} );
-    $S->{DayChangedSeasonPheno} = 0 unless ( $S->{DayChangedSeasonPheno} );
-    $S->{DayChangedSunSign}     = 0 unless ( $S->{DayChangedSunSign} );
-    $S->{DayChangedMoonSign}    = 0 unless ( $S->{DayChangedMoonSign} );
-    $S->{DayChangedMoonPhaseS}  = 0 unless ( $S->{DayChangedMoonPhaseS} );
-    $S->{DayChangedIsDST}       = 0 unless ( $S->{DayChangedIsDST} );
+    $S->{DayChangeSeason}      = 0 unless ( $S->{DayChangeSeason} );
+    $S->{DayChangeSeasonMeteo} = 0 unless ( $S->{DayChangeSeasonMeteo} );
+    $S->{DayChangeSeasonPheno} = 0 unless ( $S->{DayChangeSeasonPheno} );
+    $S->{DayChangeSunSign}     = 0 unless ( $S->{DayChangeSunSign} );
+    $S->{DayChangeMoonSign}    = 0 unless ( $S->{DayChangeMoonSign} );
+    $S->{DayChangeMoonPhaseS}  = 0 unless ( $S->{DayChangeMoonPhaseS} );
+    $S->{DayChangeIsDST}       = 0 unless ( $S->{DayChangeIsDST} );
 
     #  Astronomical season is going to change tomorrow
     if (   ref($At)
         && ref($St)
-        && !$St->{DayChangedSeason}
+        && !$St->{DayChangeSeason}
         && defined( $At->{ObsSeasonN} )
         && $At->{ObsSeasonN} != $A->{ObsSeasonN} )
     {
-        $S->{DayChangedSeason}  = 2;
-        $St->{DayChangedSeason} = 1;
+        $S->{DayChangeSeason}  = 2;
+        $St->{DayChangeSeason} = 1;
         AddToSchedule( $S, 0, "ObsSeason " . $At->{ObsSeason} )
           if ( grep ( /^ObsSeason/, @schedsch ) );
     }
@@ -2354,60 +2008,60 @@ sub Compute($;$$) {
     #  Astronomical season changed since yesterday
     elsif (ref($Ay)
         && ref($Sy)
-        && !$Sy->{DayChangedSeason}
+        && !$Sy->{DayChangeSeason}
         && defined( $Ay->{ObsSeasonN} )
         && $Ay->{ObsSeasonN} != $A->{ObsSeasonN} )
     {
-        $Sy->{DayChangedSeason} = 2;
-        $S->{DayChangedSeason}  = 1;
+        $Sy->{DayChangeSeason} = 2;
+        $S->{DayChangeSeason}  = 1;
         AddToSchedule( $S, 0, "ObsSeason " . $A->{ObsSeason} )
           if ( grep ( /^ObsSeason/, @schedsch ) );
     }
 
     #  Meteorological season is going to change tomorrow
     if (   ref($St)
-        && !$St->{DayChangedSeasonMeteo}
+        && !$St->{DayChangeSeasonMeteo}
         && defined( $St->{SeasonMeteoN} )
         && $St->{SeasonMeteoN} != $S->{SeasonMeteoN} )
     {
-        $S->{DayChangedSeasonMeteo}  = 2;
-        $St->{DayChangedSeasonMeteo} = 1;
+        $S->{DayChangeSeasonMeteo}  = 2;
+        $St->{DayChangeSeasonMeteo} = 1;
         AddToSchedule( $St, 0, "SeasonMeteo " . $St->{SeasonMeteo} )
           if ( grep ( /^SeasonMeteo/, @schedsch ) );
     }
 
     #  Meteorological season changed since yesterday
     elsif (ref($Sy)
-        && !$Sy->{DayChangedSeasonMeteo}
+        && !$Sy->{DayChangeSeasonMeteo}
         && defined( $Sy->{SeasonMeteoN} )
         && $Sy->{SeasonMeteoN} != $S->{SeasonMeteoN} )
     {
-        $Sy->{DayChangedSeasonMeteo} = 2;
-        $S->{DayChangedSeasonMeteo}  = 1;
+        $Sy->{DayChangeSeasonMeteo} = 2;
+        $S->{DayChangeSeasonMeteo}  = 1;
         AddToSchedule( $S, 0, "SeasonMeteo " . $S->{SeasonMeteo} )
           if ( grep ( /^SeasonMeteo/, @schedsch ) );
     }
 
     #  Phenological season is going to change tomorrow
     if (   ref($St)
-        && !$St->{DayChangedSeasonPheno}
+        && !$St->{DayChangeSeasonPheno}
         && defined( $St->{SeasonPhenoN} )
         && $St->{SeasonPhenoN} != $S->{SeasonPhenoN} )
     {
-        $S->{DayChangedSeasonPheno}  = 2;
-        $St->{DayChangedSeasonPheno} = 1;
+        $S->{DayChangeSeasonPheno}  = 2;
+        $St->{DayChangeSeasonPheno} = 1;
         AddToSchedule( $St, 0, "SeasonPheno " . $St->{SeasonPheno} )
           if ( grep ( /^SeasonPheno/, @schedsch ) );
     }
 
     #  Phenological season changed since yesterday
     elsif (ref($Sy)
-        && !$Sy->{DayChangedSeasonPheno}
+        && !$Sy->{DayChangeSeasonPheno}
         && defined( $Sy->{SeasonPhenoN} )
         && $Sy->{SeasonPhenoN} != $S->{SeasonPhenoN} )
     {
-        $Sy->{DayChangedSeasonPheno} = 2;
-        $S->{DayChangedSeasonPheno}  = 1;
+        $Sy->{DayChangeSeasonPheno} = 2;
+        $S->{DayChangeSeasonPheno}  = 1;
         AddToSchedule( $S, 0, "SeasonPheno " . $S->{SeasonPheno} )
           if ( grep ( /^SeasonPheno/, @schedsch ) );
     }
@@ -2415,12 +2069,12 @@ sub Compute($;$$) {
     #  SunSign is going to change tomorrow
     if (   ref($At)
         && ref($St)
-        && !$St->{DayChangedSunSign}
+        && !$St->{DayChangeSunSign}
         && defined( $At->{SunSign} )
         && $At->{SunSign} ne $A->{SunSign} )
     {
-        $S->{DayChangedSunSign}  = 2;
-        $St->{DayChangedSunSign} = 1;
+        $S->{DayChangeSunSign}  = 2;
+        $St->{DayChangeSunSign} = 1;
         AddToSchedule( $St, 0, "SunSign " . $At->{SunSign} )
           if ( grep ( /^SunSign/, @schedsch ) );
     }
@@ -2428,12 +2082,12 @@ sub Compute($;$$) {
     #  SunSign changed since yesterday
     elsif (ref($Ay)
         && ref($Sy)
-        && !$Sy->{DayChangedSunSign}
+        && !$Sy->{DayChangeSunSign}
         && defined( $Ay->{SunSign} )
         && $Ay->{SunSign} ne $A->{SunSign} )
     {
-        $Sy->{DayChangedSunSign} = 2;
-        $S->{DayChangedSunSign}  = 1;
+        $Sy->{DayChangeSunSign} = 2;
+        $S->{DayChangeSunSign}  = 1;
         AddToSchedule( $S, 0, "SunSign " . $A->{SunSign} )
           if ( grep ( /^SunSign/, @schedsch ) );
     }
@@ -2441,12 +2095,12 @@ sub Compute($;$$) {
     #  MoonSign is going to change tomorrow
     if (   ref($At)
         && ref($St)
-        && !$St->{DayChangedMoonSign}
+        && !$St->{DayChangeMoonSign}
         && defined( $At->{MoonSign} )
         && $At->{MoonSign} ne $A->{MoonSign} )
     {
-        $S->{DayChangedMoonSign}  = 2;
-        $St->{DayChangedMoonSign} = 1;
+        $S->{DayChangeMoonSign}  = 2;
+        $St->{DayChangeMoonSign} = 1;
         AddToSchedule( $St, 0, "MoonSign " . $At->{MoonSign} )
           if ( grep ( /^MoonSign/, @schedsch ) );
     }
@@ -2454,12 +2108,12 @@ sub Compute($;$$) {
     #  MoonSign changed since yesterday
     elsif (ref($Ay)
         && ref($Sy)
-        && !$Sy->{DayChangedMoonSign}
+        && !$Sy->{DayChangeMoonSign}
         && defined( $Ay->{MoonSign} )
         && $Ay->{MoonSign} ne $A->{MoonSign} )
     {
-        $Sy->{DayChangedMoonSign} = 2;
-        $S->{DayChangedMoonSign}  = 1;
+        $Sy->{DayChangeMoonSign} = 2;
+        $S->{DayChangeMoonSign}  = 1;
         AddToSchedule( $S, 0, "MoonSign " . $A->{MoonSign} )
           if ( grep ( /^MoonSign/, @schedsch ) );
     }
@@ -2467,12 +2121,12 @@ sub Compute($;$$) {
     #  MoonPhase is going to change tomorrow
     if (   ref($At)
         && ref($St)
-        && !$St->{DayChangedMoonPhaseS}
+        && !$St->{DayChangeMoonPhaseS}
         && defined( $At->{MoonPhaseS} )
         && $At->{MoonPhaseI} != $A->{MoonPhaseI} )
     {
-        $S->{DayChangedMoonPhaseS}  = 2;
-        $St->{DayChangedMoonPhaseS} = 1;
+        $S->{DayChangeMoonPhaseS}  = 2;
+        $St->{DayChangeMoonPhaseS} = 1;
         AddToSchedule( $St, 0, "MoonPhaseS " . $At->{MoonPhaseS} )
           if ( grep ( /^MoonPhaseS/, @schedsch ) );
     }
@@ -2480,36 +2134,36 @@ sub Compute($;$$) {
     #  MoonPhase changed since yesterday
     elsif (ref($Ay)
         && ref($Sy)
-        && !$Sy->{DayChangedMoonPhaseS}
+        && !$Sy->{DayChangeMoonPhaseS}
         && defined( $Ay->{MoonPhaseS} )
         && $Ay->{MoonPhaseI} != $A->{MoonPhaseI} )
     {
-        $Sy->{DayChangedMoonPhaseS} = 2;
-        $S->{DayChangedMoonPhaseS}  = 1;
+        $Sy->{DayChangeMoonPhaseS} = 2;
+        $S->{DayChangeMoonPhaseS}  = 1;
         AddToSchedule( $S, 0, "MoonPhaseS " . $A->{MoonPhaseS} )
           if ( grep ( /^MoonPhaseS/, @schedsch ) );
     }
 
     #  DST is going to change tomorrow
     if (   ref($St)
-        && !$St->{DayChangedIsDST}
+        && !$St->{DayChangeIsDST}
         && defined( $St->{".isdstnoon"} )
         && $St->{".isdstnoon"} != $S->{".isdstnoon"} )
     {
-        $S->{DayChangedIsDST}  = 2;
-        $St->{DayChangedIsDST} = 1;
+        $S->{DayChangeIsDST}  = 2;
+        $St->{DayChangeIsDST} = 1;
         AddToSchedule( $St, 0, "ObsIsDST " . $St->{".isdstnoon"} )
           if ( grep ( /^ObsIsDST/, @schedsch ) );
     }
 
     #  DST is going to change somewhere today
     elsif (ref($Sy)
-        && !$Sy->{DayChangedIsDST}
+        && !$Sy->{DayChangeIsDST}
         && defined( $Sy->{".isdstnoon"} )
         && $Sy->{".isdstnoon"} != $S->{".isdstnoon"} )
     {
-        $Sy->{DayChangedIsDST} = 2;
-        $S->{DayChangedIsDST}  = 1;
+        $Sy->{DayChangeIsDST} = 2;
+        $S->{DayChangeIsDST}  = 1;
         AddToSchedule( $S, 0, "ObsIsDST " . $S->{".isdstnoon"} )
           if ( grep ( /^ObsIsDST/, @schedsch ) );
     }
@@ -2532,8 +2186,8 @@ sub Compute($;$$) {
             # past of today
             if ( $e <= $daypartTNow ) {
                 $S->{".SchedLastT"} = $e == 24. ? 0 : $e;
-                $S->{SchedLastT} =
-                  $e == 0. || $e == 24. ? '00:00:00' : FHEM::Astro::HHMMSS($e);
+                $S->{SchedLastT} = $e == 0.
+                  || $e == 24. ? '00:00:00' : FHEM::Astro::HHMMSS($e);
                 $S->{SchedLast} = join( ", ", @{ $S->{".schedule"}{$e} } );
                 $S->{SchedRecent} =
                   join( ", ", reverse @{ $S->{".schedule"}{$e} } )
@@ -2633,7 +2287,8 @@ sub Update($@) {
               $Astro{$k} * 3600.;
             $t += 86400. if ( $t < $now );    # that is for tomorrow
         }
-        elsif ( defined( $Schedule{$k} ) && $Schedule{$k} =~ /^\d+(?:\.\d+)?$/ )
+        elsif ( defined( $Schedule{$k} )
+            && $Schedule{$k} =~ /^\d+(?:\.\d+)?$/ )
         {
             $t =
               timelocal( 0, 0, 0, ( localtime($now) )[ 3, 4, 5 ] ) +
@@ -2893,6 +2548,8 @@ sub Update($@) {
     "dusk",
     "season",
     "time",
+    "twilight",
+    "Dämmerung",
     "Datum",
     "Jahreszeit",
     "Uhrzeit"
@@ -2906,6 +2563,7 @@ sub Update($@) {
         "POSIX": 0,
         "Time::HiRes": 0,
         "Time::Local": 0,
+        "UConv": 0,
         "locale": 0,
         "strict": 0,
         "warnings": 0
