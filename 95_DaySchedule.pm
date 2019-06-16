@@ -23,7 +23,9 @@ use 5.014;
 use strict;
 use warnings;
 use POSIX;
+use utf8;
 
+use Encode;
 use GPUtils qw(GP_Import);
 use Time::HiRes qw(gettimeofday);
 use Time::Local;
@@ -41,9 +43,10 @@ our $VERSION = "v0.0.1";
 my %sets = ( "update" => "noArg", );
 
 my %gets = (
-    "json"    => undef,
-    "text"    => undef,
-    "version" => undef,
+    "json"     => undef,
+    "schedule" => undef,
+    "text"     => undef,
+    "version"  => undef,
 );
 
 my %attrs = (
@@ -56,7 +59,11 @@ my %attrs = (
     "interval"    => undef,
     "language"    => "EN,DE,ES,FR,IT,NL,PL",
     "latitude"    => undef,
-    "longitude"   => undef,
+    "lc_numeric" =>
+"en_EN.UTF-8,de_DE.UTF-8,es_ES.UTF-8,fr_FR.UTF-8,it_IT.UTF-8,nl_NL.UTF-8,pl_PL.UTF-8",
+    "lc_time" =>
+"en_EN.UTF-8,de_DE.UTF-8,es_ES.UTF-8,fr_FR.UTF-8,it_IT.UTF-8,nl_NL.UTF-8,pl_PL.UTF-8",
+    "longitude" => undef,
     "recomputeAt" =>
 "multiple-strict,MoonRise,MoonSet,MoonTransit,NewDay,SeasonalHr,SunRise,SunSet,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
     "schedule" =>
@@ -652,9 +659,11 @@ BEGIN {
           Debug
           defs
           deviceEvents
+          FW_webArgs
           IsDevice
           FmtDateTime
           GetType
+          goodDeviceName
           init_done
           InternalTimer
           IsDisabled
@@ -685,7 +694,7 @@ _Export(
 
 _LoadPackagesWrapper();
 
-sub SetTime(;$$$);
+sub SetTime(;$$$$);
 sub Compute($;$$);
 
 sub Initialize ($) {
@@ -772,6 +781,35 @@ sub Notify ($$) {
                         "FHEM::DaySchedule::Update", $hash, 0 );
                 }
             }
+
+            # only process attribute events
+            next
+              unless ( $event =~
+m/^((?:DELETE)?ATTR)\s+([A-Za-z\d._]+)\s+([A-Za-z\d_\.\-\/]+)(?:\s+(.*)\s*)?$/
+              );
+
+            my $cmd  = $1;
+            my $d    = $2;
+            my $attr = $3;
+            my $val  = $4;
+            my $type = GetType($d);
+
+            # filter attributes to be processed
+            next
+              unless ( $attr eq "altitude"
+                || $attr eq "language"
+                || $attr eq "latitude"
+                || $attr eq "lc_numeric"
+                || $attr eq "lc_time"
+                || $attr eq "longitude"
+                || $attr eq "timezone" );
+
+            # when global or Astro attributes were changed
+            if ( $d eq "global" || IsDevice( $d, "Astro" ) ) {
+                RemoveInternalTimer($hash);
+                InternalTimer( gettimeofday() + 1,
+                    "FHEM::DaySchedule::Update", $hash, 0 );
+            }
         }
     }
 
@@ -794,6 +832,23 @@ sub Attr(@) {
                 return
                   "$do $name attribute $key must be a float number >= 0 meters"
                   unless ( $value =~ m/^(\d+(?:\.\d+)?)$/ && $1 >= 0. );
+            };
+
+            # AstroDevice modified at runtime
+            $key eq "AstroDevice" and do {
+
+                # check value
+                return
+                  "$do $name attribute $key has invalid device name format"
+                  unless ( goodDeviceName($value) );
+
+                if ( $init_done && scalar keys %Astro > 0. ) {
+                    foreach ( keys %Astro ) {
+                        delete $defs{$name}{READINGS}{$_};
+                    }
+                }
+
+                $hash->{NOTIFYDEV} = "global," . $value;
             };
 
             # disable modified at runtime
@@ -930,6 +985,8 @@ sub Attr(@) {
           if ( $key eq "disable" );
         $hash->{INTERVAL} = 3600
           if ( $key eq "interval" );
+        $hash->{NOTIFYDEV} = "global"
+          if ( $key eq "AstroDevice" );
         delete $hash->{RECOMPUTEAT}
           if ( $key eq "recomputeAt" );
     }
@@ -975,62 +1032,98 @@ sub Set($@) {
 sub Get($@) {
     my ( $hash, $a, $h, @a ) = @_;
     my $name = "#APIcall";
+    my $type = "dummy";
 
     # backwards compatibility for non-parseParams requests
     if ( !ref($a) ) {
         $hash = exists( $defs{$hash} ) ? $defs{$hash} : ()
           if ( $hash && !ref($hash) );
-        if ( defined( $hash->{NAME} ) ) {
-            $name = $hash->{NAME};
-        }
-        else {
-            $hash->{NAME} = $name;
-        }
         unshift @a, $h;
-        $h = undef;
-        $a = \@a;
+        $h    = undef;
+        $type = $a;
+        $a    = \@a;
     }
     else {
-        $name = shift @$a;
+        $type = shift @$a;
+    }
+    if ( defined( $hash->{NAME} ) ) {
+        $name = $hash->{NAME};
+    }
+    else {
+        $hash->{NAME} = $name;
     }
 
     my $wantsreading = 0;
     my $dayOffset    = 0;
-    my $tz           = AttrVal(
+    my $html =
+      defined( $hash->{CL} ) && $hash->{CL}{TYPE} eq "FHEMWEB" ? 1 : undef;
+    my $AstroDev = AttrVal( $name, "AstroDevice", "" );
+    my $tz = AttrVal(
         $name,
         "timezone",
         AttrVal(
-            AttrVal( $name, "AstroDevice", "global" ),
-            "timezone",
-            AttrVal( "global", "timezone", undef )
+            $AstroDev, "timezone", AttrVal( "global", "timezone", undef )
         )
     );
-    my $locale = AttrVal(
+    my $lang = AttrVal(
+        $name,
+        "language",
+        AttrVal(
+            $AstroDev, "language", AttrVal( "global", "language", undef )
+        )
+    );
+    my $lc_numeric = AttrVal(
         $name,
         "lc_numeric",
         AttrVal(
-            AttrVal( $name, "AstroDevice", "global" ),
+            $AstroDev,
             "lc_numeric",
-            AttrVal( "global", "lc_numeric", undef )
+            AttrVal( "global", "lc_numeric",
+                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef ) )
+
+        )
+    );
+    my $lc_time = AttrVal(
+        $name,
+        "lc_time",
+        AttrVal(
+            $AstroDev,
+            "lc_time",
+            AttrVal( "global", "lc_time",
+                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef ) )
+
         )
     );
     if ( $h && ref($h) ) {
-        $tz     = $h->{timezone}   if ( defined( $h->{timezone} ) );
-        $locale = $h->{lc_numeric} if ( defined( $h->{lc_numeric} ) );
+        $html       = $h->{html}       if ( defined( $h->{html} ) );
+        $tz         = $h->{timezone}   if ( defined( $h->{timezone} ) );
+        $lc_numeric = $h->{lc_numeric} if ( defined( $h->{lc_numeric} ) );
+        $lc_numeric =
+          lc( $h->{language} ) . "_" . uc( $h->{language} ) . ".UTF-8"
+          if ( !$lc_numeric && defined( $h->{language} ) );
+        $lc_time = $h->{lc_time} if ( defined( $h->{lc_time} ) );
+        $lc_time = lc( $h->{language} ) . "_" . uc( $h->{language} ) . ".UTF-8"
+          if ( !$lc_time && defined( $h->{language} ) );
     }
 
     # fill %Astro if it is still empty after restart
     Compute( $hash, undef, $h )
       if ( scalar keys %Astro == 0 || scalar keys %Schedule == 0 );
 
-    # second parameter may be a reading
-    if (
-        ( int(@$a) > 1 )
-        && ( ( exists( $Astro{ $a->[1] } ) && !ref( $Astro{ $a->[1] } ) )
-            || exists( $Schedule{ $a->[1] } ) && !ref( $Schedule{ $a->[1] } ) )
-      )
-    {
-        $wantsreading = 1;
+    #-- second parameter may be one or many readings
+    my @readings;
+    if ( ( int(@$a) > 1 ) ) {
+        @readings = split( ',', $a->[1] );
+        foreach (@readings) {
+            if ( exists( $Schedule{$_} ) ) {
+                $wantsreading = 1;
+                last;
+            }
+            elsif ( exists( $Astro{$_} ) ) {
+                $wantsreading = 1;
+                last;
+            }
+        }
     }
 
     # last parameter may be indicating day offset
@@ -1077,7 +1170,7 @@ sub Get($@) {
                         : ( localtime( gettimeofday() ) )[ 3, 4, 5 ]
                     )
                   ) + ( $dayOffset * 86400. ),
-                $tz
+                $tz, $lc_time
             );
         }
         else {
@@ -1086,8 +1179,11 @@ sub Get($@) {
         }
     }
     else {
-        SetTime( gettimeofday + ( $dayOffset * 86400. ), $tz );
+        SetTime( gettimeofday() + ( $dayOffset * 86400. ), $tz, $lc_time );
     }
+
+    #-- disable automatic links to FHEM devices
+    delete $FW_webArgs{addLinks};
 
     if ( $a->[0] eq "version" ) {
         return $VERSION;
@@ -1103,11 +1199,27 @@ sub Get($@) {
             $json->canonical;
             $json->pretty;
         }
+
         if ( $wantsreading == 1 ) {
-            return $json->encode( $Schedule{ $a->[1] } )
-              if ( defined( $Schedule{ $a->[1] } ) );
-            return $json->encode( $Astro{ $a->[1] } )
-              if ( defined( $Astro{ $a->[1] } ) );
+            my %ret;
+            foreach (@readings) {
+                if ( exists( $Schedule{$_} ) && !ref( $Schedule{$_} ) ) {
+                    if (   $h
+                        && ref($h)
+                        && ( $h->{text} || $h->{unit} || $h->{long} ) )
+                    {
+                        $ret{text}{$_} = FormatReading( $_, $h, $lc_numeric );
+                    }
+                    $ret{$_} = $Schedule{$_};
+                }
+                else {
+                    $ret{$_} = $Astro{$_} if ( defined( $Astro{$_} ) );
+                    $ret{text}{$_} = $Astro{text}{$_}
+                      if ( defined( $Astro{text}{$_} ) );
+                }
+            }
+
+            return $json->encode( \%ret );
         }
         else {
             # only publish today
@@ -1119,40 +1231,115 @@ sub Get($@) {
             delete $Schedule{1};
             delete $Schedule{"-2"};
             delete $Schedule{"-1"};
-            return $json->encode( { %Astro, %Schedule } );
-        }
 
-    }
-    elsif ( $a->[0] eq "text" ) {
-        my $ret;
-
-        # Use Astro subroutine if it was about an Astro value
-        if ( !$wantsreading
-            || ( $wantsreading && defined( $Astro{ $a->[1] } ) ) )
-        {
-            my $AstroDev = AttrVal( $name, "AstroDevice", "" );
-            if ( IsDevice( $AstroDev, "Astro" ) ) {
-                foreach (
-                    qw(
-                    altitude
-                    horizon
-                    language
-                    latitude
-                    lc_numeric
-                    longitude
-                    timezone
-                    )
-                  )
-                {
-                    $h->{$_} = $attr{$name}{$_}
-                      if ( defined( $attr{$name} )
-                        && defined( $attr{$name}{$_} )
-                        && $attr{$name}{$_} ne ""
-                        && !defined( $h->{$_} ) );
+            if ( $h && ref($h) && $h->{text} ) {
+                foreach ( keys %Schedule ) {
+                    next if ( ref( $Schedule{$_} ) || $_ =~ /^\./ );
+                    $Astro{text}{$_} = FormatReading( $_, $h, $lc_numeric );
                 }
             }
+            return $json->encode( { %Astro, %Schedule } );
+        }
+    }
+    elsif ( $a->[0] eq "text" ) {
+        Compute( $hash, undef, $h );
+        my $ret = "";
 
-            unshift @$a, $name;
+        if ( IsDevice( $AstroDev, "Astro" ) ) {
+            foreach (
+                qw(
+                altitude
+                horizon
+                language
+                latitude
+                lc_numeric
+                longitude
+                timezone
+                )
+              )
+            {
+                $h->{$_} = $attr{$name}{$_}
+                  if ( defined( $attr{$name} )
+                    && defined( $attr{$name}{$_} )
+                    && $attr{$name}{$_} ne ""
+                    && !defined( $h->{$_} ) );
+            }
+        }
+
+        if ( $wantsreading == 1 && $h && ref($h) && scalar keys %{$h} > 0 ) {
+            unshift @$a, $type;
+
+            foreach (@readings) {
+                if ( exists( $Astro{$_} ) ) {
+                    $ret .= $html && $html eq "1" ? "<br/>\n" : "\n"
+                      if ( $ret ne "" );
+                    $ret .= Astro_Get(
+                        (
+                            IsDevice( $AstroDev, "Astro" )
+                            ? $defs{$AstroDev}
+                            : $hash
+                        ),
+                        [
+                            IsDevice( $AstroDev, "Astro" ) ? "Astro" : "dummy",
+                            "text", $_,
+                            sprintf( "%04d-%02d-%02d",
+                                $Date{year}, $Date{month}, $Date{day} ),
+                            sprintf( "%02d:%02d:%02d",
+                                $Date{hour}, $Date{min}, $Date{sec} )
+                        ],
+                        $h
+                    );
+                    next;
+                }
+
+                next if ( !defined( $Schedule{$_} ) || ref( $Schedule{$_} ) );
+                $ret .= $html && $html eq "1" ? "<br/>\n" : "\n"
+                  if ( $ret ne "" );
+                $ret .= encode_utf8( FormatReading( $_, $h, $lc_numeric ) )
+                  unless ( $_ =~ /^\./ );
+                $ret .= encode_utf8( $Schedule{$_} ) if ( $_ =~ /^\./ );
+            }
+            $ret = "<html>" . $ret . "</html>"
+              if ( defined($html) && $html ne "0" );
+        }
+        elsif ( $wantsreading == 1 ) {
+            unshift @$a, $type;
+
+            foreach (@readings) {
+                if ( exists( $Astro{$_} ) ) {
+                    $ret .= $html && $html eq "1" ? "<br/>\n" : "\n"
+                      if ( $ret ne "" );
+                    $ret .= Astro_Get(
+                        (
+                            IsDevice( $AstroDev, "Astro" )
+                            ? $defs{$AstroDev}
+                            : $hash
+                        ),
+                        [
+                            IsDevice( $AstroDev, "Astro" ) ? "Astro" : "dummy",
+                            "text", $_,
+                            sprintf( "%04d-%02d-%02d",
+                                $Date{year}, $Date{month}, $Date{day} ),
+                            sprintf( "%02d:%02d:%02d",
+                                $Date{hour}, $Date{min}, $Date{sec} )
+                        ]
+                    );
+                    next;
+                }
+
+                next if ( !defined( $Schedule{$_} ) || ref( $Schedule{$_} ) );
+                $ret .= $html && $html eq "1" ? "<br/>\n" : "\n"
+                  if ( $ret ne "" );
+                $ret .= encode_utf8( $Schedule{$_} );
+            }
+            $ret = "<html>" . $ret . "</html>"
+              if ( defined($html) && $html ne "0" );
+        }
+        else {
+            $h->{long} = 1;
+            $h->{html} = $html if ($html);
+
+            unshift @$a, $type;
             $ret = Astro_Get(
                 (
                     IsDevice( $AstroDev, "Astro" )
@@ -1162,25 +1349,26 @@ sub Get($@) {
                 $a, $h
             );
 
-            # Add schedule
-            my $txt = "Test: Test";
-            $ret =~ s/^((?:[^\n]+\n){1})([\s\S]*)$/$1$txt\n$2/;
+            my $txt = FormatReading( "DaySeasonalHr", $h, $lc_numeric ) . ", "
+              . FormatReading( "Daytime", $h, $lc_numeric );
+            $txt .= $html && $html eq "1" ? "<br/>\n" : "\n";
+            $ret =~ s/^((?:[^\n]+\n){1})([\s\S]*)$/$1$txt$2/;
 
-            return $ret;
+            $txt = FormatReading( "SeasonMeteo", $h );
+            $txt .= $html && $html eq "1" ? "<br/>\n" : "\n";
+            $ret =~ s/^((?:[^\n]+\n){4})([\s\S]*)$/$1$txt$2/;
+
+            $txt = FormatReading( "SeasonPheno", $h );
+            $txt .= $html && $html eq "1" ? "<br/>\n" : "\n";
+            $ret =~ s/^((?:[^\n]+\n){5})([\s\S]*)$/$1$txt$2/;
+
+            if ( $html && $html eq "1" ) {
+                $ret = "<html>" . $ret . "</html>";
+                $ret =~ s/   /&nbsp;&nbsp;&nbsp;/g;
+                $ret =~ s/  /&nbsp;&nbsp;/g;
+            }
         }
 
-        Compute( $hash, undef, $h );
-
-        my $old_locale = setlocale(LC_NUMERIC);
-        setlocale( LC_NUMERIC, $locale ) if ($locale);
-
-        use locale ':not_characters';
-
-        $ret = $Schedule{ $a->[1] };
-
-        setlocale( LC_NUMERIC, "" );
-        setlocale( LC_NUMERIC, $old_locale );
-        no locale;
         return $ret;
     }
     else {
@@ -1189,6 +1377,115 @@ sub Get($@) {
             map { defined( $gets{$_} ) ? "$_:$gets{$_}" : $_ }
             sort keys %gets );
     }
+}
+
+sub FormatReading($$;$) {
+    my ( $r, $h, $lc_numeric ) = @_;
+    my $ret;
+
+    my $f = "%s";
+
+    #-- number formatting
+    $f = "%2.1f" if ( $r eq "MonthProgress" );
+    $f = "%2.1f" if ( $r eq "YearProgress" );
+
+    $ret = sprintf( $f, $Schedule{$r} );
+    $ret = UConv::decimal_mark( $ret, $lc_numeric )
+      unless ( $h && ref($h) && defined( $h->{html} ) && $h->{html} eq "0" );
+
+    if ( $h && ref($h) && ( !$h->{html} || $h->{html} ne "0" ) ) {
+
+        #-- add unit if desired
+        if (
+            $h->{unit}
+            || ( $h->{long}
+                && ( !defined( $h->{unit} ) || $h->{unit} ne "0" ) )
+          )
+        {
+            $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrLenDay" );
+            $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrLenNight" );
+            $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrsDay" );
+            $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrsNight" );
+            $ret .= chr(0x00A0) . "%" if ( $r eq "MonthProgress" );
+            $ret .= chr(0x00A0) . $astrott->{"days"}
+              if ( $r eq "MonthRemainD" );
+            $ret .= "." if ( $r eq "Weekofyear" );
+            $ret .= chr(0x00A0) . "%" if ( $r eq "YearProgress" );
+            $ret .= chr(0x00A0) . $astrott->{"days"} if ( $r eq "YearRemainD" );
+        }
+
+        #-- add text if desired
+        if ( $h->{long} ) {
+            $ret = $tt->{"twilightastro"} . " " . $ret
+              if ( $r eq "DayChangeIsDST" );
+            $ret = $tt->{"twilightastro"} . " " . $ret
+              if ( $r eq "DayChangeMoonPhaseS" );
+            $ret = $tt->{"twilightcivil"} . " " . $ret
+              if ( $r eq "DayChangeMoonSign" );
+            $ret = $tt->{"twilightcivil"} . " " . $ret
+              if ( $r eq "DayChangeSeason" );
+            $ret = $tt->{"twilightcustom"} . " " . $ret
+              if ( $r eq "DayChangeSeasonMeteo" );
+            $ret = $tt->{"twilightcustom"} . " " . $ret
+              if ( $r eq "DayChangeSeasonPheno" );
+            $ret = $tt->{"age"} . " " . $ret if ( $r eq "DayChangeSunSign" );
+            $ret = (
+                (
+                    (
+                             $Schedule{"DaySeasonalHr"} < 0.
+                          && $Schedule{"DaySeasonalHrsNight"} == 12.
+                    )
+                      || ( $Schedule{"DaySeasonalHr"} > 0.
+                        && $Schedule{"DaySeasonalHrsDay"} == 12. )
+                )
+                ? $tt->{"temporalhour"}
+                : $tt->{"seasonalhour"}
+              )
+              . " "
+              . $ret
+              if ( $r eq "DaySeasonalHr" );
+            $ret = $tt->{"az"} . " " . $ret if ( $r eq "DaySeasonalHrLenDay" );
+            $ret = $tt->{"dec"} . " " . $ret
+              if ( $r eq "DaySeasonalHrLenNight" );
+            $ret = $tt->{"diameter"} . " " . $ret if ( $r eq "DaySeasonalHrR" );
+            $ret = $ret . " " . $tt->{"toce"}
+              if ( $r =~ /^DaySeasonalHrT/ );
+            $ret = $ret . " " . $tt->{"toobs"}
+              if ( $r eq "DaySeasonalHrTNext" );
+            $ret = $tt->{"hoursofvisibility"} . " " . $ret
+              if ( $r eq "DaySeasonalHrsDay" );
+            $ret = $tt->{"latecl"} . " " . $ret
+              if ( $r eq "DaySeasonalHrsNight" );
+            $ret = $tt->{"dayphase"} . " " . $ret  if ( $r eq "Daytime" );
+            $ret = $tt->{"phase"} . " " . $ret   if ( $r eq "DaytimeN" );
+            $ret = $tt->{"phase"} . " " . $ret   if ( $r eq "MonthProgress" );
+            $ret = $tt->{"ra"} . " " . $ret      if ( $r eq "MonthRemainD" );
+            $ret = $tt->{"rise"} . " " . $ret    if ( $r eq "MoonCompass" );
+            $ret = $tt->{"set"} . " " . $ret     if ( $r eq "MoonCompassI" );
+            $ret = $tt->{"sign"} . " " . $ret    if ( $r eq "MoonCompassS" );
+            $ret = $tt->{"transit"} . " " . $ret if ( $r eq "ObsTimeR" );
+            $ret = $tt->{"twilightnautic"} . " " . $ret
+              if ( $r eq "SchedLast" );
+            $ret = $tt->{"twilightnautic"} . " " . $ret
+              if ( $r eq "SchedLastT" );
+            $ret = $ret . " " . $tt->{"altitude"} if ( $r eq "SchedNext" );
+            $ret = $tt->{"date"} . " " . $ret     if ( $r eq "SchedNextT" );
+            $ret = $ret . " " . $tt->{"dayofyear"}
+              if ( $r eq "SchedRecent" );
+            $ret = $tt->{"alt"} . " " . $ret if ( $r eq "SchedUpcoming" );
+            $ret = $tt->{"metseason"} . " " . $ret if ( $r eq "SeasonMeteo" );
+            $ret = $tt->{"phenseason"} . " " . $ret     if ( $r eq "SeasonPheno" );
+            $ret = $ret . " " . $tt->{"latitude"}  if ( $r eq "SunCompass" );
+            $ret = $ret . " " . $tt->{"longitude"} if ( $r eq "SunCompassI" );
+            $ret = $tt->{"season"} . " " . $ret    if ( $r eq "SunCompassS" );
+            $ret = $tt->{"time"} . " " . $ret      if ( $r eq "Weekofyear" );
+            $ret = $tt->{"timezone"} . " " . $ret  if ( $r eq "YearIsLY" );
+            $ret = $tt->{"alt"} . " " . $ret       if ( $r eq "YearProgress" );
+            $ret = $tt->{"az"} . " " . $ret        if ( $r eq "YearRemainD" );
+        }
+    }
+
+    return $ret;
 }
 
 sub _Export {
@@ -1273,10 +1570,16 @@ sub _LoadPackagesWrapper {
 
     $json->allow_nonref;
     $json->shrink;
+    $json->utf8;
 }
 
-sub SetTime (;$$$) {
-    my ( $time, $tz, $dayOffset ) = @_;
+sub SetTime (;$$$$) {
+    my ( $time, $tz, $lc_time, $dayOffset ) = @_;
+
+    # readjust locale
+    my $old_lctime = setlocale(LC_TIME);
+    setlocale( LC_TIME, $lc_time ) if ($lc_time);
+    use locale ':not_characters';
 
     # readjust timezone
     local $ENV{TZ} = $tz if ($tz);
@@ -1314,6 +1617,17 @@ sub SetTime (;$$$) {
     # half broken in windows
     $D->{dayofyear} = 1 * strftime( "%j", localtime($time) );
 
+    $D->{wdayl}    = strftime( "%A", localtime($time) );
+    $D->{wdays}    = strftime( "%a", localtime($time) );
+    $D->{monthl}   = strftime( "%B", localtime($time) );
+    $D->{months}   = strftime( "%b", localtime($time) );
+    $D->{datetime} = strftime( "%c", localtime($time) );
+    $D->{week} = 1 * strftime( "%V", localtime($time) );
+    $D->{wday} = 1 * strftime( "%w", localtime($time) );
+    $D->{time} = strftime( "%X", localtime($time) );
+    $D->{date} = strftime( "%x", localtime($time) );
+    $D->{tz}   = strftime( "%Z", localtime($time) );
+
     $D->{weekofyear}   = 1 * strftime( "%V", localtime($time) );
     $D->{isly}         = UConv::IsLeapYear($year);
     $D->{yearremdays}  = 365. + $D->{isly} - $D->{dayofyear};
@@ -1323,11 +1637,13 @@ sub SetTime (;$$$) {
     $D->{monthprogress} =
       $D->{day} / UConv::DaysOfMonth( $D->{year}, $D->{month} );
 
+    delete $D->{tz} if ( !$D->{tz} || $D->{tz} eq "" || $D->{tz} eq " " );
+
     # add info from X days before+after
     if ($dayOffset) {
         my $i = $dayOffset * -1.;
         while ( $i < $dayOffset + 1. ) {
-            $D->{$i} = SetTime( $time + ( 86400. * $i ), $tz, 0 )
+            $D->{$i} = SetTime( $time + ( 86400. * $i ), $tz, $lc_time, 0 )
               unless ( $i == 0 );
             $i++;
         }
@@ -1339,6 +1655,10 @@ sub SetTime (;$$$) {
     delete local $ENV{TZ};
     tzset();
 
+    setlocale( LC_TIME, "" );
+    setlocale( LC_TIME, $old_lctime );
+    no locale;
+
     return (undef);
 }
 
@@ -1348,19 +1668,11 @@ sub Compute($;$$) {
     undef %Astro    unless ($dayOffset);
     undef %Schedule unless ($dayOffset);
     my $name = $hash->{NAME};
-    my $tz   = AttrVal(
-        $name,
-        "timezone",
-        AttrVal(
-            AttrVal( $name, "AstroDevice", "global" ),
-            "timezone",
-            AttrVal( "global", "timezone", undef )
-        )
-    );
     my $AstroDev = AttrVal( $name, "AstroDevice", "" );
-    SetTime( undef, $tz )
-      if ( scalar keys %Date == 0 )
-      ;    # fill %Date if it is still empty after restart
+
+    # fill %Date if it is still empty after restart
+    SetTime() if ( scalar keys %Date == 0 );
+
     my $D = $dayOffset ? $Date{$dayOffset} : \%Date;
     my $S = $dayOffset ? {} : \%Schedule;
 
@@ -1399,6 +1711,15 @@ sub Compute($;$$) {
     }
 
     # readjust timezone
+    my $tz = AttrVal(
+        $name,
+        "timezone",
+        AttrVal(
+            $AstroDev, "timezone", AttrVal( "global", "timezone", undef )
+        )
+    );
+    $tz = $params->{"timezone"}
+      if ( defined( $params->{"timezone"} ) );
     local $ENV{TZ} = $tz if ($tz);
     tzset();
 
@@ -2246,18 +2567,38 @@ sub Update($@) {
 
     return undef if ( IsDisabled($name) );
 
+    my $AstroDevice = AttrVal( $name, "AstroDevice", "" );
     my $tz = AttrVal(
         $name,
         "timezone",
         AttrVal(
-            AttrVal( $name, "AstroDevice", "global" ),
-            "timezone",
+            $AstroDevice, "timezone",
             AttrVal( "global", "timezone", undef )
+        )
+    );
+    my $lang = AttrVal(
+        $name,
+        "language",
+        AttrVal(
+            $AstroDevice, "language",
+            AttrVal( "global", "language", undef )
+        )
+    );
+    my $lc_time = AttrVal(
+        $name,
+        "lc_time",
+        AttrVal(
+            $AstroDevice,
+            "lc_time",
+            AttrVal(
+                "global", "lc_time",
+                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef )
+            )
         )
     );
     my $now = gettimeofday();    # conserve timestamp before recomputing
 
-    SetTime( undef, $tz );
+    SetTime( undef, $tz, $lc_time );
     Compute($hash);
 
     my @next;
@@ -2281,18 +2622,18 @@ sub Update($@) {
         my $k = ".$comp";
         $k = '.DaySeasonalHrTNext' if ( $comp eq 'SeasonalHr' );
         my $t;
-        if ( defined( $Astro{$k} ) && $Astro{$k} =~ /^\d+(?:\.\d+)?$/ ) {
-            $t =
-              timelocal( 0, 0, 0, ( localtime($now) )[ 3, 4, 5 ] ) +
-              $Astro{$k} * 3600.;
-            $t += 86400. if ( $t < $now );    # that is for tomorrow
-        }
-        elsif ( defined( $Schedule{$k} )
+        if ( defined( $Schedule{$k} )
             && $Schedule{$k} =~ /^\d+(?:\.\d+)?$/ )
         {
             $t =
               timelocal( 0, 0, 0, ( localtime($now) )[ 3, 4, 5 ] ) +
               $Schedule{$k} * 3600.;
+            $t += 86400. if ( $t < $now );    # that is for tomorrow
+        }
+        elsif ( defined( $Astro{$k} ) && $Astro{$k} =~ /^\d+(?:\.\d+)?$/ ) {
+            $t =
+              timelocal( 0, 0, 0, ( localtime($now) )[ 3, 4, 5 ] ) +
+              $Astro{$k} * 3600.;
             $t += 86400. if ( $t < $now );    # that is for tomorrow
         }
         else {
@@ -2309,11 +2650,12 @@ sub Update($@) {
     }
 
     readingsBeginUpdate($hash);
-    unless ( AttrVal( $name, "AstroDevice", undef ) ) {
+    unless ( IsDevice( $AstroDevice, "Astro" ) ) {
         foreach my $key ( keys %Astro ) {
             next if ( ref( $Astro{$key} ) );
             if ( defined( $Astro{$key} ) && $Astro{$key} ne "" ) {
-                readingsBulkUpdateIfChanged( $hash, $key, $Astro{$key} );
+                readingsBulkUpdateIfChanged( $hash, $key,
+                    encode_utf8( $Astro{$key} ) );
             }
             else {
                 Log3 $name, 3, "$name: ERROR: empty value for $key in hash";
@@ -2323,7 +2665,8 @@ sub Update($@) {
     foreach my $key ( keys %Schedule ) {
         next if ( ref( $Schedule{$key} ) );
         if ( defined( $Schedule{$key} ) && $Schedule{$key} ne "" ) {
-            readingsBulkUpdateIfChanged( $hash, $key, $Schedule{$key} );
+            readingsBulkUpdateIfChanged( $hash, $key,
+                encode_utf8( $Schedule{$key} ) );
         }
         else {
             Log3 $name, 3, "$name: ERROR: empty value for $key in hash";
@@ -2457,7 +2800,7 @@ sub Update($@) {
       <ul>
         <li>
           <a name="DaySchedule_AstroDevice" id="DaySchedule_AstroDevice"></a> <code>&lt;AstroDevice&gt;</code><br>
-          May link to an existing Astro device to calculate astronomic data, otherwise the calculation will be handled internally. Readings provided by the Astro device will not be created here to avoid duplicates.
+          May link to an existing Astro device to calculate astronomic data, otherwise the calculation will be handled internally. Readings provided by the Astro device will only be created for the DaySchedule device if no Astro device was referenced.
         </li>
         <li>
           <a name="DaySchedule_earlyfall" id="DaySchedule_earlyfall"></a> <code>&lt;earlyfall&gt;</code><br>
@@ -2557,15 +2900,16 @@ sub Update($@) {
   "prereqs": {
     "runtime": {
       "requires": {
+        "Encode": 0,
         "FHEM::Astro": 0,
         "GPUtils": 0,
-        "Math::Trig": 0,
         "POSIX": 0,
         "Time::HiRes": 0,
         "Time::Local": 0,
         "UConv": 0,
         "locale": 0,
         "strict": 0,
+        "utf8": 0,
         "warnings": 0
       },
       "recommends": {
