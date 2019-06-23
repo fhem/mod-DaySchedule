@@ -2501,11 +2501,12 @@ sub Compute($;$$) {
     # Change indicators for event day and day before
     $S->{DayChangeSeason}      = 0 unless ( $S->{DayChangeSeason} );
     $S->{DayChangeSeasonMeteo} = 0 unless ( $S->{DayChangeSeasonMeteo} );
-    $S->{DayChangeSeasonPheno} = 0 unless ( $S->{DayChangeSeasonPheno} );
-    $S->{DayChangeSunSign}     = 0 unless ( $S->{DayChangeSunSign} );
-    $S->{DayChangeMoonSign}    = 0 unless ( $S->{DayChangeMoonSign} );
-    $S->{DayChangeMoonPhaseS}  = 0 unless ( $S->{DayChangeMoonPhaseS} );
-    $S->{DayChangeIsDST}       = 0 unless ( $S->{DayChangeIsDST} );
+    $S->{DayChangeSeasonPheno} = 0
+      unless ( !defined( $S->{SeasonPhenoN} ) || $S->{DayChangeSeasonPheno} );
+    $S->{DayChangeSunSign}    = 0 unless ( $S->{DayChangeSunSign} );
+    $S->{DayChangeMoonSign}   = 0 unless ( $S->{DayChangeMoonSign} );
+    $S->{DayChangeMoonPhaseS} = 0 unless ( $S->{DayChangeMoonPhaseS} );
+    $S->{DayChangeIsDST}      = 0 unless ( $S->{DayChangeIsDST} );
 
     #  Astronomical season is going to change tomorrow
     if (   ref($At)
@@ -2852,6 +2853,12 @@ sub Update($@) {
               if ( defined( $Astro{$key} ) && $Astro{$key} ne "" );
         }
     }
+    delete $hash->{READINGS}{SeasonPheno}
+      unless ( defined( $Schedule{SeasonPheno} ) );
+    delete $hash->{READINGS}{SeasonPhenoN}
+      unless ( defined( $Schedule{SeasonPhenoN} ) );
+    delete $hash->{READINGS}{DayChangeSeasonPheno}
+      unless ( defined( $Schedule{DayChangeSeasonPheno} ) );
     foreach my $key ( keys %Schedule ) {
         next if ( ref( $Schedule{$key} ) );
         readingsBulkUpdateIfChanged( $hash, $key,
