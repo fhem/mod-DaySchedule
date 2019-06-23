@@ -2334,7 +2334,7 @@ sub Compute($;$$) {
 
     # check meteorological season
     for ( my $i = 0 ; $i < 4 ; $i++ ) {
-        my $key = $FHEM::Astro::seasons{ $A->{ObsLat} < 0 ? 'S' : 'N' }[$i];
+        my $key = $FHEM::Astro::seasons{'N'}[$i];
         if (
             (
                    ( $seasonmn{$key}[0] < $seasonmn{$key}[1] )
@@ -2348,7 +2348,8 @@ sub Compute($;$$) {
             )
           )
         {
-            $S->{SeasonMeteo}  = $astrott->{$key};
+            my $k = $FHEM::Astro::seasons{ $A->{ObsLat} < 0 ? 'S' : 'N' }[$i];
+            $S->{SeasonMeteo}  = $astrott->{$k};
             $S->{SeasonMeteoN} = $i;
             last;
         }
