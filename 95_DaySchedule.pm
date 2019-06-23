@@ -26,19 +26,16 @@ use POSIX;
 use utf8;
 
 use Encode;
-use GPUtils qw(GP_Import);
+use FHEM::Meta;
+use GPUtils qw(GP_Import GP_Export);
 use Time::HiRes qw(gettimeofday);
 use Time::Local;
 use UConv;
 use Data::Dumper;
 
-require "95_Astro.pm" unless ( defined( *{"main::Astro_Initialize"} ) );
-
 my %Astro;
 my %Schedule;
 my %Date;
-
-our $VERSION = "v0.0.1";
 
 my %sets = ( "update" => "noArg", );
 
@@ -79,16 +76,20 @@ my $astrott;
 # Export variables to other programs
 our %transtable = (
     EN => {
-        "direction"  => "Direction",
-        "duskcivil"  => "Civil dusk",
-        "dusknautic" => "Nautic dusk",
-        "duskastro"  => "Astronomical dusk",
-        "duskcustom" => "Custom dusk",
-        "dawncivil"  => "Civil dawn",
-        "dawnnautic" => "Nautic dawn",
-        "dawnastro"  => "Astronomical dawn",
-        "dawncustom" => "Custom dawn",
-        "leapyear"   => "leap year",
+        "dayschedule" => "Day Schedule",
+        "event"       => "Event",
+
+        #
+        "cardinaldirection" => "Cardinal direction",
+        "duskcivil"         => "Civil dusk",
+        "dusknautic"        => "Nautic dusk",
+        "duskastro"         => "Astronomical dusk",
+        "duskcustom"        => "Custom dusk",
+        "dawncivil"         => "Civil dawn",
+        "dawnnautic"        => "Nautic dawn",
+        "dawnastro"         => "Astronomical dawn",
+        "dawncustom"        => "Custom dawn",
+        "leapyear"          => "leap year",
 
         #
         "seasonalhour" => "Seasonal Hour",
@@ -121,8 +122,8 @@ our %transtable = (
         "firstdusk"         => "First dusk",
 
         #
-        "daysremaining" => "days remaining",
-        "dayremaining"  => "day remaining",
+        "week"      => "week",
+        "remaining" => "remaining",
 
         #
         "metseason" => "Meteorological Season",
@@ -141,16 +142,20 @@ our %transtable = (
     },
 
     DE => {
-        "direction"  => "Richtung",
-        "duskcivil"  => "Bürgerliche Abenddämmerung",
-        "dusknautic" => "Nautische Abenddämmerung",
-        "duskastro"  => "Astronomische Abenddämmerung",
-        "duskcustom" => "Konfigurierte Abenddämmerung",
-        "dawncivil"  => "Bürgerliche Morgendämmerung",
-        "dawnnautic" => "Nautische Morgendämmerung",
-        "dawnastro"  => "Astronomische Morgendämmerung",
-        "dawncustom" => "Konfigurierte Morgendämmerung",
-        "leapyear"   => "Schaltjahr",
+        "dayschedule" => "Tagesablaufplan",
+        "event"       => "Ereignis",
+
+        #
+        "cardinaldirection" => "Himmelsrichtung",
+        "duskcivil"         => "Bürgerliche Abenddämmerung",
+        "dusknautic"        => "Nautische Abenddämmerung",
+        "duskastro"         => "Astronomische Abenddämmerung",
+        "duskcustom"        => "Konfigurierte Abenddämmerung",
+        "dawncivil"         => "Bürgerliche Morgendämmerung",
+        "dawnnautic"        => "Nautische Morgendämmerung",
+        "dawnastro"         => "Astronomische Morgendämmerung",
+        "dawncustom"        => "Konfigurierte Morgendämmerung",
+        "leapyear"          => "Schaltjahr",
 
         #
         "seasonalhour" => "Saisonale Stunde",
@@ -183,8 +188,8 @@ our %transtable = (
         "firstdusk"         => "Erste Dämmerung",
 
         #
-        "daysremaining" => "Tage verbleibend",
-        "dayremaining"  => "Tag verbleibend",
+        "week"      => "Woche",
+        "remaining" => "verbleibend",
 
         #
         "metseason" => "Meteorologische Jahreszeit",
@@ -203,16 +208,20 @@ our %transtable = (
     },
 
     ES => {
-        "direction"  => "Dirección",
-        "duskcivil"  => "Oscuridad civil",
-        "dusknautic" => "Oscuridad náutico",
-        "duskastro"  => "Oscuridad astronómico",
-        "duskcustom" => "Oscuridad personalizado",
-        "dawncivil"  => "Amanecer civil",
-        "dawnnautic" => "Amanecer náutico",
-        "dawnastro"  => "Amanecer astronómico",
-        "dawncustom" => "Amanecer personalizado",
-        "leapyear"   => "año bisiesto",
+        "dayschedule" => "Horario Diario",
+        "event"       => "Evento",
+
+        #
+        "cardinaldirection" => "Punto cardinal",
+        "duskcivil"         => "Oscuridad civil",
+        "dusknautic"        => "Oscuridad náutico",
+        "duskastro"         => "Oscuridad astronómico",
+        "duskcustom"        => "Oscuridad personalizado",
+        "dawncivil"         => "Amanecer civil",
+        "dawnnautic"        => "Amanecer náutico",
+        "dawnastro"         => "Amanecer astronómico",
+        "dawncustom"        => "Amanecer personalizado",
+        "leapyear"          => "año bisiesto",
 
         #
         "seasonalhour" => "Hora Estacional",
@@ -245,8 +254,8 @@ our %transtable = (
         "firstdusk"         => "Temprano oscuridad",
 
         #
-        "daysremaining" => "Días restantes",
-        "dayremaining"  => "Día restante",
+        "week"      => "Semana",
+        "remaining" => "restantes",
 
         #
         "metseason" => "Temporada Meteorológica",
@@ -265,16 +274,20 @@ our %transtable = (
     },
 
     FR => {
-        "direction"  => "Direction",
-        "duskcivil"  => "Crépuscule civil",
-        "dusknautic" => "Crépuscule nautique",
-        "duskastro"  => "Crépuscule astronomique",
-        "duskcustom" => "Crépuscule personnalisé",
-        "dawncivil"  => "Aube civil",
-        "dawnnautic" => "Aube nautique",
-        "dawnastro"  => "Aube astronomique",
-        "dawncustom" => "Aube personnalisé",
-        "leapyear"   => "année bissextile",
+        "dayschedule" => "Horaire Quotidien",
+        "event"       => "Événement",
+
+        #
+        "cardinaldirection" => "Direction cardinale",
+        "duskcivil"         => "Crépuscule civil",
+        "dusknautic"        => "Crépuscule nautique",
+        "duskastro"         => "Crépuscule astronomique",
+        "duskcustom"        => "Crépuscule personnalisé",
+        "dawncivil"         => "Aube civil",
+        "dawnnautic"        => "Aube nautique",
+        "dawnastro"         => "Aube astronomique",
+        "dawncustom"        => "Aube personnalisé",
+        "leapyear"          => "année bissextile",
 
         #
         "seasonalhour" => "Heure de Saison",
@@ -307,8 +320,8 @@ our %transtable = (
         "firstdusk"         => "Premier crépuscule",
 
         #
-        "daysremaining" => "jours restant",
-        "dayremaining"  => "jour restant",
+        "week"      => "Semaine",
+        "remaining" => "restant",
 
         #
         "metseason" => "Saison Météorologique",
@@ -327,16 +340,20 @@ our %transtable = (
     },
 
     IT => {
-        "direction"  => "Direzione",
-        "duskcivil"  => "Crepuscolo civile",
-        "dusknautic" => "Crepuscolo nautico",
-        "duskastro"  => "Crepuscolo astronomico",
-        "duskcustom" => "Crepuscolo personalizzato",
-        "dawncivil"  => "Alba civile",
-        "dawnnautic" => "Alba nautico",
-        "dawnastro"  => "Alba astronomico",
-        "dawncustom" => "Alba personalizzato",
-        "leapyear"   => "anno bisestile",
+        "dayschedule" => "Programma Giornaliero",
+        "event"       => "Evento",
+
+        #
+        "cardinaldirection" => "Direzione cardinale",
+        "duskcivil"         => "Crepuscolo civile",
+        "dusknautic"        => "Crepuscolo nautico",
+        "duskastro"         => "Crepuscolo astronomico",
+        "duskcustom"        => "Crepuscolo personalizzato",
+        "dawncivil"         => "Alba civile",
+        "dawnnautic"        => "Alba nautico",
+        "dawnastro"         => "Alba astronomico",
+        "dawncustom"        => "Alba personalizzato",
+        "leapyear"          => "anno bisestile",
 
         #
         "seasonalhour" => "Ora di Stagione",
@@ -369,8 +386,8 @@ our %transtable = (
         "firstdusk"         => "Primo crepuscolo",
 
         #
-        "daysremaining" => "giorni rimanenti",
-        "dayremaining"  => "giorno rimanente",
+        "week"      => "Settimana",
+        "remaining" => "rimanente",
 
         #
         "metseason" => "Stagione Meteorologica",
@@ -389,16 +406,20 @@ our %transtable = (
     },
 
     NL => {
-        "direction"  => "Richting",
-        "duskcivil"  => "Burgerlijke Schemering",
-        "dusknautic" => "Nautische Schemering",
-        "duskastro"  => "Astronomische Schemering",
-        "duskcustom" => "Aangepaste Schemering",
-        "dawncivil"  => "Burgerlijke Dageraad",
-        "dawnnautic" => "Nautische Dageraad",
-        "dawnastro"  => "Astronomische Dageraad",
-        "dawncustom" => "Aangepaste Dageraad",
-        "leapyear"   => "Schrikkeljaar",
+        "dayschedule" => "Dagelijkse Planning",
+        "event"       => "Voorval",
+
+        #
+        "cardinaldirection" => "Hoofdrichting",
+        "duskcivil"         => "Burgerlijke Schemering",
+        "dusknautic"        => "Nautische Schemering",
+        "duskastro"         => "Astronomische Schemering",
+        "duskcustom"        => "Aangepaste Schemering",
+        "dawncivil"         => "Burgerlijke Dageraad",
+        "dawnnautic"        => "Nautische Dageraad",
+        "dawnastro"         => "Astronomische Dageraad",
+        "dawncustom"        => "Aangepaste Dageraad",
+        "leapyear"          => "Schrikkeljaar",
 
         #
         "seasonalhour" => "Seizoensgebonden Uur",
@@ -431,8 +452,8 @@ our %transtable = (
         "firstdusk"         => "Eerste Schemering",
 
         #
-        "daysremaining" => "resterende Dagen",
-        "dayremaining"  => "resterende Dag",
+        "week"      => "Wee",
+        "remaining" => "resterende",
 
         #
         "metseason" => "Meteorologisch Seizoen",
@@ -451,16 +472,20 @@ our %transtable = (
     },
 
     PL => {
-        "direction"  => "Kierunek",
-        "duskcivil"  => "Zmierzch cywilny",
-        "dusknautic" => "Zmierzch morski",
-        "duskastro"  => "Zmierzch astronomiczny",
-        "duskcustom" => "Zmierzch niestandardowy",
-        "dawncivil"  => "świt cywilny",
-        "dawnnautic" => "świt morski",
-        "dawnastro"  => "świt astronomiczny",
-        "dawncustom" => "świt niestandardowy",
-        "leapyear"   => "rok przestępny",
+        "dayschedule" => "Rozkład Dnia",
+        "event"       => "Zdarzenie",
+
+        #
+        "cardinaldirection" => "Kierunek główny",
+        "duskcivil"         => "Zmierzch cywilny",
+        "dusknautic"        => "Zmierzch morski",
+        "duskastro"         => "Zmierzch astronomiczny",
+        "duskcustom"        => "Zmierzch niestandardowy",
+        "dawncivil"         => "świt cywilny",
+        "dawnnautic"        => "świt morski",
+        "dawnastro"         => "świt astronomiczny",
+        "dawncustom"        => "świt niestandardowy",
+        "leapyear"          => "rok przestępny",
 
         #
         "seasonalhour" => "Godzina Sezonowa",
@@ -493,8 +518,8 @@ our %transtable = (
         "firstdusk"         => "Pierwszy zmierzch",
 
         #
-        "daysremaining" => "pozostało dni",
-        "dayremaining"  => "pozostały dzień",
+        "week"      => "Tydzień",
+        "remaining" => "pozostały",
 
         #
         "metseason" => "Sezon Meteorologiczny",
@@ -525,9 +550,9 @@ our %readingsLabel = (
     "MoonAge"               => [ "age",               "°" ],
     "MoonAlt"               => [ "alt",               "°" ],
     "MoonAz"                => [ "az",                "°" ],
-    "MoonCompass"           => [ "direction",         undef ],
-    "MoonCompassI"          => [ "direction",         undef ],
-    "MoonCompassS"          => [ "direction",         undef ],
+    "MoonCompass"           => [ "cardinaldirection", undef ],
+    "MoonCompassI"          => [ "cardinaldirection", undef ],
+    "MoonCompassS"          => [ "cardinaldirection", undef ],
     "MoonDec"               => [ "dec",               "°" ],
     "MoonDiameter"          => [ "diameter",          "'" ],
     "MoonDistance"          => [ "distance toce",     "km" ],
@@ -578,23 +603,23 @@ our %readingsLabel = (
     "YearRemainD"  => [ "remaining", "1:day|days", 1 ],
 
     #
-    "SunAlt"              => [ "alt",             undef ],
-    "SunAz"               => [ "az",              "°" ],
-    "SunCompass"          => [ "direction",       undef ],
-    "SunCompassI"         => [ "direction",       undef ],
-    "SunCompassS"         => [ "direction",       undef ],
-    "SunDec"              => [ "dec",             "°" ],
-    "SunDiameter"         => [ "diameter",        "'" ],
-    "SunDistance"         => [ "distance toce",   "km" ],
-    "SunDistanceObserver" => [ "distance toobs",  "km" ],
-    "SunHrsInvisible"     => [ "hoursofnight",    "h" ],
-    "SunHrsVisible"       => [ "hoursofsunlight", "h" ],
-    "SunLon"              => [ "longitude",       "°" ],
-    "SunRa"               => [ "ra",              "h" ],
-    "SunRise"             => [ "rise",            undef ],
-    "SunSet"              => [ "set",             undef ],
-    "SunSign"             => [ "sign",            undef ],
-    "SunTransit"          => [ "transit",         undef ],
+    "SunAlt"              => [ "alt",               undef ],
+    "SunAz"               => [ "az",                "°" ],
+    "SunCompass"          => [ "cardinaldirection", undef ],
+    "SunCompassI"         => [ "cardinaldirection", undef ],
+    "SunCompassS"         => [ "cardinaldirection", undef ],
+    "SunDec"              => [ "dec",               "°" ],
+    "SunDiameter"         => [ "diameter",          "'" ],
+    "SunDistance"         => [ "distance toce",     "km" ],
+    "SunDistanceObserver" => [ "distance toobs",    "km" ],
+    "SunHrsInvisible"     => [ "hoursofnight",      "h" ],
+    "SunHrsVisible"       => [ "hoursofsunlight",   "h" ],
+    "SunLon"              => [ "longitude",         "°" ],
+    "SunRa"               => [ "ra",                "h" ],
+    "SunRise"             => [ "rise",              undef ],
+    "SunSet"              => [ "set",               undef ],
+    "SunSign"             => [ "sign",              undef ],
+    "SunTransit"          => [ "transit",           undef ],
 );
 
 our @dayphases = (
@@ -648,6 +673,7 @@ our %seasonppos = (
 
 # Run before package compilation
 BEGIN {
+    main::LoadModule("Astro");
 
     # Import from main context
     GP_Import(
@@ -682,15 +708,15 @@ BEGIN {
           toJSON
           )
     );
-}
 
-# Export to main context with different name
-_Export(
-    qw(
-      Get
-      Initialize
-      )
-);
+    # Export to main context
+    GP_Export(
+        qw(
+          Get
+          Initialize
+          )
+    );
+}
 
 _LoadPackagesWrapper();
 
@@ -713,7 +739,7 @@ sub Initialize ($) {
 
     $hash->{parseParams} = 1;
 
-    return undef;
+    return FHEM::Meta::InitMod( __FILE__, $hash );
 }
 
 sub Define ($@) {
@@ -721,7 +747,9 @@ sub Define ($@) {
     my $name = shift @$a;
     my $type = shift @$a;
 
-    $hash->{VERSION}   = $VERSION;
+    return $@ unless ( FHEM::Meta::SetInternals($hash) );
+    use version 0.77; our $VERSION = FHEM::Meta::Get( $hash, 'version' );
+
     $hash->{NOTIFYDEV} = "global";
     $hash->{INTERVAL}  = 3600;
     readingsSingleUpdate( $hash, "state", "Initialized", $init_done );
@@ -1030,21 +1058,21 @@ sub Set($@) {
 }
 
 sub Get($@) {
-    my ( $hash, $a, $h, @a ) = @_;
+    my ( $hash, $aref, $h, @a ) = @_;
     my $name = "#APIcall";
     my $type = "dummy";
 
     # backwards compatibility for non-parseParams requests
-    if ( !ref($a) ) {
+    if ( !ref($aref) ) {
         $hash = exists( $defs{$hash} ) ? $defs{$hash} : ()
           if ( $hash && !ref($hash) );
         unshift @a, $h;
         $h    = undef;
-        $type = $a;
-        $a    = \@a;
+        $type = $aref;
+        $aref = \@a;
     }
     else {
-        $type = shift @$a;
+        $type = shift @$aref;
     }
     if ( defined( $hash->{NAME} ) ) {
         $name = $hash->{NAME};
@@ -1112,14 +1140,14 @@ sub Get($@) {
 
     #-- second parameter may be one or many readings
     my @readings;
-    if ( ( int(@$a) > 1 ) ) {
-        @readings = split( ',', $a->[1] );
+    if ( ( int(@$aref) > 1 ) ) {
+        @readings = split( ',', $aref->[1] );
         foreach (@readings) {
-            if ( exists( $Schedule{$_} ) ) {
+            if ( exists( $Schedule{$_} ) && !ref( $Schedule{$_} ) ) {
                 $wantsreading = 1;
                 last;
             }
-            elsif ( exists( $Astro{$_} ) ) {
+            elsif ( exists( $Astro{$_} ) && !ref( $Astro{$_} ) ) {
                 $wantsreading = 1;
                 last;
             }
@@ -1129,32 +1157,32 @@ sub Get($@) {
     # last parameter may be indicating day offset
     if (
         (
-            int(@$a) > 4 + $wantsreading
-            && $a->[ 4 + $wantsreading ] =~
+            int(@$aref) > 4 + $wantsreading
+            && $aref->[ 4 + $wantsreading ] =~
             /^\+?([-+]\d+|yesterday|tomorrow)$/i
         )
-        || ( int(@$a) > 3 + $wantsreading
-            && $a->[ 3 + $wantsreading ] =~
+        || ( int(@$aref) > 3 + $wantsreading
+            && $aref->[ 3 + $wantsreading ] =~
             /^\+?([-+]\d+|yesterday|tomorrow)$/i )
-        || ( int(@$a) > 2 + $wantsreading
-            && $a->[ 2 + $wantsreading ] =~
+        || ( int(@$aref) > 2 + $wantsreading
+            && $aref->[ 2 + $wantsreading ] =~
             /^\+?([-+]\d+|yesterday|tomorrow)$/i )
-        || ( int(@$a) > 1 + $wantsreading
-            && $a->[ 1 + $wantsreading ] =~
+        || ( int(@$aref) > 1 + $wantsreading
+            && $aref->[ 1 + $wantsreading ] =~
             /^\+?([-+]\d+|yesterday|tomorrow)$/i )
       )
     {
         $dayOffset = $1;
-        pop @$a;
+        pop @$aref;
         $dayOffset = -1 if ( lc($dayOffset) eq "yesterday" );
         $dayOffset = 1  if ( lc($dayOffset) eq "tomorrow" );
     }
 
-    if ( int(@$a) > ( 1 + $wantsreading ) ) {
+    if ( int(@$aref) > ( 1 + $wantsreading ) ) {
         my $str =
-          ( int(@$a) == ( 3 + $wantsreading ) )
-          ? $a->[ 1 + $wantsreading ] . " " . $a->[ 2 + $wantsreading ]
-          : $a->[ 1 + $wantsreading ];
+          ( int(@$aref) == ( 3 + $wantsreading ) )
+          ? $aref->[ 1 + $wantsreading ] . " " . $aref->[ 2 + $wantsreading ]
+          : $aref->[ 1 + $wantsreading ];
         if ( $str =~
 /^(\d{2}):(\d{2})(?::(\d{2}))?|(?:(\d{4})-(\d{2})-(\d{2}))(?:\D+(\d{2}):(\d{2})(?::(\d{2}))?)?$/
           )
@@ -1185,11 +1213,11 @@ sub Get($@) {
     #-- disable automatic links to FHEM devices
     delete $FW_webArgs{addLinks};
 
-    if ( $a->[0] eq "version" ) {
-        return $VERSION;
+    if ( $aref->[0] eq "version" ) {
+        return version->parse( FHEM::DaySchedule::->VERSION() )->normal;
 
     }
-    elsif ( $a->[0] eq "json" ) {
+    elsif ( $aref->[0] eq "json" ) {
         Compute( $hash, undef, $h );
 
         # beautify JSON at cost of performance only when debugging
@@ -1241,7 +1269,7 @@ sub Get($@) {
             return $json->encode( { %Astro, %Schedule } );
         }
     }
-    elsif ( $a->[0] eq "text" ) {
+    elsif ( $aref->[0] eq "text" ) {
         Compute( $hash, undef, $h );
         my $ret = "";
 
@@ -1267,7 +1295,7 @@ sub Get($@) {
         }
 
         if ( $wantsreading == 1 && $h && ref($h) && scalar keys %{$h} > 0 ) {
-            unshift @$a, $type;
+            unshift @$aref, $type;
 
             foreach (@readings) {
                 if ( exists( $Astro{$_} ) ) {
@@ -1275,12 +1303,12 @@ sub Get($@) {
                       if ( $ret ne "" );
                     $ret .= Astro_Get(
                         (
-                            IsDevice( $AstroDev, "Astro" )
-                            ? $defs{$AstroDev}
+                            IsDevice( $AstroDev, "Astro" ) ? $defs{$AstroDev}
                             : $hash
                         ),
                         [
-                            IsDevice( $AstroDev, "Astro" ) ? "Astro" : "dummy",
+                            IsDevice( $AstroDev, "Astro" ) ? "Astro"
+                            : "DaySchedule",
                             "text", $_,
                             sprintf( "%04d-%02d-%02d",
                                 $Date{year}, $Date{month}, $Date{day} ),
@@ -1295,7 +1323,7 @@ sub Get($@) {
                 next if ( !defined( $Schedule{$_} ) || ref( $Schedule{$_} ) );
                 $ret .= $html && $html eq "1" ? "<br/>\n" : "\n"
                   if ( $ret ne "" );
-                $ret .= encode_utf8( FormatReading( $_, $h, $lc_numeric ) )
+                $ret .= FormatReading( $_, $h, $lc_numeric )
                   unless ( $_ =~ /^\./ );
                 $ret .= encode_utf8( $Schedule{$_} ) if ( $_ =~ /^\./ );
             }
@@ -1303,7 +1331,7 @@ sub Get($@) {
               if ( defined($html) && $html ne "0" );
         }
         elsif ( $wantsreading == 1 ) {
-            unshift @$a, $type;
+            unshift @$aref, $type;
 
             foreach (@readings) {
                 if ( exists( $Astro{$_} ) ) {
@@ -1311,12 +1339,12 @@ sub Get($@) {
                       if ( $ret ne "" );
                     $ret .= Astro_Get(
                         (
-                            IsDevice( $AstroDev, "Astro" )
-                            ? $defs{$AstroDev}
+                            IsDevice( $AstroDev, "Astro" ) ? $defs{$AstroDev}
                             : $hash
                         ),
                         [
-                            IsDevice( $AstroDev, "Astro" ) ? "Astro" : "dummy",
+                            IsDevice( $AstroDev, "Astro" ) ? "Astro"
+                            : "DaySchedule",
                             "text", $_,
                             sprintf( "%04d-%02d-%02d",
                                 $Date{year}, $Date{month}, $Date{day} ),
@@ -1339,14 +1367,22 @@ sub Get($@) {
             $h->{long} = 1;
             $h->{html} = $html if ($html);
 
-            unshift @$a, $type;
+            unshift @$aref, $type;
             $ret = Astro_Get(
                 (
                     IsDevice( $AstroDev, "Astro" )
                     ? $defs{$AstroDev}
                     : $hash
                 ),
-                $a, $h
+                [
+                    IsDevice( $AstroDev, "Astro" ) ? "Astro" : "DaySchedule",
+                    "text",
+                    sprintf( "%04d-%02d-%02d",
+                        $Date{year}, $Date{month}, $Date{day} ),
+                    sprintf( "%02d:%02d:%02d",
+                        $Date{hour}, $Date{min}, $Date{sec} )
+                ],
+                $h
             );
 
             my $txt = FormatReading( "DaySeasonalHr", $h, $lc_numeric ) . ", "
@@ -1362,6 +1398,14 @@ sub Get($@) {
             $txt .= $html && $html eq "1" ? "<br/>\n" : "\n";
             $ret =~ s/^((?:[^\n]+\n){5})([\s\S]*)$/$1$txt$2/;
 
+            $txt = FormatReading( "SunCompass", $h );
+            $txt .= $html && $html eq "1" ? "<br/>\n" : "\n";
+            $ret =~ s/^((?:[^\n]+\n){16})([\s\S]*)$/$1$txt$2/;
+
+            $txt = FormatReading( "MoonCompass", $h );
+            $txt .= $html && $html eq "1" ? "<br/>\n" : "\n";
+            $ret =~ s/^((?:[^\n]+\n){25})([\s\S]*)$/$1$txt$2/;
+
             if ( $html && $html eq "1" ) {
                 $ret = "<html>" . $ret . "</html>";
                 $ret =~ s/   /&nbsp;&nbsp;&nbsp;/g;
@@ -1371,8 +1415,137 @@ sub Get($@) {
 
         return $ret;
     }
+    elsif ( $aref->[0] eq "schedule" ) {
+        Compute( $hash, undef, $h );
+        my @ret;
+
+        my $header = '';
+        my $footer = '';
+        if ($html) {
+            $header = '<html>';
+            $footer = '</html>';
+        }
+
+        my $blockOpen   = '';
+        my $tTitleOpen  = '';
+        my $tTitleClose = '';
+        my $tOpen       = '';
+        my $tCOpen      = '';
+        my $tCClose     = '';
+        my $tHOpen      = '';
+        my $tHClose     = '';
+        my $tBOpen      = '';
+        my $tBClose     = '';
+        my $tFOpen      = '';
+        my $tFClose     = '';
+        my $trOpen      = '';
+        my $trOpenEven  = '';
+        my $trOpenOdd   = '';
+        my $thOpen      = '';
+        my $thOpen2     = '';
+        my $thOpen3     = '';
+        my $tdOpen      = '';
+        my $tdOpen2     = '';
+        my $tdOpen3     = '';
+        my $tdOpen4     = '';
+        my $strongOpen  = '';
+        my $strongClose = '';
+        my $tdClose     = "\t\t\t";
+        my $thClose     = "\t\t\t";
+        my $trClose     = '';
+        my $tClose      = '';
+        my $blockClose  = '';
+        my $colorRed    = '';
+        my $colorGreen  = '';
+        my $colorClose  = '';
+
+        if ($html) {
+            $blockOpen   = '<div class="makeTable wide internals">';
+            $tTitleOpen  = '<span class="mkTitle">';
+            $tTitleClose = '</span>';
+            $tOpen       = '<table class="block wide internals wrapcolumns">';
+            $tCOpen  = '<caption style="text-align: left; font-size: larger;">';
+            $tCClose = '</caption>';
+            $tHOpen  = '<thead>';
+            $tHClose = '</thead>';
+            $tBOpen  = '<tbody>';
+            $tBClose = '</tbody>';
+            $tFOpen  = '<tfoot style="font-size: smaller;">';
+            $tFClose = '</tfoot>';
+            $trOpen  = '<tr class="column">';
+            $trOpenEven = '<tr class="column even">';
+            $trOpenOdd  = '<tr class="column odd">';
+            $thOpen     = '<th style="text-align: left; vertical-align: top;">';
+            $thOpen2 =
+              '<th style="text-align: left; vertical-align: top;" colspan="2">';
+            $thOpen3 =
+              '<th style="text-align: left; vertical-align: top;" colspan="3">';
+            $tdOpen      = '<td style="vertical-align: top;">';
+            $tdOpen2     = '<td style="vertical-align: top;" colspan="2">';
+            $tdOpen3     = '<td style="vertical-align: top;" colspan="3">';
+            $tdOpen4     = '<td style="vertical-align: top;" colspan="4">';
+            $strongOpen  = '<strong>';
+            $strongClose = '</strong>';
+            $tdClose     = '</td>';
+            $thClose     = '</th>';
+            $trClose     = '</tr>';
+            $tClose      = '</table>';
+            $blockClose  = '</div>';
+            $colorRed    = '<span style="color: red">';
+            $colorGreen  = '<span style="color: green">';
+            $colorClose  = '</span>';
+        }
+
+        my $space = $html ? '&nbsp;' : ' ';
+        my $lb    = $html ? '<br />' : "\n";
+
+        push @ret,
+          $blockOpen . $tOpen . $tCOpen . $tt->{dayschedule} . $tCClose;
+
+        push @ret, $tHOpen . $trOpen;
+
+        push @ret, $thOpen . $astrott->{time} . $thClose;
+
+        push @ret, $thOpen . $tt->{event} . $thClose;
+
+        push @ret, $trClose . $tHClose . $tBOpen;
+
+        my $linecount = 1;
+        foreach my $t ( sort { $a <=> $b } keys %{ $Schedule{'.schedule'} } ) {
+            my $l = $linecount % 2 == 0 ? $trOpenEven : $trOpenOdd;
+
+            $l .= $tdOpen
+              . (
+                $t == 0.
+                ? '00:00:00'
+                : FHEM::Astro::HHMMSS($t)
+              ) . $tdClose;
+            $l .= $tdOpen;
+
+            foreach my $e ( @{ $Schedule{'.schedule'}{$t} } ) {
+                if ( $e =~ m/^(\S+)(?: (.+))$/ ) {
+                    $l .= "$1: $2";
+                }
+                else {
+                    $l .= $e;
+                }
+                $l .= $lb;
+            }
+
+            $l .= $tdClose;
+
+            $l .= $trClose;
+            push @ret, $l;
+            $linecount++;
+        }
+
+        push @ret, $tBClose . $tClose . $blockClose;
+
+        push @ret, $tdClose . $trClose . $tClose . $blockClose;
+        return encode_utf8( $header . join( "\n", @ret ) . $footer );
+    }
     else {
-        return "$name with unknown argument $a->[0], choose one of "
+        return "$name with unknown argument $aref->[0], choose one of "
           . join( " ",
             map { defined( $gets{$_} ) ? "$_:$gets{$_}" : $_ }
             sort keys %gets );
@@ -1407,11 +1580,9 @@ sub FormatReading($$;$) {
             $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrsDay" );
             $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrsNight" );
             $ret .= chr(0x00A0) . "%" if ( $r eq "MonthProgress" );
-            $ret .= chr(0x00A0) . $astrott->{"days"}
-              if ( $r eq "MonthRemainD" );
-            $ret .= "." if ( $r eq "Weekofyear" );
+            $ret .= chr(0x00A0) . "d" if ( $r eq "MonthRemainD" );
             $ret .= chr(0x00A0) . "%" if ( $r eq "YearProgress" );
-            $ret .= chr(0x00A0) . $astrott->{"days"} if ( $r eq "YearRemainD" );
+            $ret .= chr(0x00A0) . "d" if ( $r eq "YearRemainD" );
         }
 
         #-- add text if desired
@@ -1456,13 +1627,16 @@ sub FormatReading($$;$) {
               if ( $r eq "DaySeasonalHrsDay" );
             $ret = $tt->{"latecl"} . " " . $ret
               if ( $r eq "DaySeasonalHrsNight" );
-            $ret = $tt->{"dayphase"} . " " . $ret  if ( $r eq "Daytime" );
-            $ret = $tt->{"phase"} . " " . $ret   if ( $r eq "DaytimeN" );
-            $ret = $tt->{"phase"} . " " . $ret   if ( $r eq "MonthProgress" );
-            $ret = $tt->{"ra"} . " " . $ret      if ( $r eq "MonthRemainD" );
-            $ret = $tt->{"rise"} . " " . $ret    if ( $r eq "MoonCompass" );
-            $ret = $tt->{"set"} . " " . $ret     if ( $r eq "MoonCompassI" );
-            $ret = $tt->{"sign"} . " " . $ret    if ( $r eq "MoonCompassS" );
+            $ret = $tt->{"dayphase"} . " " . $ret if ( $r eq "Daytime" );
+            $ret = $tt->{"phase"} . " " . $ret    if ( $r eq "DaytimeN" );
+            $ret = $tt->{"phase"} . " " . $ret    if ( $r eq "MonthProgress" );
+            $ret = $tt->{"ra"} . " " . $ret       if ( $r eq "MonthRemainD" );
+            $ret = $tt->{"cardinaldirection"} . " " . $ret
+              if ( $r eq "MoonCompass" );
+            $ret = $tt->{"cardinaldirection"} . " " . $ret
+              if ( $r eq "MoonCompassI" );
+            $ret = $tt->{"cardinaldirection"} . " " . $ret
+              if ( $r eq "MoonCompassS" );
             $ret = $tt->{"transit"} . " " . $ret if ( $r eq "ObsTimeR" );
             $ret = $tt->{"twilightnautic"} . " " . $ret
               if ( $r eq "SchedLast" );
@@ -1472,30 +1646,23 @@ sub FormatReading($$;$) {
             $ret = $tt->{"date"} . " " . $ret     if ( $r eq "SchedNextT" );
             $ret = $ret . " " . $tt->{"dayofyear"}
               if ( $r eq "SchedRecent" );
-            $ret = $tt->{"alt"} . " " . $ret if ( $r eq "SchedUpcoming" );
+            $ret = $tt->{"alt"} . " " . $ret       if ( $r eq "SchedUpcoming" );
             $ret = $tt->{"metseason"} . " " . $ret if ( $r eq "SeasonMeteo" );
-            $ret = $tt->{"phenseason"} . " " . $ret     if ( $r eq "SeasonPheno" );
-            $ret = $ret . " " . $tt->{"latitude"}  if ( $r eq "SunCompass" );
-            $ret = $ret . " " . $tt->{"longitude"} if ( $r eq "SunCompassI" );
-            $ret = $tt->{"season"} . " " . $ret    if ( $r eq "SunCompassS" );
-            $ret = $tt->{"time"} . " " . $ret      if ( $r eq "Weekofyear" );
-            $ret = $tt->{"timezone"} . " " . $ret  if ( $r eq "YearIsLY" );
-            $ret = $tt->{"alt"} . " " . $ret       if ( $r eq "YearProgress" );
-            $ret = $tt->{"az"} . " " . $ret        if ( $r eq "YearRemainD" );
+            $ret = $tt->{"phenseason"} . " " . $ret if ( $r eq "SeasonPheno" );
+            $ret = $tt->{"cardinaldirection"} . " " . $ret
+              if ( $r eq "SunCompass" );
+            $ret = $tt->{"cardinaldirection"} . " " . $ret
+              if ( $r eq "SunCompassI" );
+            $ret = $tt->{"cardinaldirection"} . " " . $ret
+              if ( $r eq "SunCompassS" );
+            $ret = $tt->{"week"} . " " . $ret     if ( $r eq "Weekofyear" );
+            $ret = $tt->{"timezone"} . " " . $ret if ( $r eq "YearIsLY" );
+            $ret = $tt->{"alt"} . " " . $ret      if ( $r eq "YearProgress" );
+            $ret = $tt->{"az"} . " " . $ret       if ( $r eq "YearRemainD" );
         }
     }
 
-    return $ret;
-}
-
-sub _Export {
-    no strict qw/refs/;    ## no critic
-    my $pkg  = caller(0);
-    my $main = $pkg;
-    $main =~ s/^(?:.+::)?([^:]+)$/main::$1\_/g;
-    foreach (@_) {
-        *{ $main . $_ } = *{ $pkg . '::' . $_ };
-    }
+    return encode_utf8($ret);
 }
 
 sub _LoadPackagesWrapper {
@@ -1595,20 +1762,20 @@ sub SetTime (;$$$$) {
 
     my ( $sec, $min, $hour, $day, $month, $year, $wday, $yday, $isdst ) =
       localtime($time);
-    my $isdstnoon =
-      ( localtime( timelocal( 0, 0, 12, $day, $month, $year ) ) )[8];
+    my $isdstultimo =
+      ( localtime( timelocal( 59, 59, 23, $day, $month, $year ) ) )[8];
     $year  += 1900;
     $month += 1;
-    $D->{timestamp} = $time;
-    $D->{timeday}   = $hour + $min / 60. + $sec / 3600.;
-    $D->{year}      = $year;
-    $D->{month}     = $month;
-    $D->{day}       = $day;
-    $D->{hour}      = $hour;
-    $D->{min}       = $min;
-    $D->{sec}       = $sec;
-    $D->{isdst}     = $isdst;
-    $D->{isdstnoon} = $isdstnoon;
+    $D->{timestamp}   = $time;
+    $D->{timeday}     = $hour + $min / 60. + $sec / 3600.;
+    $D->{year}        = $year;
+    $D->{month}       = $month;
+    $D->{day}         = $day;
+    $D->{hour}        = $hour;
+    $D->{min}         = $min;
+    $D->{sec}         = $sec;
+    $D->{isdst}       = $isdst;
+    $D->{isdstultimo} = $isdstultimo;
 
     # broken on windows
     #$D->{zonedelta} = (strftime "%z", localtime)/100;
@@ -1763,7 +1930,8 @@ sub Compute($;$$) {
             Astro_Get(
                 ( IsDevice( $AstroDev, "Astro" ) ? $defs{$AstroDev} : $hash ),
                 [
-                    $name, "json",
+                    IsDevice( $AstroDev, "Astro" ) ? "Astro" : "DaySchedule",
+                    "json",
                     sprintf(
                         "%04d-%02d-%02d %02d:%02d:%02d",
                         $D->{year}, $D->{month}, $D->{day},
@@ -1779,12 +1947,13 @@ sub Compute($;$$) {
             $json->decode(
                 Astro_Get(
                     (
-                        IsDevice( $AstroDev, "Astro" )
-                        ? $defs{$AstroDev}
+                        IsDevice( $AstroDev, "Astro" ) ? $defs{$AstroDev}
                         : $hash
                     ),
                     [
-                        $name, "json",
+                        IsDevice( $AstroDev, "Astro" ) ? "Astro"
+                        : "DaySchedule",
+                        "json",
                         sprintf(
                             "%04d-%02d-%02d %02d:%02d:%02d",
                             $D->{year}, $D->{month}, $D->{day},
@@ -1879,18 +2048,32 @@ sub Compute($;$$) {
         $St = \%Schedule unless ($t);
         $St = $Schedule{$t} if ( $t && defined( $Schedule{$t} ) );
     }
-    $S->{SunCompassI} =
-      UConv::direction2compasspoint( $A->{".SunAz"}, 0, $lang );
-    $S->{SunCompassS} =
-      UConv::direction2compasspoint( $A->{".SunAz"}, 1, $lang );
-    $S->{SunCompass} =
-      UConv::direction2compasspoint( $A->{".SunAz"}, 2, $lang );
-    $S->{MoonCompassI} =
-      UConv::direction2compasspoint( $A->{".MoonAz"}, 0, $lang );
-    $S->{MoonCompassS} =
-      UConv::direction2compasspoint( $A->{".MoonAz"}, 1, $lang );
-    $S->{MoonCompass} =
-      UConv::direction2compasspoint( $A->{".MoonAz"}, 2, $lang );
+    if ( $A->{SunAlt} >= 0. ) {
+        $S->{SunCompassI} =
+          UConv::direction2compasspoint( $A->{SunAz}, 0, $lang );
+        $S->{SunCompassS} =
+          UConv::direction2compasspoint( $A->{SunAz}, 1, $lang );
+        $S->{SunCompass} =
+          UConv::direction2compasspoint( $A->{SunAz}, 2, $lang );
+    }
+    else {
+        $S->{SunCompassI} = '---';
+        $S->{SunCompassS} = '---';
+        $S->{SunCompass}  = '---';
+    }
+    if ( $A->{MoonAlt} >= 0. ) {
+        $S->{MoonCompassI} =
+          UConv::direction2compasspoint( $A->{MoonAz}, 0, $lang );
+        $S->{MoonCompassS} =
+          UConv::direction2compasspoint( $A->{MoonAz}, 1, $lang );
+        $S->{MoonCompass} =
+          UConv::direction2compasspoint( $A->{MoonAz}, 2, $lang );
+    }
+    else {
+        $S->{MoonCompassI} = '---';
+        $S->{MoonCompassS} = '---';
+        $S->{MoonCompass}  = '---';
+    }
     $S->{ObsTimeR} =
       UConv::arabic2roman( $D->{hour} <= 12. ? $D->{hour} : $D->{hour} - 12. )
       . (
@@ -1899,7 +2082,7 @@ sub Compute($;$$) {
         : ":" . UConv::arabic2roman( $D->{min} )
       ) . ( $D->{sec} == 0. ? "" : ":" . UConv::arabic2roman( $D->{sec} ) );
     $S->{Weekofyear}       = $D->{weekofyear};
-    $S->{".isdstnoon"}     = $D->{isdstnoon};
+    $S->{".isdstultimo"}   = $D->{isdstultimo};
     $S->{YearIsLY}         = $D->{isly};
     $S->{YearRemainD}      = $D->{yearremdays};
     $S->{MonthRemainD}     = $D->{monthremdays};
@@ -2151,7 +2334,7 @@ sub Compute($;$$) {
 
     # check meteorological season
     for ( my $i = 0 ; $i < 4 ; $i++ ) {
-        my $key = $FHEM::Astro::seasons[$i];
+        my $key = $FHEM::Astro::seasons{ $A->{ObsLat} < 0 ? 'S' : 'N' }[$i];
         if (
             (
                    ( $seasonmn{$key}[0] < $seasonmn{$key}[1] )
@@ -2267,8 +2450,18 @@ sub Compute($;$$) {
                 }
             }
         }
+        our @seasonsp = (
+            "winter",      "earlyspring", "firstspring", "fullspring",
+            "earlysummer", "midsummer",   "latesummer",  "earlyfall",
+            "fullfall",    "latefall"
+        );
 
-        $S->{SeasonPheno}  = $tt->{ $seasonsp[$pheno] };
+        if ( $pheno == 0. ) {
+            $S->{SeasonPheno} = $astrott->{ $seasonsp[$pheno] };
+        }
+        else {
+            $S->{SeasonPheno} = $tt->{ $seasonsp[$pheno] };
+        }
         $S->{SeasonPhenoN} = $pheno;
     }
     else {
@@ -2468,24 +2661,24 @@ sub Compute($;$$) {
     #  DST is going to change tomorrow
     if (   ref($St)
         && !$St->{DayChangeIsDST}
-        && defined( $St->{".isdstnoon"} )
-        && $St->{".isdstnoon"} != $S->{".isdstnoon"} )
+        && defined( $St->{".isdstultimo"} )
+        && $St->{".isdstultimo"} != $S->{".isdstultimo"} )
     {
         $S->{DayChangeIsDST}  = 2;
         $St->{DayChangeIsDST} = 1;
-        AddToSchedule( $St, 0, "ObsIsDST " . $St->{".isdstnoon"} )
+        AddToSchedule( $St, 0, "ObsIsDST " . $St->{".isdstultimo"} )
           if ( grep ( /^ObsIsDST/, @schedsch ) );
     }
 
     #  DST is going to change somewhere today
     elsif (ref($Sy)
         && !$Sy->{DayChangeIsDST}
-        && defined( $Sy->{".isdstnoon"} )
-        && $Sy->{".isdstnoon"} != $S->{".isdstnoon"} )
+        && defined( $Sy->{".isdstultimo"} )
+        && $Sy->{".isdstultimo"} != $S->{".isdstultimo"} )
     {
         $Sy->{DayChangeIsDST} = 2;
         $S->{DayChangeIsDST}  = 1;
-        AddToSchedule( $S, 0, "ObsIsDST " . $S->{".isdstnoon"} )
+        AddToSchedule( $S, 0, "ObsIsDST " . $S->{".isdstultimo"} )
           if ( grep ( /^ObsIsDST/, @schedsch ) );
     }
 
@@ -2653,24 +2846,16 @@ sub Update($@) {
     unless ( IsDevice( $AstroDevice, "Astro" ) ) {
         foreach my $key ( keys %Astro ) {
             next if ( ref( $Astro{$key} ) );
-            if ( defined( $Astro{$key} ) && $Astro{$key} ne "" ) {
-                readingsBulkUpdateIfChanged( $hash, $key,
-                    encode_utf8( $Astro{$key} ) );
-            }
-            else {
-                Log3 $name, 3, "$name: ERROR: empty value for $key in hash";
-            }
+            readingsBulkUpdateIfChanged( $hash, $key,
+                encode_utf8( $Astro{$key} ) )
+              if ( defined( $Astro{$key} ) && $Astro{$key} ne "" );
         }
     }
     foreach my $key ( keys %Schedule ) {
         next if ( ref( $Schedule{$key} ) );
-        if ( defined( $Schedule{$key} ) && $Schedule{$key} ne "" ) {
-            readingsBulkUpdateIfChanged( $hash, $key,
-                encode_utf8( $Schedule{$key} ) );
-        }
-        else {
-            Log3 $name, 3, "$name: ERROR: empty value for $key in hash";
-        }
+        readingsBulkUpdateIfChanged( $hash, $key,
+            encode_utf8( $Schedule{$key} ) )
+          if ( defined( $Schedule{$key} ) && $Schedule{$key} ne "" );
     }
     readingsEndUpdate( $hash, 1 );
     readingsSingleUpdate( $hash, "state", "Updated", 1 );
@@ -2879,6 +3064,7 @@ sub Update($@) {
 =end html_DE
 =for :application/json;q=META.json 95_DaySchedule.pm
 {
+  "version": "v0.0.1",
   "author": [
     "Julian Pawlowski <julian.pawlowski@gmail.com>"
   ],
