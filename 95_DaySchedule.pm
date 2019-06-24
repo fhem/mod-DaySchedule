@@ -51,15 +51,17 @@ my %gets = (
 );
 
 my %attrs = (
-    "altitude"    => undef,
-    "AstroDevice" => undef,
-    "disable"     => "1,0",
-    "earlyfall"   => undef,
-    "earlyspring" => undef,
-    "horizon"     => undef,
-    "interval"    => undef,
-    "language"    => "EN,DE,ES,FR,IT,NL,PL",
-    "latitude"    => undef,
+    "altitude"           => undef,
+    "AstroDevice"        => undef,
+    "disable"            => "1,0",
+    "earlyfall"          => undef,
+    "earlyspring"        => undef,
+    "HolidayDevices"     => undef,
+    "horizon"            => undef,
+    "InformativeDevices" => undef,
+    "interval"           => undef,
+    "language"           => "EN,DE,ES,FR,IT,NL,PL",
+    "latitude"           => undef,
     "lc_numeric" =>
 "en_EN.UTF-8,de_DE.UTF-8,es_ES.UTF-8,fr_FR.UTF-8,it_IT.UTF-8,nl_NL.UTF-8,pl_PL.UTF-8",
     "lc_time" =>
@@ -69,8 +71,9 @@ my %attrs = (
 "multiple-strict,MoonRise,MoonSet,MoonTransit,NewDay,SeasonalHr,SunRise,SunSet,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
     "schedule" =>
 "multiple-strict,MoonPhaseS,MoonRise,MoonSet,MoonSign,MoonTransit,ObsDate,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,DaySeasonalHr,Daytime,SunRise,SunSet,SunSign,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
-    "seasonalHrs" => undef,
-    "timezone"    => undef,
+    "seasonalHrs"     => undef,
+    "timezone"        => undef,
+    "VacationDevices" => undef,
 );
 
 my $json;
@@ -80,12 +83,15 @@ my $astrott;
 # Export variables to other programs
 our %transtable = (
     EN => {
-        "dayschedule"  => "Day Schedule",
-        "event"        => "Event",
-        "events"       => "Events",
-        "alldayevents" => "All day events",
-        "dayevents"    => "Events during the day",
-        "teasertom"    => "Teaser for tomorrow",
+        "dayschedule"    => "Day schedule",
+        "dayscheduleyes" => "Day schedule yesterday",
+        "dayscheduletod" => "Day schedule today",
+        "dayscheduletom" => "Day schedule tomorrow",
+        "event"          => "Event",
+        "events"         => "Events",
+        "alldayevents"   => "All day events",
+        "dayevents"      => "Events during the day",
+        "teasernext"     => "Teaser for next day",
 
         #
         "cardinaldirection" => "Cardinal direction",
@@ -150,12 +156,15 @@ our %transtable = (
     },
 
     DE => {
-        "dayschedule"  => "Tagesablaufplan",
-        "event"        => "Ereignis",
-        "events"       => "Ereignisse",
-        "alldayevents" => "Ganztägige Ereignisse",
-        "dayevents"    => "Ereignisse im Laufe des Tages",
-        "teasertom"    => "Vorschau für morgen",
+        "dayschedule"    => "Tagesablaufplan",
+        "dayscheduleyes" => "Tagesablaufplan gestern",
+        "dayscheduletod" => "Tagesablaufplan heute",
+        "dayscheduletom" => "Tagesablaufplan morgen",
+        "event"          => "Ereignis",
+        "events"         => "Ereignisse",
+        "alldayevents"   => "Ganztägige Ereignisse",
+        "dayevents"      => "Ereignisse im Laufe des Tages",
+        "teasernext"     => "Vorschau für nächsten Tag",
 
         #
         "cardinaldirection" => "Himmelsrichtung",
@@ -220,12 +229,15 @@ our %transtable = (
     },
 
     ES => {
-        "dayschedule"  => "Horario Diario",
-        "event"        => "Evento",
-        "events"       => "Eventos",
-        "alldayevents" => "Eventos todo el dia",
-        "dayevents"    => "Eventos durante el día",
-        "teasertom"    => "Vista previa para mañana",
+        "dayschedule"    => "Horario diario",
+        "dayscheduleyes" => "Horario del día de ayer",
+        "dayscheduletod" => "Horario del día de hoy",
+        "dayscheduletom" => "Horario de mañana",
+        "event"          => "Evento",
+        "events"         => "Eventos",
+        "alldayevents"   => "Eventos todo el dia",
+        "dayevents"      => "Eventos durante el día",
+        "teasernext"     => "Vista previa para el día siguiente",
 
         #
         "cardinaldirection" => "Punto cardinal",
@@ -290,12 +302,15 @@ our %transtable = (
     },
 
     FR => {
-        "dayschedule"  => "Horaire Quotidien",
-        "event"        => "Événement",
-        "events"       => "Événements",
-        "alldayevents" => "Événements d'une journée",
-        "dayevents"    => "Événements pendant la journée",
-        "teasertom"    => "Aperçu pour demain",
+        "dayschedule"    => "Horaire de la journée",
+        "dayscheduleyes" => "Horaire de la journée d'hier",
+        "dayscheduletod" => "Horaire de la journée aujourd'hui",
+        "dayscheduletom" => "Horaire de la journée de demain",
+        "event"          => "Événement",
+        "events"         => "Événements",
+        "alldayevents"   => "Événements d'une journée",
+        "dayevents"      => "Événements pendant la journée",
+        "teasernext"     => "Aperçu pour le lendemain",
 
         #
         "cardinaldirection" => "Direction cardinale",
@@ -360,12 +375,15 @@ our %transtable = (
     },
 
     IT => {
-        "dayschedule"  => "Programma Giornaliero",
-        "event"        => "Evento",
-        "events"       => "Eventi",
-        "alldayevents" => "Eventi per tutto il giorno",
-        "dayevents"    => "Eventi durante il giorno",
-        "teasertom"    => "Anteprima per domani",
+        "dayschedule"    => "Programma giornaliero",
+        "dayscheduleyes" => "Programma giornaliero ieri",
+        "dayscheduletod" => "Programma giornaliero oggi",
+        "dayscheduletom" => "Programmazione del giorno domani",
+        "event"          => "Evento",
+        "events"         => "Eventi",
+        "alldayevents"   => "Eventi per tutto il giorno",
+        "dayevents"      => "Eventi durante il giorno",
+        "teasernext"     => "Anteprima per il giorno successivo",
 
         #
         "cardinaldirection" => "Direzione cardinale",
@@ -430,12 +448,15 @@ our %transtable = (
     },
 
     NL => {
-        "dayschedule"  => "Dagelijkse Planning",
-        "event"        => "Evenement",
-        "events"       => "Evenementen",
-        "alldayevents" => "De hele dag evenementen",
-        "dayevents"    => "Evenementen overdag",
-        "teasertom"    => "Voorbeeld voor morgen",
+        "dayschedule"    => "Dagschema",
+        "dayscheduleyes" => "Dagschema gisteren",
+        "dayscheduletod" => "Dagschema vandaag",
+        "dayscheduletom" => "Dagschema morgen",
+        "event"          => "Evenement",
+        "events"         => "Evenementen",
+        "alldayevents"   => "De hele dag evenementen",
+        "dayevents"      => "Evenementen overdag",
+        "teasernext"     => "Voorbeeld voor de volgende dag",
 
         #
         "cardinaldirection" => "Hoofdrichting",
@@ -500,12 +521,15 @@ our %transtable = (
     },
 
     PL => {
-        "dayschedule"  => "Rozkład Dnia",
-        "event"        => "Zdarzenie",
-        "events"       => "Zdarzenia",
-        "alldayevents" => "Wydarzenia całodniowe",
-        "dayevents"    => "Wydarzenia w ciągu dnia",
-        "teasertom"    => "Podgląd na jutro",
+        "dayschedule"    => "Rozkład dnia",
+        "dayscheduleyes" => "Rozkład dnia wczorajszego",
+        "dayscheduletod" => "Rozkład dnia dzisiaj",
+        "dayscheduletom" => "Rozkład dnia jutro",
+        "event"          => "Zdarzenie",
+        "events"         => "Zdarzenia",
+        "alldayevents"   => "Wydarzenia całodniowe",
+        "dayevents"      => "Wydarzenia w ciągu dnia",
+        "teasernext"     => "Podgląd dla następnego dnia",
 
         #
         "cardinaldirection" => "Kierunek główny",
@@ -796,6 +820,8 @@ sub Define ($@) {
     if ( $init_done && !defined( $hash->{OLDDEF} ) ) {
         $attr{$name}{icon}        = 'time_calendar';
         $attr{$name}{recomputeAt} = 'NewDay,SeasonalHr';
+        $attr{$name}{schedule} =
+'ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,Daytime,SunRise,SunSet,SunSign,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning';
         $attr{$name}{stateFormat} = 'Daytime';
     }
 
@@ -1518,14 +1544,14 @@ sub Get($@) {
                       . ' -1 backbotton=1'
                   )
                   . $FW_CSRF
-                  . '">&larr;&nbsp;previous day</a>&nbsp;&nbsp;'
+                  . '">&larr;&nbsp;Previous day</a>&nbsp;&nbsp;'
                   . (
                     defined( $h->{backbotton} )
                     ? '<a href="?cmd=get '
                       . $name
                       . urlEncode(' schedule backbotton=1')
                       . $FW_CSRF
-                      . '">today</a>&nbsp;&nbsp;'
+                      . '">Today</a>&nbsp;&nbsp;'
                     : ''
                   )
                   . '<a href="?cmd=get '
@@ -1537,7 +1563,7 @@ sub Get($@) {
                       . ' +1 backbotton=1'
                   )
                   . $FW_CSRF
-                  . '">next day&nbsp;&rarr;</a>'
+                  . '">Next day&nbsp;&rarr;</a>'
                   . '</div>'
                   . '</div>';
             }
@@ -1626,12 +1652,49 @@ sub Get($@) {
         $datetime =~ s/$months/$monthl/g;
         $datetime =~ s/\d{2}:\d{2}:\d{2} //g;
 
+        my $dschedule = $tt->{dayschedule};
+        my $now       = gettimeofday();
+        my (
+            $secY,  $minY,  $hourY, $dayY, $monthY,
+            $yearY, $wdayY, $ydayY, $isdstY
+        ) = localtime( $now - 86400. );
+        my ( $sec, $min, $hour, $day, $month, $year, $wday, $yday, $isdst ) =
+          localtime($now);
+        my (
+            $secT,  $minT,  $hourT, $dayT, $monthT,
+            $yearT, $wdayT, $ydayT, $isdstT
+        ) = localtime( $now + 86400. );
+        $yearY  += 1900;
+        $year   += 1900;
+        $yearT  += 1900;
+        $monthY += 1;
+        $month  += 1;
+        $monthT += 1;
+
+        if (   $yearY == $Date{year}
+            && $monthY == $Date{month}
+            && $dayY == $Date{day} )
+        {
+            $dschedule = $tt->{dayscheduleyes};
+        }
+        elsif ($year == $Date{year}
+            && $month == $Date{month}
+            && $day == $Date{day} )
+        {
+            $dschedule = $tt->{dayscheduletod};
+        }
+        elsif ($yearT == $Date{year}
+            && $monthT == $Date{month}
+            && $dayT == $Date{day} )
+        {
+            $dschedule = $tt->{dayscheduletom};
+        }
+
         push @ret,
             $blockOpen
           . $tOpen
           . $tCOpen
-          . encode_utf8( $tt->{dayschedule} ) . ' '
-          . $datetime
+          . encode_utf8( $dschedule . ' ' . $datetime )
           . $tCClose;
 
         push @ret, $tHOpen;
@@ -1734,7 +1797,7 @@ sub Get($@) {
 
             push @ret, $tFOpen;
             push @ret, $trOpen;
-            push @ret, $thOpen2 . encode_utf8( $tt->{teasertom} ) . $thClose;
+            push @ret, $thOpen2 . encode_utf8( $tt->{teasernext} ) . $thClose;
             push @ret, $trClose;
 
             $linecount = 1;
@@ -2760,7 +2823,7 @@ sub Compute($;$$) {
     {
         $S->{DayChangeSeason}  = 2;
         $St->{DayChangeSeason} = 1;
-        AddToSchedule( $S, '*', "ObsSeason " . $At->{ObsSeason} )
+        AddToSchedule( $St, '*', "ObsSeason " . $At->{ObsSeason} )
           if ( grep ( /^ObsSeason/, @schedsch ) );
     }
 
@@ -2962,7 +3025,7 @@ sub Compute($;$$) {
                 foreach ( @{ $St->{".schedule"}{$e} } ) {
                     AddToSchedule( $S, 't' . $e, $_ );
                 }
-                last if ($e > 0.);
+                last if ( $e > 0. );
             }
 
             if ( defined( $St->{".scheduleAllday"} ) ) {
