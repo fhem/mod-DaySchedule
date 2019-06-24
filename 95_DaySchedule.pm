@@ -28,6 +28,7 @@ use utf8;
 use Encode;
 use FHEM::Meta;
 use GPUtils qw(GP_Import GP_Export);
+use HttpUtils;
 use Time::HiRes qw(gettimeofday);
 use Time::Local;
 use UConv;
@@ -37,7 +38,10 @@ my %Astro;
 my %Schedule;
 my %Date;
 
-my %sets = ( "update" => "noArg", );
+my %sets = (
+    "create" => "weblink",
+    "update" => "noArg",
+);
 
 my %gets = (
     "json"     => undef,
@@ -76,8 +80,12 @@ my $astrott;
 # Export variables to other programs
 our %transtable = (
     EN => {
-        "dayschedule" => "Day Schedule",
-        "event"       => "Event",
+        "dayschedule"  => "Day Schedule",
+        "event"        => "Event",
+        "events"       => "Events",
+        "alldayevents" => "All day events",
+        "dayevents"    => "Events during the day",
+        "teasertom"    => "Teaser for tomorrow",
 
         #
         "cardinaldirection" => "Cardinal direction",
@@ -142,8 +150,12 @@ our %transtable = (
     },
 
     DE => {
-        "dayschedule" => "Tagesablaufplan",
-        "event"       => "Ereignis",
+        "dayschedule"  => "Tagesablaufplan",
+        "event"        => "Ereignis",
+        "events"       => "Ereignisse",
+        "alldayevents" => "Ganztägige Ereignisse",
+        "dayevents"    => "Ereignisse im Laufe des Tages",
+        "teasertom"    => "Vorschau für morgen",
 
         #
         "cardinaldirection" => "Himmelsrichtung",
@@ -208,8 +220,12 @@ our %transtable = (
     },
 
     ES => {
-        "dayschedule" => "Horario Diario",
-        "event"       => "Evento",
+        "dayschedule"  => "Horario Diario",
+        "event"        => "Evento",
+        "events"       => "Eventos",
+        "alldayevents" => "Eventos todo el dia",
+        "dayevents"    => "Eventos durante el día",
+        "teasertom"    => "Vista previa para mañana",
 
         #
         "cardinaldirection" => "Punto cardinal",
@@ -274,8 +290,12 @@ our %transtable = (
     },
 
     FR => {
-        "dayschedule" => "Horaire Quotidien",
-        "event"       => "Événement",
+        "dayschedule"  => "Horaire Quotidien",
+        "event"        => "Événement",
+        "events"       => "Événements",
+        "alldayevents" => "Événements d'une journée",
+        "dayevents"    => "Événements pendant la journée",
+        "teasertom"    => "Aperçu pour demain",
 
         #
         "cardinaldirection" => "Direction cardinale",
@@ -340,8 +360,12 @@ our %transtable = (
     },
 
     IT => {
-        "dayschedule" => "Programma Giornaliero",
-        "event"       => "Evento",
+        "dayschedule"  => "Programma Giornaliero",
+        "event"        => "Evento",
+        "events"       => "Eventi",
+        "alldayevents" => "Eventi per tutto il giorno",
+        "dayevents"    => "Eventi durante il giorno",
+        "teasertom"    => "Anteprima per domani",
 
         #
         "cardinaldirection" => "Direzione cardinale",
@@ -406,8 +430,12 @@ our %transtable = (
     },
 
     NL => {
-        "dayschedule" => "Dagelijkse Planning",
-        "event"       => "Voorval",
+        "dayschedule"  => "Dagelijkse Planning",
+        "event"        => "Evenement",
+        "events"       => "Evenementen",
+        "alldayevents" => "De hele dag evenementen",
+        "dayevents"    => "Evenementen overdag",
+        "teasertom"    => "Voorbeeld voor morgen",
 
         #
         "cardinaldirection" => "Hoofdrichting",
@@ -472,8 +500,12 @@ our %transtable = (
     },
 
     PL => {
-        "dayschedule" => "Rozkład Dnia",
-        "event"       => "Zdarzenie",
+        "dayschedule"  => "Rozkład Dnia",
+        "event"        => "Zdarzenie",
+        "events"       => "Zdarzenia",
+        "alldayevents" => "Wydarzenia całodniowe",
+        "dayevents"    => "Wydarzenia w ciągu dnia",
+        "teasertom"    => "Podgląd na jutro",
 
         #
         "cardinaldirection" => "Kierunek główny",
@@ -681,10 +713,13 @@ BEGIN {
           attr
           Astro_Get
           AttrVal
+          CommandAttr
+          CommandDefine
           data
           Debug
           defs
           deviceEvents
+          FW_hiddenroom
           FW_webArgs
           IsDevice
           FmtDateTime
@@ -706,6 +741,7 @@ BEGIN {
           RemoveInternalTimer
           time_str2num
           toJSON
+          urlEncode
           )
     );
 
@@ -1047,6 +1083,24 @@ sub Set($@) {
         InternalTimer( gettimeofday() + 1,
             "FHEM::DaySchedule::Update", $hash, 1 );
     }
+    elsif ( $a->[0] eq "create" ) {
+        if ( $a->[1] eq "weblink" ) {
+            my $d   = "wl_" . $name;
+            my $cl  = defined( $hash->{CL} ) ? $hash->{CL} : undef;
+            my $ret = CommandDefine( $cl,
+"$d weblink htmlCode { FHEM::DaySchedule::Get(\$defs{'$name'},['DaySchedule','schedule'],{html=>1}) }"
+            );
+            return $ret if ($ret);
+            if ( my $room = AttrVal( $name, "room", undef ) ) {
+                CommandAttr( $cl, "$d room $room" );
+            }
+            return "device $d was created";
+        }
+        else {
+            return "$name with unknown $a->[0] argument, choose one of "
+              . "weblink";
+        }
+    }
     else {
         return "$name with unknown argument $a->[0], choose one of "
           . join( " ",
@@ -1364,7 +1418,7 @@ sub Get($@) {
               if ( defined($html) && $html ne "0" );
         }
         else {
-            $h->{long} = 1;
+            $h->{long} = 1 unless ( defined( $h->{long} ) );
             $h->{html} = $html if ($html);
 
             unshift @$aref, $type;
@@ -1419,11 +1473,74 @@ sub Get($@) {
         Compute( $hash, undef, $h );
         my @ret;
 
+        my $FW_CSRF = (
+            defined( $hash->{CL} )
+              && defined( $hash->{CL}{SNAME} )
+              && defined( $defs{ $hash->{CL}{SNAME} }{CSRFTOKEN} )
+            ? '&fwcsrf=' . $defs{ $hash->{CL}{SNAME} }{CSRFTOKEN}
+            : ''
+        );
+
         my $header = '';
         my $footer = '';
-        if ($html) {
+
+        $h->{long} = 3 unless ( defined( $h->{long} ) );
+        $h->{html} = $html if ($html);
+
+        if ( $html && defined( $hash->{CL} ) && $hash->{CL}{TYPE} eq "FHEMWEB" )
+        {
             $header = '<html>';
             $footer = '</html>';
+
+            if ( !defined( $h->{navigation} ) || $h->{navigation} ne "0" ) {
+                $header .=
+                    '<div class="wide">'
+                  . '<div class="detLink DayScheduleJump" style="float: right; text-align: right; white-space: nowrap;">'
+                  .
+
+                  (
+                    defined( $h->{backbotton} )
+                      && !exists( $FW_hiddenroom{detail} )
+                    ? '<a href="?detail='
+                      . $name
+                      . '">back to <span style="font-style: italic;">'
+                      . AttrVal( $name, 'alias', $name )
+                      . '</span></a>&nbsp;&nbsp;&nbsp;&nbsp;'
+                    : ''
+                  )
+
+                  . '<a href="?cmd=get '
+                  . $name
+                  . urlEncode(
+                    ' schedule '
+                      . sprintf( "%04d-%02d-%02d",
+                        $Date{year}, $Date{month}, $Date{day} )
+                      . ' -1 backbotton=1'
+                  )
+                  . $FW_CSRF
+                  . '">&larr;&nbsp;previous day</a>&nbsp;&nbsp;'
+                  . (
+                    defined( $h->{backbotton} )
+                    ? '<a href="?cmd=get '
+                      . $name
+                      . urlEncode(' schedule backbotton=1')
+                      . $FW_CSRF
+                      . '">today</a>&nbsp;&nbsp;'
+                    : ''
+                  )
+                  . '<a href="?cmd=get '
+                  . $name
+                  . urlEncode(
+                    ' schedule '
+                      . sprintf( "%04d-%02d-%02d",
+                        $Date{year}, $Date{month}, $Date{day} )
+                      . ' +1 backbotton=1'
+                  )
+                  . $FW_CSRF
+                  . '">next day&nbsp;&rarr;</a>'
+                  . '</div>'
+                  . '</div>';
+            }
         }
 
         my $blockOpen   = '';
@@ -1464,15 +1581,16 @@ sub Get($@) {
             $tTitleOpen  = '<span class="mkTitle">';
             $tTitleClose = '</span>';
             $tOpen       = '<table class="block wide internals wrapcolumns">';
-            $tCOpen  = '<caption style="text-align: left; font-size: larger;">';
-            $tCClose = '</caption>';
-            $tHOpen  = '<thead>';
-            $tHClose = '</thead>';
-            $tBOpen  = '<tbody>';
-            $tBClose = '</tbody>';
-            $tFOpen  = '<tfoot style="font-size: smaller;">';
-            $tFClose = '</tfoot>';
-            $trOpen  = '<tr class="column">';
+            $tCOpen =
+'<caption style="text-align: left; font-size: larger; white-space: nowrap;">';
+            $tCClose    = '</caption>';
+            $tHOpen     = '<thead>';
+            $tHClose    = '</thead>';
+            $tBOpen     = '<tbody>';
+            $tBClose    = '</tbody>';
+            $tFOpen     = '<tfoot style="font-size: smaller;">';
+            $tFClose    = '</tfoot>';
+            $trOpen     = '<tr class="column">';
             $trOpenEven = '<tr class="column even">';
             $trOpenOdd  = '<tr class="column odd">';
             $thOpen     = '<th style="text-align: left; vertical-align: top;">';
@@ -1499,19 +1617,85 @@ sub Get($@) {
         my $space = $html ? '&nbsp;' : ' ';
         my $lb    = $html ? '<br />' : "\n";
 
+        my $datetime = $Date{datetime};
+        my $wdays    = $Date{wdays};
+        my $wdayl    = $Date{wdayl} . ",";
+        $datetime =~ s/$wdays/$wdayl/g;
+        my $months = $Date{months};
+        my $monthl = $Date{monthl};
+        $datetime =~ s/$months/$monthl/g;
+        $datetime =~ s/\d{2}:\d{2}:\d{2} //g;
+
         push @ret,
-          $blockOpen . $tOpen . $tCOpen . $tt->{dayschedule} . $tCClose;
+            $blockOpen
+          . $tOpen
+          . $tCOpen
+          . encode_utf8( $tt->{dayschedule} ) . ' '
+          . $datetime
+          . $tCClose;
+
+        push @ret, $tHOpen;
+
+        if ( defined( $Schedule{'.scheduleAllday'} ) ) {
+            push @ret, $trOpen;
+            push @ret, $thOpen2 . encode_utf8( $tt->{alldayevents} ) . $thClose;
+            push @ret, $trClose . $trOpenOdd . $tdOpen2;
+            my $l;
+
+            foreach my $e ( @{ $Schedule{'.scheduleAllday'} } ) {
+                $l .= $lb if ($l);
+
+                if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+                    if ( defined( $Astro{$1} ) ) {
+                        $l .= FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
+                            defined($2) ? $2 : '' );
+                    }
+                    else {
+                        $l .= FormatReading( $1, $h, $lc_numeric,
+                            defined($2) ? $2 : '' );
+                    }
+                }
+            }
+
+            push @ret, $l . $tdClose . $trClose;
+            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose;
+        }
+
+        if ( defined( $Schedule{'.scheduleDay'} ) ) {
+            push @ret, $trOpen;
+            push @ret, $thOpen2 . encode_utf8( $tt->{dayevents} ) . $thClose;
+            push @ret, $trClose . $trOpenOdd . $tdOpen2;
+
+            my $l;
+
+            foreach my $e ( @{ $Schedule{'.scheduleDay'} } ) {
+                $l .= $lb if ($l);
+
+                if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+                    if ( defined( $Astro{$1} ) ) {
+                        $l .= FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
+                            defined($2) ? $2 : '' );
+                    }
+                    else {
+                        $l .= FormatReading( $1, $h, $lc_numeric,
+                            defined($2) ? $2 : '' );
+                    }
+                }
+            }
+
+            push @ret, $l . $tdClose . $trClose;
+            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose;
+        }
 
         push @ret, $tHOpen . $trOpen;
-
-        push @ret, $thOpen . $astrott->{time} . $thClose;
-
-        push @ret, $thOpen . $tt->{event} . $thClose;
-
-        push @ret, $trClose . $tHClose . $tBOpen;
+        push @ret, $thOpen . encode_utf8( $astrott->{time} ) . $thClose;
+        push @ret, $thOpen . encode_utf8( $tt->{event} ) . $thClose;
+        push @ret, $trClose;
+        push @ret, $tHClose . $tBOpen;
 
         my $linecount = 1;
         foreach my $t ( sort { $a <=> $b } keys %{ $Schedule{'.schedule'} } ) {
+            next if ( $t == 24. );
             my $l = $linecount % 2 == 0 ? $trOpenEven : $trOpenOdd;
 
             $l .= $tdOpen
@@ -1523,11 +1707,15 @@ sub Get($@) {
             $l .= $tdOpen;
 
             foreach my $e ( @{ $Schedule{'.schedule'}{$t} } ) {
-                if ( $e =~ m/^(\S+)(?: (.+))$/ ) {
-                    $l .= "$1: $2";
-                }
-                else {
-                    $l .= $e;
+                if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+                    if ( defined( $Astro{$1} ) ) {
+                        $l .= FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
+                            defined($2) ? $2 : '' );
+                    }
+                    else {
+                        $l .= FormatReading( $1, $h, $lc_numeric,
+                            defined($2) ? $2 : '' );
+                    }
                 }
                 $l .= $lb;
             }
@@ -1539,10 +1727,59 @@ sub Get($@) {
             $linecount++;
         }
 
-        push @ret, $tBClose . $tClose . $blockClose;
+        push @ret, $tBClose;
+
+        if ( defined( $Schedule{'.scheduleTom'} ) ) {
+            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose;
+
+            push @ret, $tFOpen;
+            push @ret, $trOpen;
+            push @ret, $thOpen2 . encode_utf8( $tt->{teasertom} ) . $thClose;
+            push @ret, $trClose;
+
+            $linecount = 1;
+            foreach
+              my $t ( sort { $a <=> $b } keys %{ $Schedule{'.scheduleTom'} } )
+            {
+                my $l = $linecount % 2 == 0 ? $trOpenEven : $trOpenOdd;
+
+                $l .= $tdOpen
+                  . (
+                    $t == 0.
+                    ? '00:00:00'
+                    : FHEM::Astro::HHMMSS($t)
+                  ) . $tdClose;
+                $l .= $tdOpen;
+
+                foreach my $e ( @{ $Schedule{'.scheduleTom'}{$t} } ) {
+                    if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+                        if ( defined( $Astro{$1} ) ) {
+                            $l .=
+                              FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
+                                defined($2) ? $2 : '' );
+                        }
+                        else {
+                            $l .= FormatReading( $1, $h, $lc_numeric,
+                                defined($2) ? $2 : '' );
+                        }
+                    }
+                    $l .= $lb;
+                }
+
+                $l .= $tdClose;
+
+                $l .= $trClose;
+                push @ret, $l;
+                $linecount++;
+            }
+
+            push @ret, $tFClose;
+        }
+
+        push @ret, $tClose . $blockClose;
 
         push @ret, $tdClose . $trClose . $tClose . $blockClose;
-        return encode_utf8( $header . join( "\n", @ret ) . $footer );
+        return $header . join( "\n", @ret ) . $footer;
     }
     else {
         return "$name with unknown argument $aref->[0], choose one of "
@@ -1552,9 +1789,10 @@ sub Get($@) {
     }
 }
 
-sub FormatReading($$;$) {
-    my ( $r, $h, $lc_numeric ) = @_;
+sub FormatReading($$;$$) {
+    my ( $r, $h, $lc_numeric, $val ) = @_;
     my $ret;
+    $val = $Schedule{$r} unless ( defined($val) );
 
     my $f = "%s";
 
@@ -1562,7 +1800,7 @@ sub FormatReading($$;$) {
     $f = "%2.1f" if ( $r eq "MonthProgress" );
     $f = "%2.1f" if ( $r eq "YearProgress" );
 
-    $ret = sprintf( $f, $Schedule{$r} );
+    $ret = $val ne "" ? sprintf( $f, $val ) : "";
     $ret = UConv::decimal_mark( $ret, $lc_numeric )
       unless ( $h && ref($h) && defined( $h->{html} ) && $h->{html} eq "0" );
 
@@ -1587,19 +1825,23 @@ sub FormatReading($$;$) {
 
         #-- add text if desired
         if ( $h->{long} ) {
-            $ret = $tt->{"twilightastro"} . " " . $ret
+            my $sep = " ";
+            $sep = ": " if ( $h->{long} > 2. );
+            $sep = ""   if ( $ret eq "" );
+
+            $ret = $tt->{"twilightastro"} . $sep . $ret
               if ( $r eq "DayChangeIsDST" );
-            $ret = $tt->{"twilightastro"} . " " . $ret
+            $ret = $tt->{"twilightastro"} . $sep . $ret
               if ( $r eq "DayChangeMoonPhaseS" );
-            $ret = $tt->{"twilightcivil"} . " " . $ret
+            $ret = $tt->{"twilightcivil"} . $sep . $ret
               if ( $r eq "DayChangeMoonSign" );
-            $ret = $tt->{"twilightcivil"} . " " . $ret
+            $ret = $tt->{"twilightcivil"} . $sep . $ret
               if ( $r eq "DayChangeSeason" );
-            $ret = $tt->{"twilightcustom"} . " " . $ret
+            $ret = $tt->{"twilightcustom"} . $sep . $ret
               if ( $r eq "DayChangeSeasonMeteo" );
-            $ret = $tt->{"twilightcustom"} . " " . $ret
+            $ret = $tt->{"twilightcustom"} . $sep . $ret
               if ( $r eq "DayChangeSeasonPheno" );
-            $ret = $tt->{"age"} . " " . $ret if ( $r eq "DayChangeSunSign" );
+            $ret = $tt->{"age"} . $sep . $ret if ( $r eq "DayChangeSunSign" );
             $ret = (
                 (
                     (
@@ -1612,53 +1854,54 @@ sub FormatReading($$;$) {
                 ? $tt->{"temporalhour"}
                 : $tt->{"seasonalhour"}
               )
-              . " "
+              . $sep
               . $ret
               if ( $r eq "DaySeasonalHr" );
-            $ret = $tt->{"az"} . " " . $ret if ( $r eq "DaySeasonalHrLenDay" );
-            $ret = $tt->{"dec"} . " " . $ret
+            $ret = $tt->{"az"} . $sep . $ret if ( $r eq "DaySeasonalHrLenDay" );
+            $ret = $tt->{"dec"} . $sep . $ret
               if ( $r eq "DaySeasonalHrLenNight" );
-            $ret = $tt->{"diameter"} . " " . $ret if ( $r eq "DaySeasonalHrR" );
-            $ret = $ret . " " . $tt->{"toce"}
+            $ret = $tt->{"diameter"} . $sep . $ret
+              if ( $r eq "DaySeasonalHrR" );
+            $ret = $ret . $sep . $tt->{"toce"}
               if ( $r =~ /^DaySeasonalHrT/ );
-            $ret = $ret . " " . $tt->{"toobs"}
+            $ret = $ret . $sep . $tt->{"toobs"}
               if ( $r eq "DaySeasonalHrTNext" );
-            $ret = $tt->{"hoursofvisibility"} . " " . $ret
+            $ret = $tt->{"hoursofvisibility"} . $sep . $ret
               if ( $r eq "DaySeasonalHrsDay" );
-            $ret = $tt->{"latecl"} . " " . $ret
+            $ret = $tt->{"latecl"} . $sep . $ret
               if ( $r eq "DaySeasonalHrsNight" );
-            $ret = $tt->{"dayphase"} . " " . $ret if ( $r eq "Daytime" );
-            $ret = $tt->{"phase"} . " " . $ret    if ( $r eq "DaytimeN" );
-            $ret = $tt->{"phase"} . " " . $ret    if ( $r eq "MonthProgress" );
-            $ret = $tt->{"ra"} . " " . $ret       if ( $r eq "MonthRemainD" );
-            $ret = $tt->{"cardinaldirection"} . " " . $ret
+            $ret = $tt->{"dayphase"} . $sep . $ret if ( $r eq "Daytime" );
+            $ret = $tt->{"phase"} . $sep . $ret    if ( $r eq "DaytimeN" );
+            $ret = $tt->{"phase"} . $sep . $ret    if ( $r eq "MonthProgress" );
+            $ret = $tt->{"ra"} . $sep . $ret       if ( $r eq "MonthRemainD" );
+            $ret = $tt->{"cardinaldirection"} . $sep . $ret
               if ( $r eq "MoonCompass" );
-            $ret = $tt->{"cardinaldirection"} . " " . $ret
+            $ret = $tt->{"cardinaldirection"} . $sep . $ret
               if ( $r eq "MoonCompassI" );
-            $ret = $tt->{"cardinaldirection"} . " " . $ret
+            $ret = $tt->{"cardinaldirection"} . $sep . $ret
               if ( $r eq "MoonCompassS" );
-            $ret = $tt->{"transit"} . " " . $ret if ( $r eq "ObsTimeR" );
-            $ret = $tt->{"twilightnautic"} . " " . $ret
+            $ret = $tt->{"transit"} . $sep . $ret if ( $r eq "ObsTimeR" );
+            $ret = $tt->{"twilightnautic"} . $sep . $ret
               if ( $r eq "SchedLast" );
-            $ret = $tt->{"twilightnautic"} . " " . $ret
+            $ret = $tt->{"twilightnautic"} . $sep . $ret
               if ( $r eq "SchedLastT" );
-            $ret = $ret . " " . $tt->{"altitude"} if ( $r eq "SchedNext" );
-            $ret = $tt->{"date"} . " " . $ret     if ( $r eq "SchedNextT" );
-            $ret = $ret . " " . $tt->{"dayofyear"}
+            $ret = $ret . $sep . $tt->{"altitude"} if ( $r eq "SchedNext" );
+            $ret = $tt->{"date"} . $sep . $ret     if ( $r eq "SchedNextT" );
+            $ret = $ret . $sep . $tt->{"dayofyear"}
               if ( $r eq "SchedRecent" );
-            $ret = $tt->{"alt"} . " " . $ret       if ( $r eq "SchedUpcoming" );
-            $ret = $tt->{"metseason"} . " " . $ret if ( $r eq "SeasonMeteo" );
-            $ret = $tt->{"phenseason"} . " " . $ret if ( $r eq "SeasonPheno" );
-            $ret = $tt->{"cardinaldirection"} . " " . $ret
+            $ret = $tt->{"alt"} . $sep . $ret if ( $r eq "SchedUpcoming" );
+            $ret = $tt->{"metseason"} . $sep . $ret  if ( $r eq "SeasonMeteo" );
+            $ret = $tt->{"phenseason"} . $sep . $ret if ( $r eq "SeasonPheno" );
+            $ret = $tt->{"cardinaldirection"} . $sep . $ret
               if ( $r eq "SunCompass" );
-            $ret = $tt->{"cardinaldirection"} . " " . $ret
+            $ret = $tt->{"cardinaldirection"} . $sep . $ret
               if ( $r eq "SunCompassI" );
-            $ret = $tt->{"cardinaldirection"} . " " . $ret
+            $ret = $tt->{"cardinaldirection"} . $sep . $ret
               if ( $r eq "SunCompassS" );
-            $ret = $tt->{"week"} . " " . $ret     if ( $r eq "Weekofyear" );
-            $ret = $tt->{"timezone"} . " " . $ret if ( $r eq "YearIsLY" );
-            $ret = $tt->{"alt"} . " " . $ret      if ( $r eq "YearProgress" );
-            $ret = $tt->{"az"} . " " . $ret       if ( $r eq "YearRemainD" );
+            $ret = $tt->{"week"} . $sep . $ret     if ( $r eq "Weekofyear" );
+            $ret = $tt->{"timezone"} . $sep . $ret if ( $r eq "YearIsLY" );
+            $ret = $tt->{"alt"} . $sep . $ret      if ( $r eq "YearProgress" );
+            $ret = $tt->{"az"} . $sep . $ret       if ( $r eq "YearRemainD" );
         }
     }
 
@@ -2517,7 +2760,7 @@ sub Compute($;$$) {
     {
         $S->{DayChangeSeason}  = 2;
         $St->{DayChangeSeason} = 1;
-        AddToSchedule( $S, 0, "ObsSeason " . $At->{ObsSeason} )
+        AddToSchedule( $S, '*', "ObsSeason " . $At->{ObsSeason} )
           if ( grep ( /^ObsSeason/, @schedsch ) );
     }
 
@@ -2530,7 +2773,7 @@ sub Compute($;$$) {
     {
         $Sy->{DayChangeSeason} = 2;
         $S->{DayChangeSeason}  = 1;
-        AddToSchedule( $S, 0, "ObsSeason " . $A->{ObsSeason} )
+        AddToSchedule( $S, '*', "ObsSeason " . $A->{ObsSeason} )
           if ( grep ( /^ObsSeason/, @schedsch ) );
     }
 
@@ -2542,7 +2785,7 @@ sub Compute($;$$) {
     {
         $S->{DayChangeSeasonMeteo}  = 2;
         $St->{DayChangeSeasonMeteo} = 1;
-        AddToSchedule( $St, 0, "SeasonMeteo " . $St->{SeasonMeteo} )
+        AddToSchedule( $St, '*', "SeasonMeteo " . $St->{SeasonMeteo} )
           if ( grep ( /^SeasonMeteo/, @schedsch ) );
     }
 
@@ -2554,7 +2797,7 @@ sub Compute($;$$) {
     {
         $Sy->{DayChangeSeasonMeteo} = 2;
         $S->{DayChangeSeasonMeteo}  = 1;
-        AddToSchedule( $S, 0, "SeasonMeteo " . $S->{SeasonMeteo} )
+        AddToSchedule( $S, '*', "SeasonMeteo " . $S->{SeasonMeteo} )
           if ( grep ( /^SeasonMeteo/, @schedsch ) );
     }
 
@@ -2566,7 +2809,7 @@ sub Compute($;$$) {
     {
         $S->{DayChangeSeasonPheno}  = 2;
         $St->{DayChangeSeasonPheno} = 1;
-        AddToSchedule( $St, 0, "SeasonPheno " . $St->{SeasonPheno} )
+        AddToSchedule( $St, '*', "SeasonPheno " . $St->{SeasonPheno} )
           if ( grep ( /^SeasonPheno/, @schedsch ) );
     }
 
@@ -2578,7 +2821,7 @@ sub Compute($;$$) {
     {
         $Sy->{DayChangeSeasonPheno} = 2;
         $S->{DayChangeSeasonPheno}  = 1;
-        AddToSchedule( $S, 0, "SeasonPheno " . $S->{SeasonPheno} )
+        AddToSchedule( $S, '*', "SeasonPheno " . $S->{SeasonPheno} )
           if ( grep ( /^SeasonPheno/, @schedsch ) );
     }
 
@@ -2591,11 +2834,11 @@ sub Compute($;$$) {
     {
         $S->{DayChangeSunSign}  = 2;
         $St->{DayChangeSunSign} = 1;
-        AddToSchedule( $St, 0, "SunSign " . $At->{SunSign} )
+        AddToSchedule( $St, '?', "SunSign " . $At->{SunSign} )
           if ( grep ( /^SunSign/, @schedsch ) );
     }
 
-    #  SunSign changed since yesterday
+    #  SunSign is going to change somewhere today
     elsif (ref($Ay)
         && ref($Sy)
         && !$Sy->{DayChangeSunSign}
@@ -2604,7 +2847,7 @@ sub Compute($;$$) {
     {
         $Sy->{DayChangeSunSign} = 2;
         $S->{DayChangeSunSign}  = 1;
-        AddToSchedule( $S, 0, "SunSign " . $A->{SunSign} )
+        AddToSchedule( $S, '?', "SunSign " . $A->{SunSign} )
           if ( grep ( /^SunSign/, @schedsch ) );
     }
 
@@ -2617,11 +2860,11 @@ sub Compute($;$$) {
     {
         $S->{DayChangeMoonSign}  = 2;
         $St->{DayChangeMoonSign} = 1;
-        AddToSchedule( $St, 0, "MoonSign " . $At->{MoonSign} )
+        AddToSchedule( $St, '?', "MoonSign " . $At->{MoonSign} )
           if ( grep ( /^MoonSign/, @schedsch ) );
     }
 
-    #  MoonSign changed since yesterday
+    #  MoonSign is going to change somewhere today
     elsif (ref($Ay)
         && ref($Sy)
         && !$Sy->{DayChangeMoonSign}
@@ -2630,7 +2873,7 @@ sub Compute($;$$) {
     {
         $Sy->{DayChangeMoonSign} = 2;
         $S->{DayChangeMoonSign}  = 1;
-        AddToSchedule( $S, 0, "MoonSign " . $A->{MoonSign} )
+        AddToSchedule( $S, '?', "MoonSign " . $A->{MoonSign} )
           if ( grep ( /^MoonSign/, @schedsch ) );
     }
 
@@ -2643,11 +2886,11 @@ sub Compute($;$$) {
     {
         $S->{DayChangeMoonPhaseS}  = 2;
         $St->{DayChangeMoonPhaseS} = 1;
-        AddToSchedule( $St, 0, "MoonPhaseS " . $At->{MoonPhaseS} )
+        AddToSchedule( $St, '?', "MoonPhaseS " . $At->{MoonPhaseS} )
           if ( grep ( /^MoonPhaseS/, @schedsch ) );
     }
 
-    #  MoonPhase changed since yesterday
+    #  MoonPhase is going to change somewhere today
     elsif (ref($Ay)
         && ref($Sy)
         && !$Sy->{DayChangeMoonPhaseS}
@@ -2656,7 +2899,7 @@ sub Compute($;$$) {
     {
         $Sy->{DayChangeMoonPhaseS} = 2;
         $S->{DayChangeMoonPhaseS}  = 1;
-        AddToSchedule( $S, 0, "MoonPhaseS " . $A->{MoonPhaseS} )
+        AddToSchedule( $S, '?', "MoonPhaseS " . $A->{MoonPhaseS} )
           if ( grep ( /^MoonPhaseS/, @schedsch ) );
     }
 
@@ -2668,7 +2911,7 @@ sub Compute($;$$) {
     {
         $S->{DayChangeIsDST}  = 2;
         $St->{DayChangeIsDST} = 1;
-        AddToSchedule( $St, 0, "ObsIsDST " . $St->{".isdstultimo"} )
+        AddToSchedule( $St, '?', "ObsIsDST " . $St->{".isdstultimo"} )
           if ( grep ( /^ObsIsDST/, @schedsch ) );
     }
 
@@ -2680,20 +2923,58 @@ sub Compute($;$$) {
     {
         $Sy->{DayChangeIsDST} = 2;
         $S->{DayChangeIsDST}  = 1;
-        AddToSchedule( $S, 0, "ObsIsDST " . $S->{".isdstultimo"} )
+        AddToSchedule( $S, '?', "ObsIsDST " . $S->{".isdstultimo"} )
           if ( grep ( /^ObsIsDST/, @schedsch ) );
     }
 
     # schedule
     if ( defined( $S->{".schedule"} ) ) {
 
+        # past of yesterday
+        if ( ref($Sy) ) {
+            foreach my $e ( sort { $b <=> $a } keys %{ $Sy->{".schedule"} } ) {
+                foreach ( @{ $Sy->{".schedule"}{$e} } ) {
+                    AddToSchedule( $S, 'y' . $e, $_ );
+                }
+                last;    # only last event from last day
+            }
+
+            if (  !defined( $S->{".scheduleYest"} )
+                && defined( $Sy->{".scheduleDay"} ) )
+            {
+                foreach ( @{ $Sy->{".scheduleDay"} } ) {
+                    AddToSchedule( $S, 'y?', $_ );
+                }
+            }
+
+            if (  !defined( $S->{".scheduleYest"} )
+                && defined( $Sy->{".scheduleAllday"} ) )
+            {
+                foreach ( @{ $Sy->{".scheduleAllday"} } ) {
+                    AddToSchedule( $S, 'y*', $_ );
+                }
+            }
+        }
+
         # future of tomorrow
         if ( ref($St) ) {
             foreach my $e ( sort { $a <=> $b } keys %{ $St->{".schedule"} } ) {
                 foreach ( @{ $St->{".schedule"}{$e} } ) {
-                    AddToSchedule( $S, 24, $_ );
+                    AddToSchedule( $S, 't' . $e, $_ );
                 }
-                last;    # only add first event of next day
+                last if ($e > 0.);
+            }
+
+            if ( defined( $St->{".scheduleAllday"} ) ) {
+                foreach ( @{ $St->{".scheduleAllday"} } ) {
+                    AddToSchedule( $S, 't*', $_ );
+                }
+            }
+
+            if ( defined( $St->{".scheduleDay"} ) ) {
+                foreach ( @{ $St->{".scheduleDay"} } ) {
+                    AddToSchedule( $S, 't?', $_ );
+                }
             }
         }
 
@@ -2729,6 +3010,31 @@ sub Compute($;$$) {
                   join( ", ", @{ $S->{".schedule"}{$e} } );
             }
         }
+
+        # no event happend today until now
+        if ( !defined( $S->{SchedRecent} ) && defined( $S->{".scheduleYest"} ) )
+        {
+            foreach my $e ( keys %{ $S->{".scheduleYest"} } ) {
+                $S->{".SchedLastT"} = $e == 24. ? 0 : $e;
+                $S->{SchedLastT} = $e == 0.
+                  || $e == 24. ? '00:00:00' : FHEM::Astro::HHMMSS($e);
+                $S->{SchedLast}   = $S->{".scheduleYest"}{$e};
+                $S->{SchedRecent} = $S->{SchedLast};
+            }
+        }
+
+        # no event left for today
+        if (  !defined( $S->{SchedUpcoming} )
+            && defined( $S->{".scheduleTom"} ) )
+        {
+            foreach my $e ( keys %{ $S->{".scheduleTom"} } ) {
+                $S->{".SchedNextT"} = $e == 24. ? 0 : $e;
+                $S->{SchedNextT} = $e == 0.
+                  || $e == 24. ? '00:00:00' : FHEM::Astro::HHMMSS($e);
+                $S->{SchedNext} = join( ", ", @{ $S->{".scheduleTom"}{$e} } );
+                $S->{SchedUpcoming} = $S->{SchedNext};
+            }
+        }
     }
     else {
         $S->{SchedLast}     = "---";
@@ -2749,8 +3055,26 @@ sub Compute($;$$) {
 
 sub AddToSchedule {
     my ( $h, $e, $n ) = @_;
-    push @{ $h->{".schedule"}{$e} }, $n
-      if ( defined($e) && $e =~ m/^\d+(?:\.\d+)?$/ );
+    return unless ( defined($e) );
+    if ( $e =~ m/^\d+(?:\.\d+)?$/ ) {
+        push @{ $h->{".schedule"}{$e} }, $n;
+    }
+    elsif ( $e eq '*' ) {
+        push @{ $h->{".scheduleAllday"} }, $n;
+    }
+    elsif ( $e eq '?' ) {
+        push @{ $h->{".scheduleDay"} }, $n;
+    }
+    elsif ( $e =~ /^t(.+)/ ) {
+        my $t = $1;
+        $t = 0. unless ( $t =~ /^\d/ );
+        push @{ $h->{".scheduleTom"}{$t} }, $n;
+    }
+    elsif ( $e =~ /^y(.+)/ ) {
+        my $t = $1;
+        $t = 24. unless ( $t =~ /^\d/ );
+        $h->{".scheduleYest"}{$t} = $n;
+    }
 }
 
 sub Update($@) {
