@@ -54,8 +54,8 @@ my %attrs = (
     "altitude"           => undef,
     "AstroDevice"        => undef,
     "disable"            => "1,0",
-    "earlyfall"          => undef,
-    "earlyspring"        => undef,
+    "Earlyfall"          => undef,
+    "Earlyspring"        => undef,
     "HolidayDevices"     => undef,
     "horizon"            => undef,
     "InformativeDevices" => undef,
@@ -69,9 +69,13 @@ my %attrs = (
     "longitude" => undef,
     "recomputeAt" =>
 "multiple-strict,MoonRise,MoonSet,MoonTransit,NewDay,SeasonalHr,SunRise,SunSet,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
-    "schedule" =>
+    "Schedule" =>
 "multiple-strict,MoonPhaseS,MoonRise,MoonSet,MoonSign,MoonTransit,ObsDate,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,DaySeasonalHr,Daytime,SunRise,SunSet,SunSign,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
-    "seasonalHrs"     => undef,
+    "InformativeDays" =>
+"multiple-strict,ChristmasEve,FathersDay,MothersDay,Valentinstag,TanzindenMai,Halloween,Allerseelen,Martinstag,Buß-undBettag,Nikolaus,Silvester",
+    "SocialSeasons" =>
+"multiple-strict,Advent,Carnival,Easter,Halloween,HolyWeek,Lent,StrongBeer,Oktoberfest,Passion,Wiesn",
+    "SeasonalHrs"     => undef,
     "timezone"        => undef,
     "VacationDevices" => undef,
 );
@@ -87,6 +91,9 @@ our %transtable = (
         "dayscheduleyes" => "Day schedule yesterday",
         "dayscheduletod" => "Day schedule today",
         "dayscheduletom" => "Day schedule tomorrow",
+        "yesterday"      => "yesterday",
+        "today"          => "today",
+        "tomorrow"       => "tomorrow",
         "event"          => "Event",
         "events"         => "Events",
         "alldayevents"   => "All day events",
@@ -103,6 +110,7 @@ our %transtable = (
         "dawnnautic"        => "Nautic dawn",
         "dawnastro"         => "Astronomical dawn",
         "dawncustom"        => "Custom dawn",
+        "commonyear"        => "common year",
         "leapyear"          => "leap year",
 
         #
@@ -144,15 +152,52 @@ our %transtable = (
 
         #
         "phenseason"  => "Phenological Season",
-        "earlyspring" => "Early Spring",
+        "Earlyspring" => "Early Spring",
         "firstspring" => "First Spring",
         "fullspring"  => "Full Spring",
         "earlysummer" => "Early Summer",
         "midsummer"   => "Midsummer",
         "latesummer"  => "Late Summer",
-        "earlyfall"   => "Early Fall",
+        "Earlyfall"   => "Early Fall",
         "fullfall"    => "Full Fall",
         "latefall"    => "Late Fall",
+
+        #
+        "christmaseve"    => "Christmas eve",
+        "advent1"         => "Advent season: First Advent Sunday",
+        "advent2"         => "Advent season: Second Advent Sunday",
+        "advent3"         => "Advent season: Third Advent Sunday",
+        "advent4"         => "Advent season: Fourth Advent Sunday",
+        "adventseason"    => "Advent season",
+        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2" => "Faschingszeit",
+        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5" => "Faschingszeit: Rosenmontag",
+        "carnivalseason6" => "Faschingszeit: Fastnacht",
+        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
+        "eastersun"       => "Osterzeit: Ostersonntag",
+        "eastermon"       => "Osterzeit: Ostermontag",
+        "eastersat"       => "Osterzeit: Ostersamstag",
+        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
+        "easterseason"    => "Osterzeit",
+        "holyweekpalm"    => "Karwoche: Palmsonntag",
+        "holyweekthu"     => "Karwoche: Gründonnerstag",
+        "holyweekfri"     => "Karwoche: Karfreitag",
+        "holyweeksat"     => "Karwoche: Karsamstag",
+        "holyweek"        => "Karwoche",
+        "halloween"       => "Halloweenzeit: Halloween",
+        "halloweenseason" => "Halloweenzeit",
+        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
+        "lentw1"          => "Fastenzeit: Fastenwoche 1",
+        "lentw2"          => "Fastenzeit: Fastenwoche 2",
+        "lentw3"          => "Fastenzeit: Fastenwoche 3",
+        "lentw4"          => "Fastenzeit: Fastenwoche 4",
+        "lentw5"          => "Fastenzeit: Fastenwoche 5",
+        "lentw6"          => "Fastenzeit: Fastenwoche 6",
+        "lentw7"          => "Fastenzeit: Große Fastenwoche",
+        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseason"     => "Starkbierzeit",
     },
 
     DE => {
@@ -160,6 +205,9 @@ our %transtable = (
         "dayscheduleyes" => "Tagesablaufplan gestern",
         "dayscheduletod" => "Tagesablaufplan heute",
         "dayscheduletom" => "Tagesablaufplan morgen",
+        "yesterday"      => "gestern",
+        "today"          => "heute",
+        "tomorrow"       => "morgen",
         "event"          => "Ereignis",
         "events"         => "Ereignisse",
         "alldayevents"   => "Ganztägige Ereignisse",
@@ -176,6 +224,7 @@ our %transtable = (
         "dawnnautic"        => "Nautische Morgendämmerung",
         "dawnastro"         => "Astronomische Morgendämmerung",
         "dawncustom"        => "Konfigurierte Morgendämmerung",
+        "commonyear"        => "Gemeinjahr",
         "leapyear"          => "Schaltjahr",
 
         #
@@ -217,15 +266,52 @@ our %transtable = (
 
         #
         "phenseason"  => "Phänologische Jahreszeit",
-        "earlyspring" => "Vorfrühling",
+        "Earlyspring" => "Vorfrühling",
         "firstspring" => "Erstfrühling",
         "fullspring"  => "Vollfrühling",
         "earlysummer" => "Frühsommer",
         "midsummer"   => "Hochsommer",
         "latesummer"  => "Spätsommer",
-        "earlyfall"   => "Frühherbst",
+        "Earlyfall"   => "Frühherbst",
         "fullfall"    => "Vollherbst",
         "latefall"    => "Spätherbst",
+
+        #
+        "christmaseve"    => "Heiligabend",
+        "advent1"         => "Adventszeit: 1. Advent",
+        "advent2"         => "Adventszeit: 2. Advent",
+        "advent3"         => "Adventszeit: 3. Advent",
+        "advent4"         => "Adventszeit: 4. Advent",
+        "adventseason"    => "Adventszeit",
+        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2" => "Faschingszeit",
+        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5" => "Faschingszeit: Rosenmontag",
+        "carnivalseason6" => "Faschingszeit: Fastnacht",
+        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
+        "eastersun"       => "Osterzeit: Ostersonntag",
+        "eastermon"       => "Osterzeit: Ostermontag",
+        "eastersat"       => "Osterzeit: Ostersamstag",
+        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
+        "easterseason"    => "Osterzeit",
+        "holyweekpalm"    => "Karwoche: Palmsonntag",
+        "holyweekthu"     => "Karwoche: Gründonnerstag",
+        "holyweekfri"     => "Karwoche: Karfreitag",
+        "holyweeksat"     => "Karwoche: Karsamstag",
+        "holyweek"        => "Karwoche",
+        "halloween"       => "Halloweenzeit: Halloween",
+        "halloweenseason" => "Halloweenzeit",
+        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
+        "lentw1"          => "Fastenzeit: Fastenwoche 1",
+        "lentw2"          => "Fastenzeit: Fastenwoche 2",
+        "lentw3"          => "Fastenzeit: Fastenwoche 3",
+        "lentw4"          => "Fastenzeit: Fastenwoche 4",
+        "lentw5"          => "Fastenzeit: Fastenwoche 5",
+        "lentw6"          => "Fastenzeit: Fastenwoche 6",
+        "lentw7"          => "Fastenzeit: Große Fastenwoche",
+        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseason"     => "Starkbierzeit",
     },
 
     ES => {
@@ -233,6 +319,9 @@ our %transtable = (
         "dayscheduleyes" => "Horario del día de ayer",
         "dayscheduletod" => "Horario del día de hoy",
         "dayscheduletom" => "Horario de mañana",
+        "yesterday"      => "ayer",
+        "today"          => "hoy",
+        "tomorrow"       => "mañana",
         "event"          => "Evento",
         "events"         => "Eventos",
         "alldayevents"   => "Eventos todo el dia",
@@ -249,6 +338,7 @@ our %transtable = (
         "dawnnautic"        => "Amanecer náutico",
         "dawnastro"         => "Amanecer astronómico",
         "dawncustom"        => "Amanecer personalizado",
+        "commonyear"        => "año común",
         "leapyear"          => "año bisiesto",
 
         #
@@ -290,15 +380,52 @@ our %transtable = (
 
         #
         "phenseason"  => "Temporada Fenologica",
-        "earlyspring" => "Inicio de la primavera",
+        "Earlyspring" => "Inicio de la primavera",
         "firstspring" => "Primera primavera",
         "fullspring"  => "Primavera completa",
         "earlysummer" => "Comienzo del verano",
         "midsummer"   => "Pleno verano",
         "latesummer"  => "El verano pasado",
-        "earlyfall"   => "Inicio del otoño",
+        "Earlyfall"   => "Inicio del otoño",
         "fullfall"    => "Otoño completo",
         "latefall"    => "Finales de otoño",
+
+        #
+        "christmaseve"    => "Nochebuena",
+        "advent1"         => "Adventszeit: 1. Advent",
+        "advent2"         => "Adventszeit: 2. Advent",
+        "advent3"         => "Adventszeit: 3. Advent",
+        "advent4"         => "Adventszeit: 4. Advent",
+        "adventseason"    => "Temporada de Adviento",
+        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2" => "Faschingszeit",
+        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5" => "Faschingszeit: Rosenmontag",
+        "carnivalseason6" => "Faschingszeit: Fastnacht",
+        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
+        "eastersun"       => "Osterzeit: Ostersonntag",
+        "eastermon"       => "Osterzeit: Ostermontag",
+        "eastersat"       => "Osterzeit: Ostersamstag",
+        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
+        "easterseason"    => "Osterzeit",
+        "holyweekpalm"    => "Karwoche: Palmsonntag",
+        "holyweekthu"     => "Karwoche: Gründonnerstag",
+        "holyweekfri"     => "Karwoche: Karfreitag",
+        "holyweeksat"     => "Karwoche: Karsamstag",
+        "holyweek"        => "Karwoche",
+        "halloween"       => "Halloweenzeit: Halloween",
+        "halloweenseason" => "Halloweenzeit",
+        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
+        "lentw1"          => "Fastenzeit: Fastenwoche 1",
+        "lentw2"          => "Fastenzeit: Fastenwoche 2",
+        "lentw3"          => "Fastenzeit: Fastenwoche 3",
+        "lentw4"          => "Fastenzeit: Fastenwoche 4",
+        "lentw5"          => "Fastenzeit: Fastenwoche 5",
+        "lentw6"          => "Fastenzeit: Fastenwoche 6",
+        "lentw7"          => "Fastenzeit: Große Fastenwoche",
+        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseason"     => "Starkbierzeit",
     },
 
     FR => {
@@ -306,6 +433,9 @@ our %transtable = (
         "dayscheduleyes" => "Horaire de la journée d'hier",
         "dayscheduletod" => "Horaire de la journée aujourd'hui",
         "dayscheduletom" => "Horaire de la journée de demain",
+        "yesterday"      => "hier",
+        "today"          => "aujourd'hui",
+        "tomorrow"       => "demain",
         "event"          => "Événement",
         "events"         => "Événements",
         "alldayevents"   => "Événements d'une journée",
@@ -322,6 +452,7 @@ our %transtable = (
         "dawnnautic"        => "Aube nautique",
         "dawnastro"         => "Aube astronomique",
         "dawncustom"        => "Aube personnalisé",
+        "commonyear"        => "année commune",
         "leapyear"          => "année bissextile",
 
         #
@@ -363,15 +494,52 @@ our %transtable = (
 
         #
         "phenseason"  => "Saison Phénologique",
-        "earlyspring" => "Avant du printemps",
+        "Earlyspring" => "Avant du printemps",
         "firstspring" => "Début du printemps",
         "fullspring"  => "Printemps",
         "earlysummer" => "Avant de l'été",
         "midsummer"   => "Milieu de l'été",
         "latesummer"  => "Fin de l'été",
-        "earlyfall"   => "Avant de l'automne",
+        "Earlyfall"   => "Avant de l'automne",
         "fullfall"    => "Automne",
         "latefall"    => "Fin de l'automne",
+
+        #
+        "christmaseve"    => "Veille de Noël",
+        "advent1"         => "Adventszeit: 1. Advent",
+        "advent2"         => "Adventszeit: 2. Advent",
+        "advent3"         => "Adventszeit: 3. Advent",
+        "advent4"         => "Adventszeit: 4. Advent",
+        "adventseason"    => "Saison de l'Avent",
+        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2" => "Faschingszeit",
+        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5" => "Faschingszeit: Rosenmontag",
+        "carnivalseason6" => "Faschingszeit: Fastnacht",
+        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
+        "eastersun"       => "Osterzeit: Ostersonntag",
+        "eastermon"       => "Osterzeit: Ostermontag",
+        "eastersat"       => "Osterzeit: Ostersamstag",
+        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
+        "easterseason"    => "Osterzeit",
+        "holyweekpalm"    => "Karwoche: Palmsonntag",
+        "holyweekthu"     => "Karwoche: Gründonnerstag",
+        "holyweekfri"     => "Karwoche: Karfreitag",
+        "holyweeksat"     => "Karwoche: Karsamstag",
+        "holyweek"        => "Karwoche",
+        "halloween"       => "Halloweenzeit: Halloween",
+        "halloweenseason" => "Halloweenzeit",
+        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
+        "lentw1"          => "Fastenzeit: Fastenwoche 1",
+        "lentw2"          => "Fastenzeit: Fastenwoche 2",
+        "lentw3"          => "Fastenzeit: Fastenwoche 3",
+        "lentw4"          => "Fastenzeit: Fastenwoche 4",
+        "lentw5"          => "Fastenzeit: Fastenwoche 5",
+        "lentw6"          => "Fastenzeit: Fastenwoche 6",
+        "lentw7"          => "Fastenzeit: Große Fastenwoche",
+        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseason"     => "Starkbierzeit",
     },
 
     IT => {
@@ -379,6 +547,9 @@ our %transtable = (
         "dayscheduleyes" => "Programma giornaliero ieri",
         "dayscheduletod" => "Programma giornaliero oggi",
         "dayscheduletom" => "Programmazione del giorno domani",
+        "yesterday"      => "ieri",
+        "today"          => "oggigiorno",
+        "tomorrow"       => "domani",
         "event"          => "Evento",
         "events"         => "Eventi",
         "alldayevents"   => "Eventi per tutto il giorno",
@@ -395,6 +566,7 @@ our %transtable = (
         "dawnnautic"        => "Alba nautico",
         "dawnastro"         => "Alba astronomico",
         "dawncustom"        => "Alba personalizzato",
+        "commonyear"        => "anno comune",
         "leapyear"          => "anno bisestile",
 
         #
@@ -436,15 +608,52 @@ our %transtable = (
 
         #
         "phenseason"  => "Stagione Fenologica",
-        "earlyspring" => "Inizio primavera",
+        "Earlyspring" => "Inizio primavera",
         "firstspring" => "Prima primavera",
         "fullspring"  => "Piena primavera",
         "earlysummer" => "Inizio estate",
         "midsummer"   => "Mezza estate",
         "latesummer"  => "Estate inoltrata",
-        "earlyfall"   => "Inizio autunno",
+        "Earlyfall"   => "Inizio autunno",
         "fullfall"    => "Piena caduta",
         "latefall"    => "Tardo autunno",
+
+        #
+        "christmaseve"    => "Vigilia di Natale",
+        "advent1"         => "Adventszeit: 1. Advent",
+        "advent2"         => "Adventszeit: 2. Advent",
+        "advent3"         => "Adventszeit: 3. Advent",
+        "advent4"         => "Adventszeit: 4. Advent",
+        "adventseason"    => "Stagione d'Avvento",
+        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2" => "Faschingszeit",
+        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5" => "Faschingszeit: Rosenmontag",
+        "carnivalseason6" => "Faschingszeit: Fastnacht",
+        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
+        "eastersun"       => "Osterzeit: Ostersonntag",
+        "eastermon"       => "Osterzeit: Ostermontag",
+        "eastersat"       => "Osterzeit: Ostersamstag",
+        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
+        "easterseason"    => "Osterzeit",
+        "holyweekpalm"    => "Karwoche: Palmsonntag",
+        "holyweekthu"     => "Karwoche: Gründonnerstag",
+        "holyweekfri"     => "Karwoche: Karfreitag",
+        "holyweeksat"     => "Karwoche: Karsamstag",
+        "holyweek"        => "Karwoche",
+        "halloween"       => "Halloweenzeit: Halloween",
+        "halloweenseason" => "Halloweenzeit",
+        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
+        "lentw1"          => "Fastenzeit: Fastenwoche 1",
+        "lentw2"          => "Fastenzeit: Fastenwoche 2",
+        "lentw3"          => "Fastenzeit: Fastenwoche 3",
+        "lentw4"          => "Fastenzeit: Fastenwoche 4",
+        "lentw5"          => "Fastenzeit: Fastenwoche 5",
+        "lentw6"          => "Fastenzeit: Fastenwoche 6",
+        "lentw7"          => "Fastenzeit: Große Fastenwoche",
+        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseason"     => "Starkbierzeit",
     },
 
     NL => {
@@ -452,6 +661,9 @@ our %transtable = (
         "dayscheduleyes" => "Dagschema gisteren",
         "dayscheduletod" => "Dagschema vandaag",
         "dayscheduletom" => "Dagschema morgen",
+        "yesterday"      => "gisteren",
+        "today"          => "vandaag",
+        "tomorrow"       => "morgen",
         "event"          => "Evenement",
         "events"         => "Evenementen",
         "alldayevents"   => "De hele dag evenementen",
@@ -468,6 +680,7 @@ our %transtable = (
         "dawnnautic"        => "Nautische Dageraad",
         "dawnastro"         => "Astronomische Dageraad",
         "dawncustom"        => "Aangepaste Dageraad",
+        "commonyear"        => "Gemeenschappelijk Jaar",
         "leapyear"          => "Schrikkeljaar",
 
         #
@@ -509,15 +722,52 @@ our %transtable = (
 
         #
         "phenseason"  => "Fenologisch Seizoen",
-        "earlyspring" => "Vroeg Voorjaar",
+        "Earlyspring" => "Vroeg Voorjaar",
         "firstspring" => "Eerste Voorjaar",
         "fullspring"  => "Voorjaar",
         "earlysummer" => "Vroeg Zomer",
         "midsummer"   => "Zomer",
         "latesummer"  => "Laat Zomer",
-        "earlyfall"   => "Vroeg Herfst",
+        "Earlyfall"   => "Vroeg Herfst",
         "fullfall"    => "Herfst",
         "latefall"    => "Laat Herfst",
+
+        #
+        "christmaseve"    => "Kerstavond",
+        "advent1"         => "Adventszeit: 1. Advent",
+        "advent2"         => "Adventszeit: 2. Advent",
+        "advent3"         => "Adventszeit: 3. Advent",
+        "advent4"         => "Adventszeit: 4. Advent",
+        "adventseason"    => "Adventsseizoen",
+        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2" => "Faschingszeit",
+        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5" => "Faschingszeit: Rosenmontag",
+        "carnivalseason6" => "Faschingszeit: Fastnacht",
+        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
+        "eastersun"       => "Osterzeit: Ostersonntag",
+        "eastermon"       => "Osterzeit: Ostermontag",
+        "eastersat"       => "Osterzeit: Ostersamstag",
+        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
+        "easterseason"    => "Osterzeit",
+        "holyweekpalm"    => "Karwoche: Palmsonntag",
+        "holyweekthu"     => "Karwoche: Gründonnerstag",
+        "holyweekfri"     => "Karwoche: Karfreitag",
+        "holyweeksat"     => "Karwoche: Karsamstag",
+        "holyweek"        => "Karwoche",
+        "halloween"       => "Halloweenzeit: Halloween",
+        "halloweenseason" => "Halloweenzeit",
+        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
+        "lentw1"          => "Fastenzeit: Fastenwoche 1",
+        "lentw2"          => "Fastenzeit: Fastenwoche 2",
+        "lentw3"          => "Fastenzeit: Fastenwoche 3",
+        "lentw4"          => "Fastenzeit: Fastenwoche 4",
+        "lentw5"          => "Fastenzeit: Fastenwoche 5",
+        "lentw6"          => "Fastenzeit: Fastenwoche 6",
+        "lentw7"          => "Fastenzeit: Große Fastenwoche",
+        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseason"     => "Starkbierzeit",
     },
 
     PL => {
@@ -525,6 +775,9 @@ our %transtable = (
         "dayscheduleyes" => "Rozkład dnia wczorajszego",
         "dayscheduletod" => "Rozkład dnia dzisiaj",
         "dayscheduletom" => "Rozkład dnia jutro",
+        "yesterday"      => "wczoraj",
+        "today"          => "aktualnie",
+        "tomorrow"       => "przyszłość",
         "event"          => "Zdarzenie",
         "events"         => "Zdarzenia",
         "alldayevents"   => "Wydarzenia całodniowe",
@@ -541,6 +794,7 @@ our %transtable = (
         "dawnnautic"        => "świt morski",
         "dawnastro"         => "świt astronomiczny",
         "dawncustom"        => "świt niestandardowy",
+        "commonyear"        => "wspólny rok",
         "leapyear"          => "rok przestępny",
 
         #
@@ -582,15 +836,52 @@ our %transtable = (
 
         #
         "phenseason"  => "Sezon Fenologiczny",
-        "earlyspring" => "Wczesna wiosna",
+        "Earlyspring" => "Wczesna wiosna",
         "firstspring" => "Pierwsza wiosna",
         "fullspring"  => "Pełna wiosna",
         "earlysummer" => "Wczesne lato",
         "midsummer"   => "Połowa lata",
         "latesummer"  => "Późne lato",
-        "earlyfall"   => "Wczesna jesień",
+        "Earlyfall"   => "Wczesna jesień",
         "fullfall"    => "Pełna jesień",
         "latefall"    => "Późną jesienią",
+
+        #
+        "christmaseve"    => "Wigilia",
+        "advent1"         => "Adventszeit: 1. Advent",
+        "advent2"         => "Adventszeit: 2. Advent",
+        "advent3"         => "Adventszeit: 3. Advent",
+        "advent4"         => "Adventszeit: 4. Advent",
+        "adventseason"    => "Sezon adwentowy",
+        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2" => "Faschingszeit",
+        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5" => "Faschingszeit: Rosenmontag",
+        "carnivalseason6" => "Faschingszeit: Fastnacht",
+        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
+        "eastersun"       => "Osterzeit: Ostersonntag",
+        "eastermon"       => "Osterzeit: Ostermontag",
+        "eastersat"       => "Osterzeit: Ostersamstag",
+        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
+        "easterseason"    => "Osterzeit",
+        "holyweekpalm"    => "Karwoche: Palmsonntag",
+        "holyweekthu"     => "Karwoche: Gründonnerstag",
+        "holyweekfri"     => "Karwoche: Karfreitag",
+        "holyweeksat"     => "Karwoche: Karsamstag",
+        "holyweek"        => "Karwoche",
+        "halloween"       => "Halloweenzeit: Halloween",
+        "halloweenseason" => "Halloweenzeit",
+        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
+        "lentw1"          => "Fastenzeit: Fastenwoche 1",
+        "lentw2"          => "Fastenzeit: Fastenwoche 2",
+        "lentw3"          => "Fastenzeit: Fastenwoche 3",
+        "lentw4"          => "Fastenzeit: Fastenwoche 4",
+        "lentw5"          => "Fastenzeit: Fastenwoche 5",
+        "lentw6"          => "Fastenzeit: Fastenwoche 6",
+        "lentw7"          => "Fastenzeit: Große Fastenwoche",
+        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseason"     => "Starkbierzeit",
     }
 );
 
@@ -729,7 +1020,7 @@ our %seasonppos = (
 
 # Run before package compilation
 BEGIN {
-    main::LoadModule("Astro");
+    ::LoadModule("Astro");
 
     # Import from main context
     GP_Import(
@@ -764,6 +1055,7 @@ BEGIN {
           readingsSingleUpdate
           RemoveInternalTimer
           time_str2num
+          trim
           toJSON
           urlEncode
           )
@@ -820,7 +1112,7 @@ sub Define ($@) {
     if ( $init_done && !defined( $hash->{OLDDEF} ) ) {
         $attr{$name}{icon}        = 'time_calendar';
         $attr{$name}{recomputeAt} = 'NewDay,SeasonalHr';
-        $attr{$name}{schedule} =
+        $attr{$name}{Schedule} =
 'ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,Daytime,SunRise,SunSet,SunSign,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning';
         $attr{$name}{stateFormat} = 'Daytime';
     }
@@ -941,6 +1233,42 @@ sub Attr(@) {
                 $hash->{NOTIFYDEV} = "global," . $value;
             };
 
+            # HolidayDevices modified at runtime
+            $key eq "HolidayDevices" and do {
+
+                # check value
+                foreach ( split( ",", $value ) ) {
+                    return
+                      "$do $name attribute $key has invalid device name format "
+                      . $_
+                      unless ( goodDeviceName($_) );
+                }
+            };
+
+            # InformativeDevices modified at runtime
+            $key eq "InformativeDevices" and do {
+
+                # check value
+                foreach ( split( ",", $value ) ) {
+                    return
+                      "$do $name attribute $key has invalid device name format "
+                      . $_
+                      unless ( goodDeviceName($_) );
+                }
+            };
+
+            # VacationDevices modified at runtime
+            $key eq "VacationDevices" and do {
+
+                # check value
+                foreach ( split( ",", $value ) ) {
+                    return
+                      "$do $name attribute $key has invalid device name format "
+                      . $_
+                      unless ( goodDeviceName($_) );
+                }
+            };
+
             # disable modified at runtime
             $key eq "disable" and do {
 
@@ -951,8 +1279,8 @@ sub Attr(@) {
                     $value ? "inactive" : "Initialized", $init_done );
             };
 
-            # earlyfall modified at runtime
-            $key eq "earlyfall" and do {
+            # Earlyfall modified at runtime
+            $key eq "Earlyfall" and do {
 
                 # check value
                 return
@@ -960,8 +1288,8 @@ sub Attr(@) {
                   unless ( $value =~ m/^(0[8-9])-(0[1-9]|[12]\d|30|31)$/ );
             };
 
-            # earlyspring modified at runtime
-            $key eq "earlyspring" and do {
+            # Earlyspring modified at runtime
+            $key eq "Earlyspring" and do {
 
                 # check value
                 return
@@ -1036,9 +1364,9 @@ sub Attr(@) {
                 $hash->{RECOMPUTEAT} = join( ',', @vals );
             };
 
-            # schedule modified at runtime
-            $key eq "schedule" and do {
-                my @skel = split( ',', $attrs{schedule} );
+            # Schedule modified at runtime
+            $key eq "Schedule" and do {
+                my @skel = split( ',', $attrs{Schedule} );
                 shift @skel;
 
                 # check value 1/2
@@ -1056,8 +1384,8 @@ sub Attr(@) {
                 }
             };
 
-            # seasonalHrs modified at runtime
-            $key eq "seasonalHrs" and do {
+            # SeasonalHrs modified at runtime
+            $key eq "SeasonalHrs" and do {
 
                 # check value
                 return
@@ -1713,9 +2041,12 @@ sub Get($@) {
                         $l .= FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
                             defined($2) ? $2 : '' );
                     }
-                    else {
+                    elsif ( defined( $Schedule{$1} ) ) {
                         $l .= FormatReading( $1, $h, $lc_numeric,
                             defined($2) ? $2 : '' );
+                    }
+                    else {
+                        $l .= encode_utf8($e);
                     }
                 }
             }
@@ -1739,9 +2070,12 @@ sub Get($@) {
                         $l .= FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
                             defined($2) ? $2 : '' );
                     }
-                    else {
+                    elsif ( defined( $Schedule{$1} ) ) {
                         $l .= FormatReading( $1, $h, $lc_numeric,
                             defined($2) ? $2 : '' );
+                    }
+                    else {
+                        $l .= encode_utf8($e);
                     }
                 }
             }
@@ -1775,9 +2109,12 @@ sub Get($@) {
                         $l .= FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
                             defined($2) ? $2 : '' );
                     }
-                    else {
+                    elsif ( defined( $Schedule{$1} ) ) {
                         $l .= FormatReading( $1, $h, $lc_numeric,
                             defined($2) ? $2 : '' );
+                    }
+                    else {
+                        $l .= encode_utf8($e);
                     }
                 }
                 $l .= $lb;
@@ -1867,6 +2204,14 @@ sub FormatReading($$;$$) {
     $ret = UConv::decimal_mark( $ret, $lc_numeric )
       unless ( $h && ref($h) && defined( $h->{html} ) && $h->{html} eq "0" );
 
+    $ret = ( $val == 1. ? $tt->{"leapyear"} : $tt->{"commonyear"} )
+      if ( $r eq "YearIsLY" );
+    $ret = (
+          $val == 2.
+        ? $tt->{"tomorrow"}
+        : ( $val == 1. ? $tt->{"today"} : '---' )
+    ) if ( $r =~ /^DayChange/ );
+
     if ( $h && ref($h) && ( !$h->{html} || $h->{html} ne "0" ) ) {
 
         #-- add unit if desired
@@ -1892,19 +2237,6 @@ sub FormatReading($$;$$) {
             $sep = ": " if ( $h->{long} > 2. );
             $sep = ""   if ( $ret eq "" );
 
-            $ret = $tt->{"twilightastro"} . $sep . $ret
-              if ( $r eq "DayChangeIsDST" );
-            $ret = $tt->{"twilightastro"} . $sep . $ret
-              if ( $r eq "DayChangeMoonPhaseS" );
-            $ret = $tt->{"twilightcivil"} . $sep . $ret
-              if ( $r eq "DayChangeMoonSign" );
-            $ret = $tt->{"twilightcivil"} . $sep . $ret
-              if ( $r eq "DayChangeSeason" );
-            $ret = $tt->{"twilightcustom"} . $sep . $ret
-              if ( $r eq "DayChangeSeasonMeteo" );
-            $ret = $tt->{"twilightcustom"} . $sep . $ret
-              if ( $r eq "DayChangeSeasonPheno" );
-            $ret = $tt->{"age"} . $sep . $ret if ( $r eq "DayChangeSunSign" );
             $ret = (
                 (
                     (
@@ -1961,10 +2293,9 @@ sub FormatReading($$;$$) {
               if ( $r eq "SunCompassI" );
             $ret = $tt->{"cardinaldirection"} . $sep . $ret
               if ( $r eq "SunCompassS" );
-            $ret = $tt->{"week"} . $sep . $ret     if ( $r eq "Weekofyear" );
-            $ret = $tt->{"timezone"} . $sep . $ret if ( $r eq "YearIsLY" );
-            $ret = $tt->{"alt"} . $sep . $ret      if ( $r eq "YearProgress" );
-            $ret = $tt->{"az"} . $sep . $ret       if ( $r eq "YearRemainD" );
+            $ret = $tt->{"week"} . $sep . $ret if ( $r eq "Weekofyear" );
+            $ret = $tt->{"alt"} . $sep . $ret  if ( $r eq "YearProgress" );
+            $ret = $tt->{"az"} . $sep . $ret   if ( $r eq "YearRemainD" );
         }
     }
 
@@ -2068,8 +2399,9 @@ sub SetTime (;$$$$) {
 
     my ( $sec, $min, $hour, $day, $month, $year, $wday, $yday, $isdst ) =
       localtime($time);
-    my $isdstultimo =
-      ( localtime( timelocal( 59, 59, 23, $day, $month, $year ) ) )[8];
+    my $beforemn = timelocal( 59, 59, 23, $day, $month, $year );
+    my $mn       = timelocal( 0,  0,  0,  $day, $month, $year );
+    my $isdstultimo = ( localtime($beforemn) )[8];
     $year  += 1900;
     $month += 1;
     $D->{timestamp}   = $time;
@@ -2116,8 +2448,12 @@ sub SetTime (;$$$$) {
     if ($dayOffset) {
         my $i = $dayOffset * -1.;
         while ( $i < $dayOffset + 1. ) {
-            $D->{$i} = SetTime( $time + ( 86400. * $i ), $tz, $lc_time, 0 )
-              unless ( $i == 0 );
+            if ( $i > 0. ) {
+                $D->{$i} = SetTime( $beforemn + ( 86400. * $i ), $tz, $lc_time, 0 );
+            }
+            elsif ( $i < 0. ) {
+                $D->{$i} = SetTime( $mn + ( 86400. * $i ), $tz, $lc_time, 0 );
+            }
             $i++;
         }
     }
@@ -2196,14 +2532,32 @@ sub Compute($;$$) {
     local $ENV{TZ} = $tz if ($tz);
     tzset();
 
-    # load schedule schema
+    # load schemata
     my @schedsch =
       split(
         ',',
         (
-            defined( $params->{"schedule"} )
-            ? $params->{"schedule"}
-            : AttrVal( $name, "schedule", $attrs{schedule} )
+            defined( $params->{"Schedule"} )
+            ? $params->{"Schedule"}
+            : AttrVal( $name, "Schedule", $attrs{Schedule} )
+        )
+      );
+    my @infoDays =
+      split(
+        ',',
+        (
+            defined( $params->{"InformativeDays"} )
+            ? $params->{"InformativeDays"}
+            : AttrVal( $name, "InformativeDays", $attrs{InformativeDays} )
+        )
+      );
+    my @socialSeasons =
+      split(
+        ',',
+        (
+            defined( $params->{"SocialSeasons"} )
+            ? $params->{"SocialSeasons"}
+            : AttrVal( $name, "SocialSeasons", $attrs{SocialSeasons} )
         )
       );
 
@@ -2275,31 +2629,31 @@ sub Compute($;$$) {
 
     # custom date for early spring
     my $earlyspring = '02-22';
-    if ( defined( $params->{"earlyspring"} ) ) {
-        $earlyspring = $params->{"earlyspring"};
+    if ( defined( $params->{"Earlyspring"} ) ) {
+        $earlyspring = $params->{"Earlyspring"};
     }
     elsif (defined( $attr{$name} )
-        && defined( $attr{$name}{"earlyspring"} ) )
+        && defined( $attr{$name}{"Earlyspring"} ) )
     {
-        $earlyspring = $attr{$name}{"earlyspring"};
+        $earlyspring = $attr{$name}{"Earlyspring"};
     }
     else {
         Log3 $name, 5,
-          "$name: No earlyspring attribute defined, using date $earlyspring"
+          "$name: No Earlyspring attribute defined, using date $earlyspring"
           if ( !$dayOffset );
     }
 
     # custom date for early fall
     my $earlyfall = '08-20';
-    if ( defined( $params->{"earlyfall"} ) ) {
-        $earlyfall = $params->{"earlyfall"};
+    if ( defined( $params->{"Earlyfall"} ) ) {
+        $earlyfall = $params->{"Earlyfall"};
     }
-    elsif ( defined( $attr{$name} ) && defined( $attr{$name}{"earlyfall"} ) ) {
-        $earlyfall = $attr{$name}{"earlyfall"};
+    elsif ( defined( $attr{$name} ) && defined( $attr{$name}{"Earlyfall"} ) ) {
+        $earlyfall = $attr{$name}{"Earlyfall"};
     }
     else {
         Log3 $name, 5,
-          "$name: No earlyfall attribute defined, using date $earlyfall"
+          "$name: No Earlyfall attribute defined, using date $earlyfall"
           if ( !$dayOffset );
     }
 
@@ -2307,8 +2661,8 @@ sub Compute($;$$) {
     my $daypartsIsRoman = 0;
     my $dayparts        = 12;
     my $nightparts      = 12;
-    if ( defined( $params->{"seasonalHrs"} )
-        && $params->{"seasonalHrs"} =~ m/^(([^:]+)(?::(.+))?)$/ )
+    if ( defined( $params->{"SeasonalHrs"} )
+        && $params->{"SeasonalHrs"} =~ m/^(([^:]+)(?::(.+))?)$/ )
     {
         $daypartsIsRoman = 1
           if ( $1 eq '4' );    # special handling of '^4$' as roman format
@@ -2316,8 +2670,8 @@ sub Compute($;$$) {
         $nightparts = $3 ? $3 : $2;
     }
     elsif (defined( $attr{$name} )
-        && defined( $attr{$name}{"seasonalHrs"} )
-        && $attr{$name}{"seasonalHrs"} =~ m/^(([^:]+)(?::(.+))?)$/ )
+        && defined( $attr{$name}{"SeasonalHrs"} )
+        && $attr{$name}{"SeasonalHrs"} =~ m/^(([^:]+)(?::(.+))?)$/ )
     {
         $daypartsIsRoman = 1
           if ( $1 eq '4' );    # special handling of '^4$' as roman format
@@ -2326,8 +2680,124 @@ sub Compute($;$$) {
     }
     else {
         Log3 $name, 5,
-"$name: No seasonalHrs attribute defined, using $dayparts seasonal hours for day and night"
+"$name: No SeasonalHrs attribute defined, using $dayparts seasonal hours for day and night"
           if ( !$dayOffset );
+    }
+
+    # Add specific events to schedule
+    if ( grep ( /^Advent$/, @socialSeasons )
+        && IsAdventSeason( $D->{day}, $D->{month}, $D->{year} ) =~
+        /^[^:]+: (.+)/ )
+    {
+        AddToSchedule( $S, '*', $1 );
+    }
+    if ( grep ( /^Carnival$/, @socialSeasons )
+        && IsCarnivalSeason( $D->{day}, $D->{month}, $D->{year} ) =~
+        /^[^:]+: (.+)/ )
+    {
+        AddToSchedule( $S, '*', $1 );
+    }
+    if (   grep ( /^ChristmasEve$/, @infoDays )
+        && $D->{month} == 12.
+        && $D->{day} == 24. )
+    {
+        AddToSchedule( $S, '?', $tt->{christmaseve} );
+        AddToSchedule( $S, 18., $tt->{christmaseve} );
+    }
+    if ( grep ( /^Easter$/, @socialSeasons )
+        && IsEasterSeason( $D->{day}, $D->{month}, $D->{year} ) =~
+        /^[^:]+: (.+)/ )
+    {
+        AddToSchedule( $S, '*', $1 );
+    }
+    if ( grep ( /^Halloween$/, @socialSeasons )
+        && IsHalloween( $D->{day}, $D->{month}, $D->{year} ) =~ /^[^:]+: (.+)/ )
+    {
+        AddToSchedule( $S, '*', $1 );
+    }
+    if ( grep ( /^HolyWeek$/, @socialSeasons )
+        && IsHolyWeek( $D->{day}, $D->{month}, $D->{year} ) =~ /^[^:]+: (.+)/ )
+    {
+        AddToSchedule( $S, '*', $1 );
+    }
+    if ( grep ( /^Lent$/, @socialSeasons )
+        && IsLent( $D->{day}, $D->{month}, $D->{year} ) =~ /^[^:]+: (.+)/ )
+    {
+        AddToSchedule( $S, '*', $1 );
+    }
+    if ( grep ( /^StrongBeer$/, @socialSeasons )
+        && IsStrongBeerSeason( $D->{day}, $D->{month}, $D->{year} ) =~
+        /^[^:]+: (.+)/ )
+    {
+        AddToSchedule( $S, '*', $1 );
+    }
+
+    # add HolidayDevices to schedule
+    my $holidayDevs = AttrVal( $name, "HolidayDevices", "" );
+    foreach my $dev ( split( ',', $holidayDevs ) ) {
+        if ( IsDevice( $dev, "holiday" ) ) {
+            my $date = sprintf( '%02d-%02d', $D->{month}, $D->{day} );
+            my $event = ::holiday_refresh( $dev, $date );
+            if ( $event ne "none" ) {
+                foreach my $e ( split( ',', $event ) ) {
+                    AddToSchedule( $S, '*', $e );
+                }
+            }
+        }
+        elsif ( IsDevice( $dev, "Calendar" ) ) {
+            my $date =
+              sprintf( '%02d.%02d.%04d', $D->{day}, $D->{month}, $D->{year} );
+            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+                "format:text filter:mode=~'alarm|start|upcoming'" );
+            if ($list) {
+                chomp($list);
+                my @events = split( '\n', $list );
+                foreach my $event (@events) {
+                    chomp($event);
+                    my $edate = substr( $event, 0, 10 );
+                    $event = substr( $event, 17 );
+                    if ( $edate eq $date ) {
+                        foreach my $e ( split( ',', $event ) ) {
+                            AddToSchedule( $S, '*', $e );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    # add InformativeDevices to schedule
+    my $informativeDevs = AttrVal( $name, "InformativeDevices", "" );
+    foreach my $dev ( split( ',', $informativeDevs ) ) {
+        if ( IsDevice( $dev, "holiday" ) ) {
+            my $date = sprintf( '%02d-%02d', $D->{month}, $D->{day} );
+            my $event = ::holiday_refresh( $dev, $date );
+            if ( $event ne "none" ) {
+                foreach my $e ( split( ',', $event ) ) {
+                    AddToSchedule( $S, '*', $e );
+                }
+            }
+        }
+        elsif ( IsDevice( $dev, "Calendar" ) ) {
+            my $date =
+              sprintf( '%02d.%02d.%04d', $D->{day}, $D->{month}, $D->{year} );
+            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+                "format:text filter:mode=~'alarm|start|upcoming'" );
+            if ($list) {
+                chomp($list);
+                my @events = split( '\n', $list );
+                foreach my $event (@events) {
+                    chomp($event);
+                    my $edate = substr( $event, 0, 10 );
+                    $event = substr( $event, 17 );
+                    if ( $edate eq $date ) {
+                        foreach my $e ( split( ',', $event ) ) {
+                            AddToSchedule( $S, '*', $e );
+                        }
+                    }
+                }
+            }
+        }
     }
 
     # add info from 2 days after but only +1 day will be useful after all
@@ -2400,35 +2870,35 @@ sub Compute($;$$) {
       FHEM::Astro::_round( $S->{".MonthProgress"} * 100, 0 );
 
     AddToSchedule( $S, $A->{".SunTransit"}, "SunTransit" )
-      if ( grep ( /^SunTransit/, @schedsch ) );
+      if ( grep ( /^SunTransit$/, @schedsch ) );
     AddToSchedule( $S, $A->{".SunRise"}, "SunRise" )
-      if ( grep ( /^SunRise/, @schedsch ) );
+      if ( grep ( /^SunRise$/, @schedsch ) );
     AddToSchedule( $S, $A->{".SunSet"}, "SunSet" )
-      if ( grep ( /^SunSet/, @schedsch ) );
+      if ( grep ( /^SunSet$/, @schedsch ) );
     AddToSchedule( $S, $A->{".CivilTwilightMorning"}, "CivilTwilightMorning" )
-      if ( grep ( /^CivilTwilightMorning/, @schedsch ) );
+      if ( grep ( /^CivilTwilightMorning$/, @schedsch ) );
     AddToSchedule( $S, $A->{".CivilTwilightEvening"}, "CivilTwilightEvening" )
-      if ( grep ( /^CivilTwilightEvening/, @schedsch ) );
+      if ( grep ( /^CivilTwilightEvening$/, @schedsch ) );
     AddToSchedule( $S, $A->{".NauticTwilightMorning"}, "NauticTwilightMorning" )
-      if ( grep ( /^NauticTwilightMorning/, @schedsch ) );
+      if ( grep ( /^NauticTwilightMorning$/, @schedsch ) );
     AddToSchedule( $S, $A->{".NauticTwilightEvening"}, "NauticTwilightEvening" )
-      if ( grep ( /^NauticTwilightEvening/, @schedsch ) );
+      if ( grep ( /^NauticTwilightEvening$/, @schedsch ) );
     AddToSchedule( $S, $A->{".AstroTwilightMorning"}, "AstroTwilightMorning" )
-      if ( grep ( /^AstroTwilightMorning/, @schedsch ) );
+      if ( grep ( /^AstroTwilightMorning$/, @schedsch ) );
     AddToSchedule( $S, $A->{".AstroTwilightEvening"}, "AstroTwilightEvening" )
-      if ( grep ( /^AstroTwilightEvening/, @schedsch ) );
+      if ( grep ( /^AstroTwilightEvening$/, @schedsch ) );
     AddToSchedule( $S, $A->{".CustomTwilightMorning"}, "CustomTwilightMorning" )
-      if ( grep ( /^CustomTwilightMorning/, @schedsch ) );
+      if ( grep ( /^CustomTwilightMorning$/, @schedsch ) );
     AddToSchedule( $S, $A->{".CustomTwilightEvening"}, "CustomTwilightEvening" )
-      if ( grep ( /^CustomTwilightEvening/, @schedsch ) );
+      if ( grep ( /^CustomTwilightEvening$/, @schedsch ) );
     AddToSchedule( $S, $A->{".MoonTransit"}, "MoonTransit" )
-      if ( grep ( /^MoonTransit/, @schedsch ) );
+      if ( grep ( /^MoonTransit$/, @schedsch ) );
     AddToSchedule( $S, $A->{".MoonRise"}, "MoonRise" )
-      if ( grep ( /^MoonRise/, @schedsch ) );
+      if ( grep ( /^MoonRise$/, @schedsch ) );
     AddToSchedule( $S, $A->{".MoonSet"}, "MoonSet" )
-      if ( grep ( /^MoonSet/, @schedsch ) );
+      if ( grep ( /^MoonSet$/, @schedsch ) );
     AddToSchedule( $S, 0, "ObsDate " . $A->{ObsDate} )
-      if ( grep ( /^ObsDate/, @schedsch ) );
+      if ( grep ( /^ObsDate$/, @schedsch ) );
 
     # Seasonal hours
     $S->{DaySeasonalHrsDay}   = $dayparts;
@@ -2521,13 +2991,13 @@ sub Compute($;$$) {
         $d -= 24. if ( $d >= 24. );
 
         AddToSchedule( $S, $d, "DaySeasonalHr -" . ( ( $idp + 1. ) * -1. ) )
-          if ( grep ( /^DaySeasonalHr/, @schedsch ) );
+          if ( grep ( /^DaySeasonalHr$/, @schedsch ) );
         AddToSchedule( $S, $d, "Daytime " . $tt->{ $dayphases[ 13. + $idp ] } )
-          if ( grep ( /^Daytime/, @schedsch ) && $nightparts == 12. );
+          if ( grep ( /^Daytime$/, @schedsch ) && $nightparts == 12. );
         AddToSchedule( $S, $d,
             "Daytime Vigilia "
               . UConv::arabic2roman( $idp + $nightparts + 2. ) )
-          if ( grep ( /^Daytime/, @schedsch ) && $nightparts == 4. );
+          if ( grep ( /^Daytime$/, @schedsch ) && $nightparts == 4. );
 
         # if time passed us already, we want it for tomorrow
         if ( $D->{timeday} >= $d ) {
@@ -2560,14 +3030,14 @@ sub Compute($;$$) {
         $d -= 24. if ( $d >= 24. );
 
         AddToSchedule( $S, $d, "DaySeasonalHr " . ( $idp + 1. ) )
-          if ( grep ( /^DaySeasonalHr/, @schedsch ) );
+          if ( grep ( /^DaySeasonalHr$/, @schedsch ) );
         AddToSchedule( $S, $d, "Daytime " . $tt->{ $dayphases[ 12. + $idp ] } )
-          if ( grep ( /^Daytime/, @schedsch )
+          if ( grep ( /^Daytime$/, @schedsch )
             && $dayparts == 12.
             && !$daypartsIsRoman );
         AddToSchedule( $S, $d,
             "Daytime Hora " . UConv::arabic2roman( $idp + 1. ) )
-          if ( grep ( /^Daytime/, @schedsch ) && $daypartsIsRoman );
+          if ( grep ( /^Daytime$/, @schedsch ) && $daypartsIsRoman );
 
         # if time passed us already, we want it for tomorrow
         if ( $D->{timeday} >= $d ) {
@@ -2758,8 +3228,8 @@ sub Compute($;$$) {
             }
         }
         our @seasonsp = (
-            "winter",      "earlyspring", "firstspring", "fullspring",
-            "earlysummer", "midsummer",   "latesummer",  "earlyfall",
+            "winter",      "Earlyspring", "firstspring", "fullspring",
+            "earlysummer", "midsummer",   "latesummer",  "Earlyfall",
             "fullfall",    "latefall"
         );
 
@@ -2824,7 +3294,7 @@ sub Compute($;$$) {
         $S->{DayChangeSeason}  = 2;
         $St->{DayChangeSeason} = 1;
         AddToSchedule( $St, '*', "ObsSeason " . $At->{ObsSeason} )
-          if ( grep ( /^ObsSeason/, @schedsch ) );
+          if ( grep ( /^ObsSeason$/, @schedsch ) );
     }
 
     #  Astronomical season changed since yesterday
@@ -2837,7 +3307,7 @@ sub Compute($;$$) {
         $Sy->{DayChangeSeason} = 2;
         $S->{DayChangeSeason}  = 1;
         AddToSchedule( $S, '*', "ObsSeason " . $A->{ObsSeason} )
-          if ( grep ( /^ObsSeason/, @schedsch ) );
+          if ( grep ( /^ObsSeason$/, @schedsch ) );
     }
 
     #  Meteorological season is going to change tomorrow
@@ -2849,7 +3319,7 @@ sub Compute($;$$) {
         $S->{DayChangeSeasonMeteo}  = 2;
         $St->{DayChangeSeasonMeteo} = 1;
         AddToSchedule( $St, '*', "SeasonMeteo " . $St->{SeasonMeteo} )
-          if ( grep ( /^SeasonMeteo/, @schedsch ) );
+          if ( grep ( /^SeasonMeteo$/, @schedsch ) );
     }
 
     #  Meteorological season changed since yesterday
@@ -2861,7 +3331,7 @@ sub Compute($;$$) {
         $Sy->{DayChangeSeasonMeteo} = 2;
         $S->{DayChangeSeasonMeteo}  = 1;
         AddToSchedule( $S, '*', "SeasonMeteo " . $S->{SeasonMeteo} )
-          if ( grep ( /^SeasonMeteo/, @schedsch ) );
+          if ( grep ( /^SeasonMeteo$/, @schedsch ) );
     }
 
     #  Phenological season is going to change tomorrow
@@ -2873,7 +3343,7 @@ sub Compute($;$$) {
         $S->{DayChangeSeasonPheno}  = 2;
         $St->{DayChangeSeasonPheno} = 1;
         AddToSchedule( $St, '*', "SeasonPheno " . $St->{SeasonPheno} )
-          if ( grep ( /^SeasonPheno/, @schedsch ) );
+          if ( grep ( /^SeasonPheno$/, @schedsch ) );
     }
 
     #  Phenological season changed since yesterday
@@ -2885,7 +3355,7 @@ sub Compute($;$$) {
         $Sy->{DayChangeSeasonPheno} = 2;
         $S->{DayChangeSeasonPheno}  = 1;
         AddToSchedule( $S, '*', "SeasonPheno " . $S->{SeasonPheno} )
-          if ( grep ( /^SeasonPheno/, @schedsch ) );
+          if ( grep ( /^SeasonPheno$/, @schedsch ) );
     }
 
     #  SunSign is going to change tomorrow
@@ -2898,7 +3368,7 @@ sub Compute($;$$) {
         $S->{DayChangeSunSign}  = 2;
         $St->{DayChangeSunSign} = 1;
         AddToSchedule( $St, '?', "SunSign " . $At->{SunSign} )
-          if ( grep ( /^SunSign/, @schedsch ) );
+          if ( grep ( /^SunSign$/, @schedsch ) );
     }
 
     #  SunSign is going to change somewhere today
@@ -2911,7 +3381,7 @@ sub Compute($;$$) {
         $Sy->{DayChangeSunSign} = 2;
         $S->{DayChangeSunSign}  = 1;
         AddToSchedule( $S, '?', "SunSign " . $A->{SunSign} )
-          if ( grep ( /^SunSign/, @schedsch ) );
+          if ( grep ( /^SunSign$/, @schedsch ) );
     }
 
     #  MoonSign is going to change tomorrow
@@ -2924,7 +3394,7 @@ sub Compute($;$$) {
         $S->{DayChangeMoonSign}  = 2;
         $St->{DayChangeMoonSign} = 1;
         AddToSchedule( $St, '?', "MoonSign " . $At->{MoonSign} )
-          if ( grep ( /^MoonSign/, @schedsch ) );
+          if ( grep ( /^MoonSign$/, @schedsch ) );
     }
 
     #  MoonSign is going to change somewhere today
@@ -2937,7 +3407,7 @@ sub Compute($;$$) {
         $Sy->{DayChangeMoonSign} = 2;
         $S->{DayChangeMoonSign}  = 1;
         AddToSchedule( $S, '?', "MoonSign " . $A->{MoonSign} )
-          if ( grep ( /^MoonSign/, @schedsch ) );
+          if ( grep ( /^MoonSign$/, @schedsch ) );
     }
 
     #  MoonPhase is going to change tomorrow
@@ -2950,7 +3420,7 @@ sub Compute($;$$) {
         $S->{DayChangeMoonPhaseS}  = 2;
         $St->{DayChangeMoonPhaseS} = 1;
         AddToSchedule( $St, '?', "MoonPhaseS " . $At->{MoonPhaseS} )
-          if ( grep ( /^MoonPhaseS/, @schedsch ) );
+          if ( grep ( /^MoonPhaseS$/, @schedsch ) );
     }
 
     #  MoonPhase is going to change somewhere today
@@ -2963,7 +3433,7 @@ sub Compute($;$$) {
         $Sy->{DayChangeMoonPhaseS} = 2;
         $S->{DayChangeMoonPhaseS}  = 1;
         AddToSchedule( $S, '?', "MoonPhaseS " . $A->{MoonPhaseS} )
-          if ( grep ( /^MoonPhaseS/, @schedsch ) );
+          if ( grep ( /^MoonPhaseS$/, @schedsch ) );
     }
 
     #  DST is going to change tomorrow
@@ -2975,7 +3445,7 @@ sub Compute($;$$) {
         $S->{DayChangeIsDST}  = 2;
         $St->{DayChangeIsDST} = 1;
         AddToSchedule( $St, '?', "ObsIsDST " . $St->{".isdstultimo"} )
-          if ( grep ( /^ObsIsDST/, @schedsch ) );
+          if ( grep ( /^ObsIsDST$/, @schedsch ) );
     }
 
     #  DST is going to change somewhere today
@@ -2987,7 +3457,7 @@ sub Compute($;$$) {
         $Sy->{DayChangeIsDST} = 2;
         $S->{DayChangeIsDST}  = 1;
         AddToSchedule( $S, '?', "ObsIsDST " . $S->{".isdstultimo"} )
-          if ( grep ( /^ObsIsDST/, @schedsch ) );
+          if ( grep ( /^ObsIsDST$/, @schedsch ) );
     }
 
     # schedule
@@ -3075,7 +3545,8 @@ sub Compute($;$$) {
         }
 
         # no event happend today until now
-        if ( !defined( $S->{SchedRecent} ) && defined( $S->{".scheduleYest"} ) )
+        if (  !defined( $S->{SchedRecent} )
+            && defined( $S->{".scheduleYest"} ) )
         {
             foreach my $e ( keys %{ $S->{".scheduleYest"} } ) {
                 $S->{".SchedLastT"} = $e == 24. ? 0 : $e;
@@ -3116,28 +3587,399 @@ sub Compute($;$$) {
     return (undef);
 }
 
+sub IsAdventSeason($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+
+    my $today = timelocal( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my $christmas = timelocal( 0, 0, 0, 25, 11,
+        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my ( $secC, $minC, $hourC, $dayC, $monthC, $yearC, $wdayC, $ydayC, $isdstC )
+      = localtime($christmas);
+    my $adv4 = $christmas - 86400. * $wdayC;
+    my $adv3 = $adv4 - 86400. * 7;
+    my $adv2 = $adv3 - 86400. * 7;
+    my $adv1 = $adv2 - 86400. * 7;
+
+    return 0 unless ( $today >= $adv1 && $today <= $christmas );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    if ( $today >= $adv1 && $today < $adv1 + 86400. ) {
+        return ref($tt) ? $tt->{advent1} : 2;
+    }
+    elsif ( $today >= $adv2 && $today < $adv2 + 86400. ) {
+        return ref($tt) ? $tt->{advent2} : 3;
+    }
+    elsif ( $today >= $adv3 && $today < $adv3 + 86400. ) {
+        return ref($tt) ? $tt->{advent3} : 4;
+    }
+    elsif ( $today >= $adv4 && $today < $adv4 + 86400. ) {
+        return ref($tt) ? $tt->{advent4} : 5;
+    }
+    else {
+        return ref($tt) ? $tt->{adventseason} : 1;
+    }
+}
+
+sub IsCarnivalSeason($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+
+    my $today = timelocal( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+
+    my $easterSun = GetWesternEaster($y);
+    my $carnival1 = $easterSun - 86400. * 52.;
+    my $carnival2 = $carnival1 + 86400.;
+    my $carnival3 = $carnival2 + 86400.;
+    my $carnival4 = $carnival3 + 86400.;
+    my $carnival5 = $carnival4 + 86400.;
+    my $carnival6 = $carnival5 + 86400.;
+    my $carnival7 = $carnival6 + 86400.;
+
+    return 0 unless ( $today >= $carnival1 && $today <= $carnival7 );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    if ( $today >= $carnival1 && $today < $carnival2 ) {
+        return ref($tt) ? $tt->{carnivalseason1} : 1;
+    }
+    elsif ( $today >= $carnival2 && $today < $carnival3 ) {
+        return ref($tt) ? $tt->{carnivalseason2} : 2;
+    }
+    elsif ( $today >= $carnival3 && $today < $carnival4 ) {
+        return ref($tt) ? $tt->{carnivalseason3} : 3;
+    }
+    elsif ( $today >= $carnival4 && $today < $carnival5 ) {
+        return ref($tt) ? $tt->{carnivalseason4} : 4;
+    }
+    elsif ( $today >= $carnival5 && $today < $carnival6 ) {
+        return ref($tt) ? $tt->{carnivalseason5} : 5;
+    }
+    elsif ( $today >= $carnival6 && $today < $carnival7 ) {
+        return ref($tt) ? $tt->{carnivalseason6} : 6;
+    }
+    else {
+        return ref($tt) ? $tt->{carnivalseason7} : 7;
+    }
+
+    return 0;
+}
+
+sub IsEasterSeason($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+
+    my $today = timelocal( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+
+    my $easterSun     = GetWesternEaster($y);
+    my $easterMon     = $easterSun + 86400.;
+    my $easterSat     = $easterSun + 86400. * 6.;
+    my $easterWSun    = $easterSun + 86400. * 7.;
+    my $easterTimeEnd = $easterSun + 86400. * 49.;
+
+    return 0 unless ( $today >= $easterSun && $today <= $easterTimeEnd );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    if ( $today >= $easterSun && $today < $easterSun + 86400. ) {
+        return ref($tt) ? $tt->{eastersun} : 2;
+    }
+    elsif ( $today >= $easterMon && $today < $easterMon + 86400. ) {
+        return ref($tt) ? $tt->{eastermon} : 3;
+    }
+    elsif ( $today >= $easterSat && $today < $easterSat + 86400. ) {
+        return ref($tt) ? $tt->{eastersat} : 4;
+    }
+    elsif ( $today >= $easterWSun && $today < $easterWSun + 86400. ) {
+        return ref($tt) ? $tt->{easterwhitesun} : 5;
+    }
+    else {
+        return ref($tt) ? $tt->{easterseason} : 1;
+    }
+
+    return 0;
+}
+
+sub IsHalloween($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+
+    return 0 unless ( $m == 10. && $d >= 24. && $d <= 30. );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    return ref($tt) ? $tt->{halloween} : 1
+      if ( $d == 30. );
+    return ref($tt) ? $tt->{halloweenseason} : 1;
+}
+
+sub IsHolyWeek($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+
+    my $today = timelocal( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+
+    my $easterSun = GetWesternEaster($y);
+    my $hwBegin   = $easterSun - 86400. * 7.;
+    my $hwThu     = $easterSun - 86400. * 3.;
+    my $hwFri     = $easterSun - 86400. * 2.;
+    my $hwSat     = $easterSun - 86400. * 1.;
+
+    return 0 unless ( $today >= $hwBegin && $today < $easterSun );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    if ( $today >= $hwBegin && $today < $hwBegin + 86400. ) {
+        return ref($tt) ? $tt->{holyweekpalm} : 2;
+    }
+    elsif ( $today >= $hwThu && $today < $hwThu + 86400. ) {
+        return ref($tt) ? $tt->{holyweekthu} : 3;
+    }
+    elsif ( $today >= $hwFri && $today < $hwFri + 86400. ) {
+        return ref($tt) ? $tt->{holyweekfri} : 4;
+    }
+    elsif ( $today >= $hwSat && $today < $hwSat + 86400. ) {
+        return ref($tt) ? $tt->{holyweeksat} : 5;
+    }
+    else {
+        return ref($tt) ? $tt->{holyweek} : 1;
+    }
+
+    return 0;
+}
+
+sub IsLent($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+
+    my $today = timelocal( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+
+    my $easterSun = GetWesternEaster($y);
+    my $lentBegin = $easterSun - 86400. * 46;
+    my $lentW1    = $easterSun - 86400. * 45;
+    my $lentW2    = $easterSun - 86400. * 41;
+    my $lentW3    = $lentW2 + 86400. * 7;
+    my $lentW4    = $lentW3 + 86400. * 7;
+    my $lentW5    = $lentW4 + 86400. * 7;
+    my $lentW6    = $lentW5 + 86400. * 7;
+    my $lentW7    = $lentW6 + 86400. * 7;
+    my $lentEnd   = $easterSun - 86400. * 3;
+
+    return 0 unless ( $today >= $lentBegin && $today <= $lentEnd );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    if ( $today >= $lentBegin && $today < $lentBegin + 86400. ) {
+        return ref($tt) ? $tt->{lentbegin} : 2;
+    }
+    elsif ( $today >= $lentW1 && $today < $lentW2 ) {
+        return ref($tt) ? $tt->{lentw1} : 3;
+    }
+    elsif ( $today >= $lentW2 && $today < $lentW3 ) {
+        return ref($tt) ? $tt->{lentw2} : 4;
+    }
+    elsif ( $today >= $lentW3 && $today < $lentW4 ) {
+        return ref($tt) ? $tt->{lentw3} : 5;
+    }
+    elsif ( $today >= $lentW4 && $today < $lentW5 ) {
+        return ref($tt) ? $tt->{lentw4} : 6;
+    }
+    elsif ( $today >= $lentW5 && $today < $lentW6 ) {
+        return ref($tt) ? $tt->{lentw5} : 7;
+    }
+    elsif ( $today >= $lentW6 && $today < $lentW7 ) {
+        return ref($tt) ? $tt->{lentw6} : 8;
+    }
+    elsif ( $today >= $lentW7 && $today < $lentEnd ) {
+        return ref($tt) ? $tt->{lentw7} : 9;
+    }
+    else {
+        return ref($tt) ? $tt->{lentend} : 10;
+    }
+}
+
+sub IsStrongBeerSeason($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+
+    my $today = timelocal( 0, 0, 0, $d, $m - 1.,
+        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+
+    my $josef = timelocal( 0, 0, 0, 19., 3. - 1.,
+        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my ( $secJ, $minJ, $hourJ, $dayJ, $monthJ, $yearJ, $wdayJ, $ydayJ, $isdstJ )
+      = localtime($josef);
+
+    my $sbeerBegin =
+      $josef - 86400. * $wdayJ - 86400. * 2.;    # likely a Friday to begin with
+    my $sbeerEnd =
+      $sbeerBegin + 86400. * 16.;    # should end after 17 days in total
+
+    return 0 unless ( $today >= $sbeerBegin && $today <= $sbeerEnd );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    return ref($tt) ? $tt->{sbeerseason} : 1;
+}
+
+# sub IsOktoberfest($$;$$) {
+#     my ( $d, $m, $y, $lang ) = @_;
+#
+#     if ($lang) {
+#         if ( exists( $transtable{ uc($lang) } ) ) {
+#             $tt = $transtable{ uc($lang) };
+#         }
+#         else {
+#             $tt = $transtable{EN};
+#         }
+#     }
+#     return ref($tt) ? $tt->{oktoberfestseason} : 1;
+# }
+#
+# sub IsWiesn($$;$$) {
+#     my ( $d, $m, $y, $lang ) = @_;
+#     my $s = IsOktoberfest( $d, $m, $y, $lang );
+#     if ($lang) {
+#         if ( exists( $transtable{ uc($lang) } ) ) {
+#             $tt = $transtable{ uc($lang) };
+#         }
+#         else {
+#             $tt = $transtable{EN};
+#         }
+#     }
+#     return $s ? ( ref($tt) ? $tt->{wiesnseason} : 1 ) : 0;
+# }
+
+# sub IsPassion($$;$$) {
+#     my ( $d, $m, $y, $lang ) = @_;
+#
+#     if ($lang) {
+#         if ( exists( $transtable{ uc($lang) } ) ) {
+#             $tt = $transtable{ uc($lang) };
+#         }
+#         else {
+#             $tt = $transtable{EN};
+#         }
+#     }
+#     return ref($tt) ? $tt->{passionseason} : 1;
+# }
+
 sub AddToSchedule {
     my ( $h, $e, $n ) = @_;
     return unless ( defined($e) );
+    chomp($n);
+    $n = trim($n);
     if ( $e =~ m/^\d+(?:\.\d+)?$/ ) {
-        push @{ $h->{".schedule"}{$e} }, $n;
+        push @{ $h->{".schedule"}{$e} }, $n
+          unless ( grep( m/^$n$/, @{ $h->{".schedule"}{$e} } ) );
     }
     elsif ( $e eq '*' ) {
-        push @{ $h->{".scheduleAllday"} }, $n;
+        push @{ $h->{".scheduleAllday"} }, $n
+          unless ( grep( m/^$n$/, @{ $h->{".scheduleAllday"} } ) );
     }
     elsif ( $e eq '?' ) {
-        push @{ $h->{".scheduleDay"} }, $n;
+        push @{ $h->{".scheduleDay"} }, $n
+          unless ( grep( m/^$n$/, @{ $h->{".scheduleDay"} } ) );
     }
     elsif ( $e =~ /^t(.+)/ ) {
         my $t = $1;
         $t = 0. unless ( $t =~ /^\d/ );
-        push @{ $h->{".scheduleTom"}{$t} }, $n;
+        push @{ $h->{".scheduleTom"}{$t} }, $n
+          unless ( grep( m/^$n$/, @{ $h->{".scheduleTom"}{$t} } ) );
     }
     elsif ( $e =~ /^y(.+)/ ) {
         my $t = $1;
         $t = 24. unless ( $t =~ /^\d/ );
         $h->{".scheduleYest"}{$t} = $n;
     }
+}
+
+sub GetWesternEaster(;$) {
+    my ($year) = @_;
+    $year = ( localtime( gettimeofday() ) )[5] + 1900.
+      unless ( defined($year) );
+    my $golden_number = $year % 19.;
+
+    #quasicentury is so named because its a century, only its
+    # the number of full centuries rather than the current century
+    my $quasicentury = int( $year / 100. );
+    my $epact =
+      ( $quasicentury -
+          int( $quasicentury / 4. ) -
+          int( ( $quasicentury * 8. + 13. ) / 25. ) +
+          ( $golden_number * 19. ) +
+          15. )
+      % 30.;
+
+    my $interval =
+      $epact -
+      int( $epact / 28. ) *
+      ( 1. -
+          int( 29. / ( $epact + 1. ) ) *
+          int( ( 21. - $golden_number ) / 11. ) );
+    my $weekday =
+      ( $year +
+          int( $year / 4. ) +
+          $interval + 2. -
+          $quasicentury +
+          int( $quasicentury / 4. ) )
+      % 7;
+
+    my $offset = $interval - $weekday;
+    my $month  = 3. + int( ( $offset + 40. ) / 44. );
+    my $day    = $offset + 28. - 31. * int( $month / 4. );
+
+    return wantarray
+      ? ( $month, $day )
+      : timelocal( 0, 0, 0, $day, $month - 1, $year - 1900. );
 }
 
 sub Update($@) {
@@ -3332,7 +4174,7 @@ sub Update($@) {
         </li>
         <li>The phenological season will only be estimated if the observers position is located in Central Europe. Due to its definition, a phenological season cannot be strictly calculated. It is not supposed to be 100% accurate and therefore not to be used for agrarian purposes but should be close enough for other home automations like heating, cooling, shading, etc.
         </li>
-        <li>As the relative daytime is based on temporal hours, it can only be emerged if seasonalHrs is set to 12 (which is the default setting).
+        <li>As the relative daytime is based on temporal hours, it can only be emerged if SeasonalHrs is set to 12 (which is the default setting).
         </li>
         <li>It is not necessary to define a DaySchedule device to use the data provided by this or the Astro module.<br>
           To use its data in any other module, you just need to put <code>require "95_DaySchedule.pm";</code><br>
@@ -3383,11 +4225,11 @@ sub Update($@) {
           May link to an existing Astro device to calculate astronomic data, otherwise the calculation will be handled internally. Readings provided by the Astro device will only be created for the DaySchedule device if no Astro device was referenced.
         </li>
         <li>
-          <a name="DaySchedule_earlyfall" id="DaySchedule_earlyfall"></a> <code>&lt;earlyfall&gt;</code><br>
+          <a name="DaySchedule_Earlyfall" id="DaySchedule_Earlyfall"></a> <code>&lt;Earlyfall&gt;</code><br>
           The early beginning of fall will set a marker to calculate all following phenological seasons until winter time. This defaults to 08-20 to begin early fall on August 20th.
         </li>
         <li>
-          <a name="DaySchedule_earlyspring" id="DaySchedule_earlyspring"></a> <code>&lt;earlyspring&gt;</code><br>
+          <a name="DaySchedule_Earlyspring" id="DaySchedule_Earlyspring"></a> <code>&lt;Earlyspring&gt;</code><br>
           The early beginning of spring will set a marker to calculate all following phenological seasons until summer time. This defaults to 02-22 to begin early spring on February 22nd.
         </li>
         <li>
@@ -3424,7 +4266,7 @@ sub Update($@) {
           Define which events will be part of the schedule list. A full schedule will be generated if this attribute was not specified. This also controls the value of Sched* readings.
         </li>
         <li>
-          <a name="DaySchedule_seasonalHrs" id="DaySchedule_seasonalHrs"></a> <code>&lt;seasonalHrs&gt;</code><br>
+          <a name="DaySchedule_SeasonalHrs" id="DaySchedule_SeasonalHrs"></a> <code>&lt;SeasonalHrs&gt;</code><br>
           Number of total seasonal hours to divide daylight time and nighttime into (day parts). It controls the calculation of reading DaySeasonalHr throughout a full day. The default value is 12 which corresponds to the definition of temporal hours. In case the amount of hours during nighttime shall be different, they can be defined as <code>&lt;dayHours&gt;:&lt;nightHours&gt;</code>. A value of '4' will enforce historic roman mode with implicit 12:4 settings but the Daytime to be reflected in latin notation. Defining a value of 12:4 directly will still show regular daytimes during daytime. Defining *:4 nighttime parts will always calculate Daytime in latin notation during nighttime, independent from daytime settings.
         </li>
         <li>
