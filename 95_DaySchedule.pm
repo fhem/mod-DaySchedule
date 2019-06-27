@@ -30,7 +30,7 @@ use FHEM::Meta;
 use GPUtils qw(GP_Import GP_Export);
 use HttpUtils;
 use Time::HiRes qw(gettimeofday);
-use Time::Local;
+use Time::Local qw(timelocal_modern timegm_modern);
 use UConv;
 use Data::Dumper;
 
@@ -1491,6 +1491,7 @@ sub Get($@) {
 
     my $wantsreading = 0;
     my $dayOffset    = 0;
+    my $now          = gettimeofday();
     my $html =
       defined( $hash->{CL} ) && $hash->{CL}{TYPE} eq "FHEMWEB" ? 1 : undef;
     my $AstroDev = AttrVal( $name, "AstroDevice", "" );
@@ -1592,18 +1593,45 @@ sub Get($@) {
           ? $aref->[ 1 + $wantsreading ] . " " . $aref->[ 2 + $wantsreading ]
           : $aref->[ 1 + $wantsreading ];
         if ( $str =~
-/^(\d{2}):(\d{2})(?::(\d{2}))?|(?:(\d{4})-(\d{2})-(\d{2}))(?:\D+(\d{2}):(\d{2})(?::(\d{2}))?)?$/
+/^(\d{2}):(\d{2})(?::(\d{2}))?$|^(?:(?:(\d{4})-)?(\d{2})-(\d{2}))(?:\D+(\d{2}):(\d{2})(?::(\d{2}))?)?$/
           )
         {
+            return
+              "[FHEM::DaySchedule::Get] hours can only be between 00 and 23"
+              if ( defined($1) && $1 > 23. );
+            return
+              "[FHEM::DaySchedule::Get] minutes can only be between 00 and 59"
+              if ( defined($2) && $2 > 59. );
+            return
+              "[FHEM::DaySchedule::Get] seconds can only be between 00 and 59"
+              if ( defined($3) && $3 > 59. );
+            return
+              "[FHEM::DaySchedule::Get] month can only be between 01 and 12"
+              if ( defined($5) && ( $5 > 12. || $5 < 1. ) );
+            return "[FHEM::DaySchedule::Get] day can only be between 01 and 31"
+              if ( defined($6) && ( $6 > 31. || $6 < 1. ) );
+            return
+              "[FHEM::DaySchedule::Get] hours can only be between 00 and 23"
+              if ( defined($7) && $7 > 23. );
+            return
+              "[FHEM::DaySchedule::Get] minutes can only be between 00 and 59"
+              if ( defined($8) && $8 > 59. );
+            return
+              "[FHEM::DaySchedule::Get] seconds can only be between 00 and 59"
+              if ( defined($9) && $9 > 59. );
+
             SetTime(
-                timelocal(
+                timelocal_modern(
                     defined($3) ? $3 : ( defined($9) ? $9 : 0 ),
                     defined($2) ? $2 : ( defined($8) ? $8 : 0 ),
                     defined($1) ? $1 : ( defined($7) ? $7 : 12 ),
                     (
-                        defined($4)
-                        ? ( $6, $5 - 1, $4 )
-                        : ( localtime( gettimeofday() ) )[ 3, 4, 5 ]
+                        defined($5) ? ( $6, $5 - 1. )
+                        : ( localtime($now) )[ 3, 4 ]
+                    ),
+                    (
+                        defined($4) ? $4
+                        : ( localtime($now) )[5] + 1900.
                     )
                   ) + ( $dayOffset * 86400. ),
                 $tz, $lc_time
@@ -1611,11 +1639,11 @@ sub Get($@) {
         }
         else {
             return
-"$name has improper time specification $str, use YYYY-MM-DD [HH:MM:SS] [-1|yesterday|+1|tomorrow]";
+"$name has improper time specification $str, use [YYYY-]MM-DD [HH:MM[:SS]] [-1|yesterday|+1|tomorrow]";
         }
     }
     else {
-        SetTime( gettimeofday() + ( $dayOffset * 86400. ), $tz, $lc_time );
+        SetTime( $now + ( $dayOffset * 86400. ), $tz, $lc_time );
     }
 
     #-- disable automatic links to FHEM devices
@@ -1981,7 +2009,6 @@ sub Get($@) {
         $datetime =~ s/\d{2}:\d{2}:\d{2} //g;
 
         my $dschedule = $tt->{dayschedule};
-        my $now       = gettimeofday();
         my (
             $secY,  $minY,  $hourY, $dayY, $monthY,
             $yearY, $wdayY, $ydayY, $isdstY
@@ -2399,10 +2426,12 @@ sub SetTime (;$$$$) {
 
     my ( $sec, $min, $hour, $day, $month, $year, $wday, $yday, $isdst ) =
       localtime($time);
-    my $beforemn = timelocal( 59, 59, 23, $day, $month, $year );
-    my $mn       = timelocal( 0,  0,  0,  $day, $month, $year );
-    my $isdstultimo = ( localtime($beforemn) )[8];
-    $year  += 1900;
+    $year += 1900;
+
+    my $daybegin = timegm_modern( 0,  0,  0,  $day, $month, $year );
+    my $daymid   = timegm_modern( 0,  0,  12, $day, $month, $year );
+    my $dayend   = timegm_modern( 59, 59, 23, $day, $month, $year );
+    my $isdstultimo = ( localtime($dayend) )[8];
     $month += 1;
     $D->{timestamp}   = $time;
     $D->{timeday}     = $hour + $min / 60. + $sec / 3600.;
@@ -2448,11 +2477,14 @@ sub SetTime (;$$$$) {
     if ($dayOffset) {
         my $i = $dayOffset * -1.;
         while ( $i < $dayOffset + 1. ) {
-            if ( $i > 0. ) {
-                $D->{$i} = SetTime( $beforemn + ( 86400. * $i ), $tz, $lc_time, 0 );
-            }
-            elsif ( $i < 0. ) {
-                $D->{$i} = SetTime( $mn + ( 86400. * $i ), $tz, $lc_time, 0 );
+            if ( $i != 0. ) {
+                $D->{$i} = SetTime( $time + ( 86400. * $i ), $tz, $lc_time, 0 );
+                $D->{$i}{'000000'} =
+                  SetTime( $daybegin + ( 86400. * $i ), $tz, $lc_time, 0 );
+                $D->{$i}{'120000'} =
+                  SetTime( $daymid + ( 86400. * $i ), $tz, $lc_time, 0 );
+                $D->{$i}{'235959'} =
+                  SetTime( $dayend + ( 86400. * $i ), $tz, $lc_time, 0 );
             }
             $i++;
         }
@@ -2482,7 +2514,16 @@ sub Compute($;$$) {
     # fill %Date if it is still empty after restart
     SetTime() if ( scalar keys %Date == 0 );
 
-    my $D = $dayOffset ? $Date{$dayOffset} : \%Date;
+    my $dayOffsetSeg;
+    if ( $dayOffset && $dayOffset =~ /^(-?(?:\d+))(?:-(\d{6}))?$/ ) {
+        $dayOffset    = $1;
+        $dayOffsetSeg = $2;
+    }
+
+    my $D =
+        $dayOffsetSeg
+      ? $Date{$dayOffset}{$dayOffsetSeg}
+      : ( $dayOffset ? $Date{$dayOffset} : \%Date );
     my $S = $dayOffset ? {} : \%Schedule;
 
     # readjust language
@@ -2805,9 +2846,21 @@ sub Compute($;$$) {
 
         # today+2, has no tomorrow or yesterday
         ( $A->{2}, $S->{2} ) = Compute( $hash, 2, $params );
+        ( $A->{2}{'000000'}, $S->{2}{'000000'} ) =
+          Compute( $hash, '2-000000', $params );
+        ( $A->{2}{'120000'}, $S->{2}{'120000'} ) =
+          Compute( $hash, '2-120000', $params );
+        ( $A->{2}{'235959'}, $S->{2}{'235959'} ) =
+          Compute( $hash, '2-235959', $params );
 
         # today+1, only has tomorrow and incomplete yesterday
         ( $A->{1}, $S->{1} ) = Compute( $hash, 1, $params );
+        ( $A->{1}{'000000'}, $S->{1}{'000000'} ) =
+          Compute( $hash, '1-000000', $params );
+        ( $A->{1}{'120000'}, $S->{1}{'120000'} ) =
+          Compute( $hash, '1-120000', $params );
+        ( $A->{1}{'235959'}, $S->{1}{'235959'} ) =
+          Compute( $hash, '1-235959', $params );
     }
 
     # reference for tomorrow
@@ -3251,12 +3304,22 @@ sub Compute($;$$) {
     if ( !defined($dayOffset) ) {
 
         # today-2, has no tomorrow or yesterday
-        ( $A->{"-2"}, $S->{"-2"} ) =
-          Compute( $hash, -2, $params );
+        ( $A->{'-2'}, $S->{'-2'} ) = Compute( $hash, -2, $params );
+        ( $A->{'-2'}{'000000'}, $S->{'-2'}{'000000'} ) =
+          Compute( $hash, '-2-000000', $params );
+        ( $A->{'-2'}{'120000'}, $S->{'-2'}{'120000'} ) =
+          Compute( $hash, '-2-120000', $params );
+        ( $A->{'-2'}{'235959'}, $S->{'-2'}{'235959'} ) =
+          Compute( $hash, '-2-235959', $params );
 
         # today-1, has tomorrow and yesterday
-        ( $A->{"-1"}, $S->{"-1"} ) =
-          Compute( $hash, -1, $params );
+        ( $A->{'-1'}, $S->{'-1'} ) = Compute( $hash, -1, $params );
+        ( $A->{'-1'}{'000000'}, $S->{'-1'}{'000000'} ) =
+          Compute( $hash, '-1-000000', $params );
+        ( $A->{'-1'}{'120000'}, $S->{'-1'}{'120000'} ) =
+          Compute( $hash, '-1-120000', $params );
+        ( $A->{'-1'}{'235959'}, $S->{'-1'}{'235959'} ) =
+          Compute( $hash, '-1-235959', $params );
     }
 
     # reference for yesterday
@@ -3590,10 +3653,11 @@ sub Compute($;$$) {
 sub IsAdventSeason($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
-    my $today = timelocal( 0, 0, 0, $d, $m - 1,
-        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
-    my $christmas = timelocal( 0, 0, 0, 25, 11,
-        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my $now   = gettimeofday();
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my $christmas = timegm_modern( 0, 0, 0, 25, 11,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my ( $secC, $minC, $hourC, $dayC, $monthC, $yearC, $wdayC, $ydayC, $isdstC )
       = localtime($christmas);
     my $adv4 = $christmas - 86400. * $wdayC;
@@ -3632,8 +3696,8 @@ sub IsAdventSeason($$;$$) {
 sub IsCarnivalSeason($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
-    my $today = timelocal( 0, 0, 0, $d, $m - 1,
-        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
 
     my $easterSun = GetWesternEaster($y);
     my $carnival1 = $easterSun - 86400. * 52.;
@@ -3676,15 +3740,13 @@ sub IsCarnivalSeason($$;$$) {
     else {
         return ref($tt) ? $tt->{carnivalseason7} : 7;
     }
-
-    return 0;
 }
 
 sub IsEasterSeason($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
-    my $today = timelocal( 0, 0, 0, $d, $m - 1,
-        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
 
     my $easterSun     = GetWesternEaster($y);
     my $easterMon     = $easterSun + 86400.;
@@ -3744,8 +3806,8 @@ sub IsHalloween($$;$$) {
 sub IsHolyWeek($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
-    my $today = timelocal( 0, 0, 0, $d, $m - 1,
-        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
 
     my $easterSun = GetWesternEaster($y);
     my $hwBegin   = $easterSun - 86400. * 7.;
@@ -3786,8 +3848,8 @@ sub IsHolyWeek($$;$$) {
 sub IsLent($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
-    my $today = timelocal( 0, 0, 0, $d, $m - 1,
-        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
 
     my $easterSun = GetWesternEaster($y);
     my $lentBegin = $easterSun - 86400. * 46;
@@ -3843,11 +3905,12 @@ sub IsLent($$;$$) {
 sub IsStrongBeerSeason($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
-    my $today = timelocal( 0, 0, 0, $d, $m - 1.,
-        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my $now   = gettimeofday();
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1.,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
 
-    my $josef = timelocal( 0, 0, 0, 19., 3. - 1.,
-        ( defined($y) ? $y - 1900. : ( localtime( gettimeofday() ) )[5] ) );
+    my $josef = timegm_modern( 0, 0, 0, 19., 3. - 1.,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my ( $secJ, $minJ, $hourJ, $dayJ, $monthJ, $yearJ, $wdayJ, $ydayJ, $isdstJ )
       = localtime($josef);
 
@@ -3979,7 +4042,7 @@ sub GetWesternEaster(;$) {
 
     return wantarray
       ? ( $month, $day )
-      : timelocal( 0, 0, 0, $day, $month - 1, $year - 1900. );
+      : timegm_modern( 0, 0, 0, $day, $month - 1, $year );
 }
 
 sub Update($@) {
@@ -4040,7 +4103,11 @@ sub Update($@) {
     {
         if ( $comp eq 'NewDay' ) {
             push @next,
-              timelocal( 0, 0, 0, ( localtime( $now + 86400. ) )[ 3, 4, 5 ] );
+              timelocal_modern(
+                0, 0, 0,
+                ( localtime( $now + 86400. ) )[ 3, 4 ],
+                ( localtime( $now + 86400. ) )[5] + 1900.
+              );
             next;
         }
         my $k = ".$comp";
@@ -4049,14 +4116,20 @@ sub Update($@) {
         if ( defined( $Schedule{$k} )
             && $Schedule{$k} =~ /^\d+(?:\.\d+)?$/ )
         {
-            $t =
-              timelocal( 0, 0, 0, ( localtime($now) )[ 3, 4, 5 ] ) +
+            $t = timelocal_modern(
+                0, 0, 0,
+                ( localtime($now) )[ 3, 4 ],
+                ( localtime($now) )[5] + 1900.
+              ) +
               $Schedule{$k} * 3600.;
             $t += 86400. if ( $t < $now );    # that is for tomorrow
         }
         elsif ( defined( $Astro{$k} ) && $Astro{$k} =~ /^\d+(?:\.\d+)?$/ ) {
-            $t =
-              timelocal( 0, 0, 0, ( localtime($now) )[ 3, 4, 5 ] ) +
+            $t = timelocal_modern(
+                0, 0, 0,
+                ( localtime($now) )[ 3, 4 ],
+                ( localtime($now) )[5] + 1900.
+              ) +
               $Astro{$k} * 3600.;
             $t += 86400. if ( $t < $now );    # that is for tomorrow
         }
