@@ -25,6 +25,7 @@ use warnings;
 use POSIX;
 use utf8;
 
+#use Date::Hijri; # Ramadan
 use Encode;
 use FHEM::Meta;
 use GPUtils qw(GP_Import GP_Export);
@@ -70,11 +71,11 @@ my %attrs = (
     "recomputeAt" =>
 "multiple-strict,MoonRise,MoonSet,MoonTransit,NewDay,SeasonalHr,SunRise,SunSet,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
     "Schedule" =>
-"multiple-strict,MoonPhaseS,MoonRise,MoonSet,MoonSign,MoonTransit,ObsDate,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,DaySeasonalHr,Daytime,SunRise,SunSet,SunSign,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
+"multiple-strict,none,MoonPhaseS,MoonRise,MoonSet,MoonSign,MoonTransit,ObsDate,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,DaySeasonalHr,Daytime,SunRise,SunSet,SunSign,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
     "InformativeDays" =>
-"multiple-strict,ChristmasEve,FathersDay,MothersDay,Valentinstag,TanzindenMai,Halloween,Allerseelen,Martinstag,Buß-undBettag,Nikolaus,Silvester",
+"multiple-strict,none,AshWednesday,ValentinesDay,DanceIntoMay,MothersDay,FathersDay,Pentecost,HarvestFestival,Martinmas,DayOfPrayerandRepentance,RemembranceDay,LastSundayBeforeAdvent,StNicholasDay",
     "SocialSeasons" =>
-"multiple-strict,Advent,Carnival,Easter,Halloween,HolyWeek,Lent,StrongBeer,Oktoberfest,Passion,Wiesn",
+"multiple-strict,none,Ramadan,Carnival,StrongBeer,Pessach,HolyWeek,Passiontide,Lenten,Easter,Oktoberfest,Halloween,Advent,Chanukka,TurnOfTheYear,Christmas,ChristmasLong",
     "SeasonalHrs"     => undef,
     "timezone"        => undef,
     "VacationDevices" => undef,
@@ -96,6 +97,7 @@ our %transtable = (
         "tomorrow"       => "tomorrow",
         "event"          => "Event",
         "events"         => "Events",
+        "noevents"       => "There are no events.",
         "alldayevents"   => "All day events",
         "dayevents"      => "Events during the day",
         "teasernext"     => "Teaser for next day",
@@ -148,6 +150,7 @@ our %transtable = (
         "remaining" => "remaining",
 
         #
+        "season"    => "Season",
         "metseason" => "Meteorological Season",
 
         #
@@ -163,41 +166,71 @@ our %transtable = (
         "latefall"    => "Late Fall",
 
         #
-        "christmaseve"    => "Christmas eve",
-        "advent1"         => "Advent season: First Advent Sunday",
-        "advent2"         => "Advent season: Second Advent Sunday",
-        "advent3"         => "Advent season: Third Advent Sunday",
-        "advent4"         => "Advent season: Fourth Advent Sunday",
-        "adventseason"    => "Advent season",
-        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
-        "carnivalseason2" => "Faschingszeit",
-        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
-        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
-        "carnivalseason5" => "Faschingszeit: Rosenmontag",
-        "carnivalseason6" => "Faschingszeit: Fastnacht",
-        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
-        "eastersun"       => "Osterzeit: Ostersonntag",
-        "eastermon"       => "Osterzeit: Ostermontag",
-        "eastersat"       => "Osterzeit: Ostersamstag",
-        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
-        "easterseason"    => "Osterzeit",
-        "holyweekpalm"    => "Karwoche: Palmsonntag",
-        "holyweekthu"     => "Karwoche: Gründonnerstag",
-        "holyweekfri"     => "Karwoche: Karfreitag",
-        "holyweeksat"     => "Karwoche: Karsamstag",
-        "holyweek"        => "Karwoche",
-        "halloween"       => "Halloweenzeit: Halloween",
-        "halloweenseason" => "Halloweenzeit",
-        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
-        "lentw1"          => "Fastenzeit: Fastenwoche 1",
-        "lentw2"          => "Fastenzeit: Fastenwoche 2",
-        "lentw3"          => "Fastenzeit: Fastenwoche 3",
-        "lentw4"          => "Fastenzeit: Fastenwoche 4",
-        "lentw5"          => "Fastenzeit: Fastenwoche 5",
-        "lentw6"          => "Fastenzeit: Fastenwoche 6",
-        "lentw7"          => "Fastenzeit: Große Fastenwoche",
-        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
-        "sbeerseason"     => "Starkbierzeit",
+        "valentinesday"            => "Valentines Day",
+        "danceintomay"             => "Dance into May",
+        "mothersday"               => "Mothers Day",
+        "fathersday"               => "Fathers Day",
+        "pentecost"                => "Pentecost",
+        "harvestfestival"          => "Harvest Festival",
+        "martinmas"                => "St. Martin's Day",
+        "dayofprayerandrepentance" => "Day of Prayer and Repentance",
+        "remembranceday"           => "Remembrance Day",
+        "lastsundaybeforeadvent"   => "Last Sunday before Advent",
+        "stnicholasday"            => "St. Nicholas' Day",
+        "christmaseve"             => "Christmas Season: Christmas Eve",
+        "christmas1"               => "Christmas Season: Christmas Day",
+        "christmas2"               => "Christmas Season: Day after Christmas",
+        "christmasseason"          => "Christmas Season",
+        "newyearseve"              => "Turn of the year: New Year's Eve",
+        "newyear"                  => "Turn of the year: New Year",
+        "turnoftheyear"            => "Turn of the year",
+        "advent1"                  => "Advent season: First Advent Sunday",
+        "advent2"                  => "Advent season: Second Advent Sunday",
+        "advent3"                  => "Advent season: Third Advent Sunday",
+        "advent4"                  => "Advent season: Fourth Advent Sunday",
+        "adventseason"             => "Advent season",
+        "carnivalseason1"          => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2"          => "Faschingszeit",
+        "carnivalseason3"          => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4"          => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5"          => "Faschingszeit: Rosenmontag",
+        "carnivalseason6"          => "Faschingszeit: Fastnacht",
+        "ashwednesday"             => "Ash Wednesday",
+        "eastersun"                => "Osterzeit: Ostersonntag",
+        "eastermon"                => "Osterzeit: Ostermontag",
+        "eastersat"                => "Osterzeit: Ostersamstag",
+        "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
+        "easterseason"             => "Osterzeit",
+        "passiontidebegin"         => "Passionszeit: Passionssonntag",
+        "passiontide"              => "Passionszeit",
+        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekthu"              => "Karwoche: Gründonnerstag",
+        "holyweekfri"              => "Karwoche: Karfreitag",
+        "holyweeksat"              => "Karwoche: Karsamstag",
+        "holyweek"                 => "Karwoche",
+        "halloweenbegin"           => "Halloweenzeit: Begin der Halloweenzeit",
+        "halloween"                => "Halloweenzeit: Halloween",
+        "halloweenseason"          => "Halloweenzeit",
+        "lentenbegin"              => "Fastenzeit: Begin der Fastenzeit",
+        "lentenw1"                 => "Fastenzeit: Fastenwoche 1",
+        "lentenw2"                 => "Fastenzeit: Fastenwoche 2",
+        "lentenw3"                 => "Fastenzeit: Fastenwoche 3",
+        "lentenw4"                 => "Fastenzeit: Fastenwoche 4",
+        "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
+        "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
+        "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseasonbegin"  => "Starkbierfest: Beginn des Starkbierfests",
+        "sbeerseason"       => "Starkbierfest",
+        "oktoberfestbegin"  => "Oktoberfestzeit: Begin des Oktoberfests",
+        "oktoberfestend"    => "Oktoberfestzeit: Ende des Oktoberfests",
+        "oktoberfestseason" => "Oktoberfestzeit",
+        "ramadanbegin"      => "Ramadan: 1. Ramadan",
+        "ramadanw1"         => "Ramadan: Fastenwoche 1",
+        "ramadanw2"         => "Ramadan: Fastenwoche 2",
+        "ramadanw3"         => "Ramadan: Fastenwoche 3",
+        "ramadanw4"         => "Ramadan: Fastenwoche 4",
+        "ramadanend"        => "Ramadan: Fastenbrechen",
     },
 
     DE => {
@@ -210,6 +243,7 @@ our %transtable = (
         "tomorrow"       => "morgen",
         "event"          => "Ereignis",
         "events"         => "Ereignisse",
+        "noevents"       => "Es finden keine Ereignisse statt.",
         "alldayevents"   => "Ganztägige Ereignisse",
         "dayevents"      => "Ereignisse im Laufe des Tages",
         "teasernext"     => "Vorschau für nächsten Tag",
@@ -262,6 +296,7 @@ our %transtable = (
         "remaining" => "verbleibend",
 
         #
+        "season"    => "Saison",
         "metseason" => "Meteorologische Jahreszeit",
 
         #
@@ -277,41 +312,72 @@ our %transtable = (
         "latefall"    => "Spätherbst",
 
         #
-        "christmaseve"    => "Heiligabend",
-        "advent1"         => "Adventszeit: 1. Advent",
-        "advent2"         => "Adventszeit: 2. Advent",
-        "advent3"         => "Adventszeit: 3. Advent",
-        "advent4"         => "Adventszeit: 4. Advent",
-        "adventseason"    => "Adventszeit",
-        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
-        "carnivalseason2" => "Faschingszeit",
-        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
-        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
-        "carnivalseason5" => "Faschingszeit: Rosenmontag",
-        "carnivalseason6" => "Faschingszeit: Fastnacht",
-        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
-        "eastersun"       => "Osterzeit: Ostersonntag",
-        "eastermon"       => "Osterzeit: Ostermontag",
-        "eastersat"       => "Osterzeit: Ostersamstag",
-        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
-        "easterseason"    => "Osterzeit",
-        "holyweekpalm"    => "Karwoche: Palmsonntag",
-        "holyweekthu"     => "Karwoche: Gründonnerstag",
-        "holyweekfri"     => "Karwoche: Karfreitag",
-        "holyweeksat"     => "Karwoche: Karsamstag",
-        "holyweek"        => "Karwoche",
-        "halloween"       => "Halloweenzeit: Halloween",
-        "halloweenseason" => "Halloweenzeit",
-        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
-        "lentw1"          => "Fastenzeit: Fastenwoche 1",
-        "lentw2"          => "Fastenzeit: Fastenwoche 2",
-        "lentw3"          => "Fastenzeit: Fastenwoche 3",
-        "lentw4"          => "Fastenzeit: Fastenwoche 4",
-        "lentw5"          => "Fastenzeit: Fastenwoche 5",
-        "lentw6"          => "Fastenzeit: Fastenwoche 6",
-        "lentw7"          => "Fastenzeit: Große Fastenwoche",
-        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
-        "sbeerseason"     => "Starkbierzeit",
+        "epiphany"                 => "Heilige Drei Könige",
+        "valentinesday"            => "Valentinstag",
+        "danceintomay"             => "Tanz in den Mai",
+        "mothersday"               => "Muttertag",
+        "fathersday"               => "Vatertag",
+        "pentecost"                => "Pfingsten",
+        "harvestfestival"          => "Erntedankfest",
+        "martinmas"                => "Martinstag",
+        "dayofprayerandrepentance" => "Buß- und Bettag",
+        "remembranceday"           => "Volkstrauertag",
+        "lastsundaybeforeadvent"   => "Totensonntag",
+        "stnicholasday"            => "Nikolaus",
+        "christmaseve"             => "Weihnachtszeit: Heiligabend",
+        "christmas1"               => "Weihnachtszeit: 1. Weihnachtstag",
+        "christmas2"               => "Weihnachtszeit: 2. Weihnachtstag",
+        "christmasseason"          => "Weihnachtszeit",
+        "newyearseve"              => "Jahreswechsel: Silvester",
+        "newyear"                  => "Jahreswechsel: Neujahr",
+        "turnoftheyear"            => "Jahreswechsel",
+        "advent1"                  => "Adventszeit: 1. Advent",
+        "advent2"                  => "Adventszeit: 2. Advent",
+        "advent3"                  => "Adventszeit: 3. Advent",
+        "advent4"                  => "Adventszeit: 4. Advent",
+        "adventseason"             => "Adventszeit",
+        "carnivalseason1"          => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2"          => "Faschingszeit",
+        "carnivalseason3"          => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4"          => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5"          => "Faschingszeit: Rosenmontag",
+        "carnivalseason6"          => "Faschingszeit: Fastnacht",
+        "ashwednesday"             => "Aschermittwoch",
+        "eastersun"                => "Osterzeit: Ostersonntag",
+        "eastermon"                => "Osterzeit: Ostermontag",
+        "eastersat"                => "Osterzeit: Ostersamstag",
+        "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
+        "easterseason"             => "Osterzeit",
+        "passiontidebegin"         => "Passionszeit: Passionssonntag",
+        "passiontide"              => "Passionszeit",
+        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekthu"              => "Karwoche: Gründonnerstag",
+        "holyweekfri"              => "Karwoche: Karfreitag",
+        "holyweeksat"              => "Karwoche: Karsamstag",
+        "holyweek"                 => "Karwoche",
+        "halloweenbegin"           => "Halloweenzeit: Begin der Halloweenzeit",
+        "halloween"                => "Halloweenzeit: Halloween",
+        "halloweenseason"          => "Halloweenzeit",
+        "lentenbegin"              => "Fastenzeit: Begin der Fastenzeit",
+        "lentenw1"                 => "Fastenzeit: Fastenwoche 1",
+        "lentenw2"                 => "Fastenzeit: Fastenwoche 2",
+        "lentenw3"                 => "Fastenzeit: Fastenwoche 3",
+        "lentenw4"                 => "Fastenzeit: Fastenwoche 4",
+        "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
+        "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
+        "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
+        "sbeerseason"              => "Starkbierfest",
+        "oktoberfestbegin"         => "Oktoberfestzeit: Begin des Oktoberfests",
+        "oktoberfestend"           => "Oktoberfestzeit: Ende des Oktoberfests",
+        "oktoberfestseason"        => "Oktoberfestzeit",
+        "ramadanbegin"             => "Ramadan: 1. Ramadan",
+        "ramadanw1"                => "Ramadan: Fastenwoche 1",
+        "ramadanw2"                => "Ramadan: Fastenwoche 2",
+        "ramadanw3"                => "Ramadan: Fastenwoche 3",
+        "ramadanw4"                => "Ramadan: Fastenwoche 4",
+        "ramadanend"               => "Ramadan: Fastenbrechen",
     },
 
     ES => {
@@ -324,6 +390,7 @@ our %transtable = (
         "tomorrow"       => "mañana",
         "event"          => "Evento",
         "events"         => "Eventos",
+        "noevents"       => "No hay eventos.",
         "alldayevents"   => "Eventos todo el dia",
         "dayevents"      => "Eventos durante el día",
         "teasernext"     => "Vista previa para el día siguiente",
@@ -376,6 +443,7 @@ our %transtable = (
         "remaining" => "restantes",
 
         #
+        "season"    => "Condimentar",
         "metseason" => "Temporada Meteorológica",
 
         #
@@ -391,41 +459,71 @@ our %transtable = (
         "latefall"    => "Finales de otoño",
 
         #
-        "christmaseve"    => "Nochebuena",
-        "advent1"         => "Adventszeit: 1. Advent",
-        "advent2"         => "Adventszeit: 2. Advent",
-        "advent3"         => "Adventszeit: 3. Advent",
-        "advent4"         => "Adventszeit: 4. Advent",
-        "adventseason"    => "Temporada de Adviento",
-        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
-        "carnivalseason2" => "Faschingszeit",
-        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
-        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
-        "carnivalseason5" => "Faschingszeit: Rosenmontag",
-        "carnivalseason6" => "Faschingszeit: Fastnacht",
-        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
-        "eastersun"       => "Osterzeit: Ostersonntag",
-        "eastermon"       => "Osterzeit: Ostermontag",
-        "eastersat"       => "Osterzeit: Ostersamstag",
-        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
-        "easterseason"    => "Osterzeit",
-        "holyweekpalm"    => "Karwoche: Palmsonntag",
-        "holyweekthu"     => "Karwoche: Gründonnerstag",
-        "holyweekfri"     => "Karwoche: Karfreitag",
-        "holyweeksat"     => "Karwoche: Karsamstag",
-        "holyweek"        => "Karwoche",
-        "halloween"       => "Halloweenzeit: Halloween",
-        "halloweenseason" => "Halloweenzeit",
-        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
-        "lentw1"          => "Fastenzeit: Fastenwoche 1",
-        "lentw2"          => "Fastenzeit: Fastenwoche 2",
-        "lentw3"          => "Fastenzeit: Fastenwoche 3",
-        "lentw4"          => "Fastenzeit: Fastenwoche 4",
-        "lentw5"          => "Fastenzeit: Fastenwoche 5",
-        "lentw6"          => "Fastenzeit: Fastenwoche 6",
-        "lentw7"          => "Fastenzeit: Große Fastenwoche",
-        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
-        "sbeerseason"     => "Starkbierzeit",
+        "valentinesday"            => "Valentines Day",
+        "danceintomay"             => "Dance into May",
+        "mothersday"               => "Mothers Day",
+        "fathersday"               => "Fathers Day",
+        "pentecost"                => "Pentecost",
+        "harvestfestival"          => "Harvest Festival",
+        "martinmas"                => "St. Martin's Day",
+        "dayofprayerandrepentance" => "Day of Prayer and Repentance",
+        "remembranceday"           => "Remembrance Day",
+        "lastsundaybeforeadvent"   => "Last Sunday before Advent",
+        "stnicholasday"            => "St. Nicholas' Day",
+        "christmaseve"             => "Christmas Season: Christmas Eve",
+        "christmas1"               => "Christmas Season: Christmas Day",
+        "christmas2"               => "Christmas Season: Day after Christmas",
+        "christmasseason"          => "Christmas Season",
+        "newyearseve"              => "Turn of the year: New Year's Eve",
+        "newyear"                  => "Turn of the year: New Year",
+        "turnoftheyear"            => "Turn of the year",
+        "advent1"                  => "Adventszeit: 1. Advent",
+        "advent2"                  => "Adventszeit: 2. Advent",
+        "advent3"                  => "Adventszeit: 3. Advent",
+        "advent4"                  => "Adventszeit: 4. Advent",
+        "adventseason"             => "Temporada de Adviento",
+        "carnivalseason1"          => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2"          => "Faschingszeit",
+        "carnivalseason3"          => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4"          => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5"          => "Faschingszeit: Rosenmontag",
+        "carnivalseason6"          => "Faschingszeit: Fastnacht",
+        "ashwednesday"             => "Aschermittwoch",
+        "eastersun"                => "Osterzeit: Ostersonntag",
+        "eastermon"                => "Osterzeit: Ostermontag",
+        "eastersat"                => "Osterzeit: Ostersamstag",
+        "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
+        "easterseason"             => "Osterzeit",
+        "passiontidebegin"         => "Passionszeit: Passionssonntag",
+        "passiontide"              => "Passionszeit",
+        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekthu"              => "Karwoche: Gründonnerstag",
+        "holyweekfri"              => "Karwoche: Karfreitag",
+        "holyweeksat"              => "Karwoche: Karsamstag",
+        "holyweek"                 => "Karwoche",
+        "halloweenbegin"           => "Halloweenzeit: Begin der Halloweenzeit",
+        "halloween"                => "Halloweenzeit: Halloween",
+        "halloweenseason"          => "Halloweenzeit",
+        "lentenbegin"              => "Fastenzeit: Begin der Fastenzeit",
+        "lentenw1"                 => "Fastenzeit: Fastenwoche 1",
+        "lentenw2"                 => "Fastenzeit: Fastenwoche 2",
+        "lentenw3"                 => "Fastenzeit: Fastenwoche 3",
+        "lentenw4"                 => "Fastenzeit: Fastenwoche 4",
+        "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
+        "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
+        "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
+        "sbeerseason"              => "Starkbierfest",
+        "oktoberfestbegin"         => "Oktoberfestzeit: Begin des Oktoberfests",
+        "oktoberfestend"           => "Oktoberfestzeit: Ende des Oktoberfests",
+        "oktoberfestseason"        => "Oktoberfestzeit",
+        "ramadanbegin"             => "Ramadan: 1. Ramadan",
+        "ramadanw1"                => "Ramadan: Fastenwoche 1",
+        "ramadanw2"                => "Ramadan: Fastenwoche 2",
+        "ramadanw3"                => "Ramadan: Fastenwoche 3",
+        "ramadanw4"                => "Ramadan: Fastenwoche 4",
+        "ramadanend"               => "Ramadan: Fastenbrechen",
     },
 
     FR => {
@@ -438,6 +536,7 @@ our %transtable = (
         "tomorrow"       => "demain",
         "event"          => "Événement",
         "events"         => "Événements",
+        "noevents"       => "Il n'y a pas d'événements.",
         "alldayevents"   => "Événements d'une journée",
         "dayevents"      => "Événements pendant la journée",
         "teasernext"     => "Aperçu pour le lendemain",
@@ -490,6 +589,7 @@ our %transtable = (
         "remaining" => "restant",
 
         #
+        "season"    => "Assaisonner",
         "metseason" => "Saison Météorologique",
 
         #
@@ -505,41 +605,71 @@ our %transtable = (
         "latefall"    => "Fin de l'automne",
 
         #
-        "christmaseve"    => "Veille de Noël",
-        "advent1"         => "Adventszeit: 1. Advent",
-        "advent2"         => "Adventszeit: 2. Advent",
-        "advent3"         => "Adventszeit: 3. Advent",
-        "advent4"         => "Adventszeit: 4. Advent",
-        "adventseason"    => "Saison de l'Avent",
-        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
-        "carnivalseason2" => "Faschingszeit",
-        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
-        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
-        "carnivalseason5" => "Faschingszeit: Rosenmontag",
-        "carnivalseason6" => "Faschingszeit: Fastnacht",
-        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
-        "eastersun"       => "Osterzeit: Ostersonntag",
-        "eastermon"       => "Osterzeit: Ostermontag",
-        "eastersat"       => "Osterzeit: Ostersamstag",
-        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
-        "easterseason"    => "Osterzeit",
-        "holyweekpalm"    => "Karwoche: Palmsonntag",
-        "holyweekthu"     => "Karwoche: Gründonnerstag",
-        "holyweekfri"     => "Karwoche: Karfreitag",
-        "holyweeksat"     => "Karwoche: Karsamstag",
-        "holyweek"        => "Karwoche",
-        "halloween"       => "Halloweenzeit: Halloween",
-        "halloweenseason" => "Halloweenzeit",
-        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
-        "lentw1"          => "Fastenzeit: Fastenwoche 1",
-        "lentw2"          => "Fastenzeit: Fastenwoche 2",
-        "lentw3"          => "Fastenzeit: Fastenwoche 3",
-        "lentw4"          => "Fastenzeit: Fastenwoche 4",
-        "lentw5"          => "Fastenzeit: Fastenwoche 5",
-        "lentw6"          => "Fastenzeit: Fastenwoche 6",
-        "lentw7"          => "Fastenzeit: Große Fastenwoche",
-        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
-        "sbeerseason"     => "Starkbierzeit",
+        "valentinesday"            => "Valentines Day",
+        "danceintomay"             => "Dance into May",
+        "mothersday"               => "Mothers Day",
+        "fathersday"               => "Fathers Day",
+        "pentecost"                => "Pentecost",
+        "harvestfestival"          => "Harvest Festival",
+        "martinmas"                => "St. Martin's Day",
+        "dayofprayerandrepentance" => "Day of Prayer and Repentance",
+        "remembranceday"           => "Remembrance Day",
+        "lastsundaybeforeadvent"   => "Last Sunday before Advent",
+        "stnicholasday"            => "St. Nicholas' Day",
+        "christmaseve"             => "Christmas Season: Christmas Eve",
+        "christmas1"               => "Christmas Season: Christmas Day",
+        "christmas2"               => "Christmas Season: Day after Christmas",
+        "christmasseason"          => "Christmas Season",
+        "newyearseve"              => "Turn of the year: New Year's Eve",
+        "newyear"                  => "Turn of the year: New Year",
+        "turnoftheyear"            => "Turn of the year",
+        "advent1"                  => "Adventszeit: 1. Advent",
+        "advent2"                  => "Adventszeit: 2. Advent",
+        "advent3"                  => "Adventszeit: 3. Advent",
+        "advent4"                  => "Adventszeit: 4. Advent",
+        "adventseason"             => "Saison de l'Avent",
+        "carnivalseason1"          => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2"          => "Faschingszeit",
+        "carnivalseason3"          => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4"          => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5"          => "Faschingszeit: Rosenmontag",
+        "carnivalseason6"          => "Faschingszeit: Fastnacht",
+        "ashwednesday"             => "Aschermittwoch",
+        "eastersun"                => "Osterzeit: Ostersonntag",
+        "eastermon"                => "Osterzeit: Ostermontag",
+        "eastersat"                => "Osterzeit: Ostersamstag",
+        "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
+        "easterseason"             => "Osterzeit",
+        "passiontidebegin"         => "Passionszeit: Passionssonntag",
+        "passiontide"              => "Passionszeit",
+        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekthu"              => "Karwoche: Gründonnerstag",
+        "holyweekfri"              => "Karwoche: Karfreitag",
+        "holyweeksat"              => "Karwoche: Karsamstag",
+        "holyweek"                 => "Karwoche",
+        "halloweenbegin"           => "Halloweenzeit: Begin der Halloweenzeit",
+        "halloween"                => "Halloweenzeit: Halloween",
+        "halloweenseason"          => "Halloweenzeit",
+        "lentenbegin"              => "Fastenzeit: Begin der Fastenzeit",
+        "lentenw1"                 => "Fastenzeit: Fastenwoche 1",
+        "lentenw2"                 => "Fastenzeit: Fastenwoche 2",
+        "lentenw3"                 => "Fastenzeit: Fastenwoche 3",
+        "lentenw4"                 => "Fastenzeit: Fastenwoche 4",
+        "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
+        "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
+        "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
+        "sbeerseason"              => "Starkbierfest",
+        "oktoberfestbegin"         => "Oktoberfestzeit: Begin des Oktoberfests",
+        "oktoberfestend"           => "Oktoberfestzeit: Ende des Oktoberfests",
+        "oktoberfestseason"        => "Oktoberfestzeit",
+        "ramadanbegin"             => "Ramadan: 1. Ramadan",
+        "ramadanw1"                => "Ramadan: Fastenwoche 1",
+        "ramadanw2"                => "Ramadan: Fastenwoche 2",
+        "ramadanw3"                => "Ramadan: Fastenwoche 3",
+        "ramadanw4"                => "Ramadan: Fastenwoche 4",
+        "ramadanend"               => "Ramadan: Fastenbrechen",
     },
 
     IT => {
@@ -552,6 +682,7 @@ our %transtable = (
         "tomorrow"       => "domani",
         "event"          => "Evento",
         "events"         => "Eventi",
+        "noevents"       => "Non ci sono eventi.",
         "alldayevents"   => "Eventi per tutto il giorno",
         "dayevents"      => "Eventi durante il giorno",
         "teasernext"     => "Anteprima per il giorno successivo",
@@ -604,6 +735,7 @@ our %transtable = (
         "remaining" => "rimanente",
 
         #
+        "season"    => "Periodo",
         "metseason" => "Stagione Meteorologica",
 
         #
@@ -619,41 +751,71 @@ our %transtable = (
         "latefall"    => "Tardo autunno",
 
         #
-        "christmaseve"    => "Vigilia di Natale",
-        "advent1"         => "Adventszeit: 1. Advent",
-        "advent2"         => "Adventszeit: 2. Advent",
-        "advent3"         => "Adventszeit: 3. Advent",
-        "advent4"         => "Adventszeit: 4. Advent",
-        "adventseason"    => "Stagione d'Avvento",
-        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
-        "carnivalseason2" => "Faschingszeit",
-        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
-        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
-        "carnivalseason5" => "Faschingszeit: Rosenmontag",
-        "carnivalseason6" => "Faschingszeit: Fastnacht",
-        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
-        "eastersun"       => "Osterzeit: Ostersonntag",
-        "eastermon"       => "Osterzeit: Ostermontag",
-        "eastersat"       => "Osterzeit: Ostersamstag",
-        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
-        "easterseason"    => "Osterzeit",
-        "holyweekpalm"    => "Karwoche: Palmsonntag",
-        "holyweekthu"     => "Karwoche: Gründonnerstag",
-        "holyweekfri"     => "Karwoche: Karfreitag",
-        "holyweeksat"     => "Karwoche: Karsamstag",
-        "holyweek"        => "Karwoche",
-        "halloween"       => "Halloweenzeit: Halloween",
-        "halloweenseason" => "Halloweenzeit",
-        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
-        "lentw1"          => "Fastenzeit: Fastenwoche 1",
-        "lentw2"          => "Fastenzeit: Fastenwoche 2",
-        "lentw3"          => "Fastenzeit: Fastenwoche 3",
-        "lentw4"          => "Fastenzeit: Fastenwoche 4",
-        "lentw5"          => "Fastenzeit: Fastenwoche 5",
-        "lentw6"          => "Fastenzeit: Fastenwoche 6",
-        "lentw7"          => "Fastenzeit: Große Fastenwoche",
-        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
-        "sbeerseason"     => "Starkbierzeit",
+        "valentinesday"            => "Valentines Day",
+        "danceintomay"             => "Dance into May",
+        "mothersday"               => "Mothers Day",
+        "fathersday"               => "Fathers Day",
+        "pentecost"                => "Pentecost",
+        "harvestfestival"          => "Harvest Festival",
+        "martinmas"                => "St. Martin's Day",
+        "dayofprayerandrepentance" => "Day of Prayer and Repentance",
+        "remembranceday"           => "Remembrance Day",
+        "lastsundaybeforeadvent"   => "Last Sunday before Advent",
+        "stnicholasday"            => "St. Nicholas' Day",
+        "christmaseve"             => "Christmas Season: Christmas Eve",
+        "christmas1"               => "Christmas Season: Christmas Day",
+        "christmas2"               => "Christmas Season: Day after Christmas",
+        "christmasseason"          => "Christmas Season",
+        "newyearseve"              => "Turn of the year: New Year's Eve",
+        "newyear"                  => "Turn of the year: New Year",
+        "turnoftheyear"            => "Turn of the year",
+        "advent1"                  => "Adventszeit: 1. Advent",
+        "advent2"                  => "Adventszeit: 2. Advent",
+        "advent3"                  => "Adventszeit: 3. Advent",
+        "advent4"                  => "Adventszeit: 4. Advent",
+        "adventseason"             => "Stagione d'Avvento",
+        "carnivalseason1"          => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2"          => "Faschingszeit",
+        "carnivalseason3"          => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4"          => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5"          => "Faschingszeit: Rosenmontag",
+        "carnivalseason6"          => "Faschingszeit: Fastnacht",
+        "ashwednesday"             => "Aschermittwoch",
+        "eastersun"                => "Osterzeit: Ostersonntag",
+        "eastermon"                => "Osterzeit: Ostermontag",
+        "eastersat"                => "Osterzeit: Ostersamstag",
+        "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
+        "easterseason"             => "Osterzeit",
+        "passiontidebegin"         => "Passionszeit: Passionssonntag",
+        "passiontide"              => "Passionszeit",
+        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekthu"              => "Karwoche: Gründonnerstag",
+        "holyweekfri"              => "Karwoche: Karfreitag",
+        "holyweeksat"              => "Karwoche: Karsamstag",
+        "holyweek"                 => "Karwoche",
+        "halloweenbegin"           => "Halloweenzeit: Begin der Halloweenzeit",
+        "halloween"                => "Halloweenzeit: Halloween",
+        "halloweenseason"          => "Halloweenzeit",
+        "lentenbegin"              => "Fastenzeit: Begin der Fastenzeit",
+        "lentenw1"                 => "Fastenzeit: Fastenwoche 1",
+        "lentenw2"                 => "Fastenzeit: Fastenwoche 2",
+        "lentenw3"                 => "Fastenzeit: Fastenwoche 3",
+        "lentenw4"                 => "Fastenzeit: Fastenwoche 4",
+        "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
+        "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
+        "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
+        "sbeerseason"              => "Starkbierfest",
+        "oktoberfestbegin"         => "Oktoberfestzeit: Begin des Oktoberfests",
+        "oktoberfestend"           => "Oktoberfestzeit: Ende des Oktoberfests",
+        "oktoberfestseason"        => "Oktoberfestzeit",
+        "ramadanbegin"             => "Ramadan: 1. Ramadan",
+        "ramadanw1"                => "Ramadan: Fastenwoche 1",
+        "ramadanw2"                => "Ramadan: Fastenwoche 2",
+        "ramadanw3"                => "Ramadan: Fastenwoche 3",
+        "ramadanw4"                => "Ramadan: Fastenwoche 4",
+        "ramadanend"               => "Ramadan: Fastenbrechen",
     },
 
     NL => {
@@ -666,6 +828,7 @@ our %transtable = (
         "tomorrow"       => "morgen",
         "event"          => "Evenement",
         "events"         => "Evenementen",
+        "noevents"       => "Er zijn geen evenementen.",
         "alldayevents"   => "De hele dag evenementen",
         "dayevents"      => "Evenementen overdag",
         "teasernext"     => "Voorbeeld voor de volgende dag",
@@ -718,6 +881,7 @@ our %transtable = (
         "remaining" => "resterende",
 
         #
+        "season"    => "Jaargetijde",
         "metseason" => "Meteorologisch Seizoen",
 
         #
@@ -733,41 +897,71 @@ our %transtable = (
         "latefall"    => "Laat Herfst",
 
         #
-        "christmaseve"    => "Kerstavond",
-        "advent1"         => "Adventszeit: 1. Advent",
-        "advent2"         => "Adventszeit: 2. Advent",
-        "advent3"         => "Adventszeit: 3. Advent",
-        "advent4"         => "Adventszeit: 4. Advent",
-        "adventseason"    => "Adventsseizoen",
-        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
-        "carnivalseason2" => "Faschingszeit",
-        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
-        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
-        "carnivalseason5" => "Faschingszeit: Rosenmontag",
-        "carnivalseason6" => "Faschingszeit: Fastnacht",
-        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
-        "eastersun"       => "Osterzeit: Ostersonntag",
-        "eastermon"       => "Osterzeit: Ostermontag",
-        "eastersat"       => "Osterzeit: Ostersamstag",
-        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
-        "easterseason"    => "Osterzeit",
-        "holyweekpalm"    => "Karwoche: Palmsonntag",
-        "holyweekthu"     => "Karwoche: Gründonnerstag",
-        "holyweekfri"     => "Karwoche: Karfreitag",
-        "holyweeksat"     => "Karwoche: Karsamstag",
-        "holyweek"        => "Karwoche",
-        "halloween"       => "Halloweenzeit: Halloween",
-        "halloweenseason" => "Halloweenzeit",
-        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
-        "lentw1"          => "Fastenzeit: Fastenwoche 1",
-        "lentw2"          => "Fastenzeit: Fastenwoche 2",
-        "lentw3"          => "Fastenzeit: Fastenwoche 3",
-        "lentw4"          => "Fastenzeit: Fastenwoche 4",
-        "lentw5"          => "Fastenzeit: Fastenwoche 5",
-        "lentw6"          => "Fastenzeit: Fastenwoche 6",
-        "lentw7"          => "Fastenzeit: Große Fastenwoche",
-        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
-        "sbeerseason"     => "Starkbierzeit",
+        "valentinesday"            => "Valentines Day",
+        "danceintomay"             => "Dance into May",
+        "mothersday"               => "Mothers Day",
+        "fathersday"               => "Fathers Day",
+        "pentecost"                => "Pentecost",
+        "harvestfestival"          => "Harvest Festival",
+        "martinmas"                => "St. Martin's Day",
+        "dayofprayerandrepentance" => "Day of Prayer and Repentance",
+        "remembranceday"           => "Remembrance Day",
+        "lastsundaybeforeadvent"   => "Last Sunday before Advent",
+        "stnicholasday"            => "St. Nicholas' Day",
+        "christmaseve"             => "Christmas Season: Christmas Eve",
+        "christmas1"               => "Christmas Season: Christmas Day",
+        "christmas2"               => "Christmas Season: Day after Christmas",
+        "christmasseason"          => "Christmas Season",
+        "newyearseve"              => "Turn of the year: New Year's Eve",
+        "newyear"                  => "Turn of the year: New Year",
+        "turnoftheyear"            => "Turn of the year",
+        "advent1"                  => "Adventszeit: 1. Advent",
+        "advent2"                  => "Adventszeit: 2. Advent",
+        "advent3"                  => "Adventszeit: 3. Advent",
+        "advent4"                  => "Adventszeit: 4. Advent",
+        "adventseason"             => "Adventsseizoen",
+        "carnivalseason1"          => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2"          => "Faschingszeit",
+        "carnivalseason3"          => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4"          => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5"          => "Faschingszeit: Rosenmontag",
+        "carnivalseason6"          => "Faschingszeit: Fastnacht",
+        "ashwednesday"             => "Aschermittwoch",
+        "eastersun"                => "Osterzeit: Ostersonntag",
+        "eastermon"                => "Osterzeit: Ostermontag",
+        "eastersat"                => "Osterzeit: Ostersamstag",
+        "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
+        "easterseason"             => "Osterzeit",
+        "passiontidebegin"         => "Passionszeit: Passionssonntag",
+        "passiontide"              => "Passionszeit",
+        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekthu"              => "Karwoche: Gründonnerstag",
+        "holyweekfri"              => "Karwoche: Karfreitag",
+        "holyweeksat"              => "Karwoche: Karsamstag",
+        "holyweek"                 => "Karwoche",
+        "halloweenbegin"           => "Halloweenzeit: Begin der Halloweenzeit",
+        "halloween"                => "Halloweenzeit: Halloween",
+        "halloweenseason"          => "Halloweenzeit",
+        "lentenbegin"              => "Fastenzeit: Begin der Fastenzeit",
+        "lentenw1"                 => "Fastenzeit: Fastenwoche 1",
+        "lentenw2"                 => "Fastenzeit: Fastenwoche 2",
+        "lentenw3"                 => "Fastenzeit: Fastenwoche 3",
+        "lentenw4"                 => "Fastenzeit: Fastenwoche 4",
+        "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
+        "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
+        "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
+        "sbeerseason"              => "Starkbierfest",
+        "oktoberfestbegin"         => "Oktoberfestzeit: Begin des Oktoberfests",
+        "oktoberfestend"           => "Oktoberfestzeit: Ende des Oktoberfests",
+        "oktoberfestseason"        => "Oktoberfestzeit",
+        "ramadanbegin"             => "Ramadan: 1. Ramadan",
+        "ramadanw1"                => "Ramadan: Fastenwoche 1",
+        "ramadanw2"                => "Ramadan: Fastenwoche 2",
+        "ramadanw3"                => "Ramadan: Fastenwoche 3",
+        "ramadanw4"                => "Ramadan: Fastenwoche 4",
+        "ramadanend"               => "Ramadan: Fastenbrechen",
     },
 
     PL => {
@@ -780,6 +974,7 @@ our %transtable = (
         "tomorrow"       => "przyszłość",
         "event"          => "Zdarzenie",
         "events"         => "Zdarzenia",
+        "noevents"       => "Nie ma żadnych wydarzeń.",
         "alldayevents"   => "Wydarzenia całodniowe",
         "dayevents"      => "Wydarzenia w ciągu dnia",
         "teasernext"     => "Podgląd dla następnego dnia",
@@ -832,6 +1027,7 @@ our %transtable = (
         "remaining" => "pozostały",
 
         #
+        "season"    => "Sezon",
         "metseason" => "Sezon Meteorologiczny",
 
         #
@@ -847,41 +1043,71 @@ our %transtable = (
         "latefall"    => "Późną jesienią",
 
         #
-        "christmaseve"    => "Wigilia",
-        "advent1"         => "Adventszeit: 1. Advent",
-        "advent2"         => "Adventszeit: 2. Advent",
-        "advent3"         => "Adventszeit: 3. Advent",
-        "advent4"         => "Adventszeit: 4. Advent",
-        "adventseason"    => "Sezon adwentowy",
-        "carnivalseason1" => "Faschingszeit: Weiberfastnacht",
-        "carnivalseason2" => "Faschingszeit",
-        "carnivalseason3" => "Faschingszeit: Fastnachtssamstag",
-        "carnivalseason4" => "Faschingszeit: Fastnachtssonntag",
-        "carnivalseason5" => "Faschingszeit: Rosenmontag",
-        "carnivalseason6" => "Faschingszeit: Fastnacht",
-        "carnivalseason7" => "Faschingszeit: Aschermittwoch",
-        "eastersun"       => "Osterzeit: Ostersonntag",
-        "eastermon"       => "Osterzeit: Ostermontag",
-        "eastersat"       => "Osterzeit: Ostersamstag",
-        "easterwhitesun"  => "Osterzeit: Weißer Sonntag",
-        "easterseason"    => "Osterzeit",
-        "holyweekpalm"    => "Karwoche: Palmsonntag",
-        "holyweekthu"     => "Karwoche: Gründonnerstag",
-        "holyweekfri"     => "Karwoche: Karfreitag",
-        "holyweeksat"     => "Karwoche: Karsamstag",
-        "holyweek"        => "Karwoche",
-        "halloween"       => "Halloweenzeit: Halloween",
-        "halloweenseason" => "Halloweenzeit",
-        "lentbegin"       => "Fastenzeit: Begin der Fastenzeit",
-        "lentw1"          => "Fastenzeit: Fastenwoche 1",
-        "lentw2"          => "Fastenzeit: Fastenwoche 2",
-        "lentw3"          => "Fastenzeit: Fastenwoche 3",
-        "lentw4"          => "Fastenzeit: Fastenwoche 4",
-        "lentw5"          => "Fastenzeit: Fastenwoche 5",
-        "lentw6"          => "Fastenzeit: Fastenwoche 6",
-        "lentw7"          => "Fastenzeit: Große Fastenwoche",
-        "lentend"         => "Fastenzeit: Ende der Fastenzeit",
-        "sbeerseason"     => "Starkbierzeit",
+        "valentinesday"            => "Valentines Day",
+        "danceintomay"             => "Dance into May",
+        "mothersday"               => "Mothers Day",
+        "fathersday"               => "Fathers Day",
+        "pentecost"                => "Pentecost",
+        "harvestfestival"          => "Harvest Festival",
+        "martinmas"                => "St. Martin's Day",
+        "dayofprayerandrepentance" => "Day of Prayer and Repentance",
+        "remembranceday"           => "Remembrance Day",
+        "lastsundaybeforeadvent"   => "Last Sunday before Advent",
+        "stnicholasday"            => "St. Nicholas' Day",
+        "christmaseve"             => "Christmas Season: Christmas Eve",
+        "christmas1"               => "Christmas Season: Christmas Day",
+        "christmas2"               => "Christmas Season: Day after Christmas",
+        "christmasseason"          => "Christmas Season",
+        "newyearseve"              => "Turn of the year: New Year's Eve",
+        "newyear"                  => "Turn of the year: New Year",
+        "turnoftheyear"            => "Turn of the year",
+        "advent1"                  => "Adventszeit: 1. Advent",
+        "advent2"                  => "Adventszeit: 2. Advent",
+        "advent3"                  => "Adventszeit: 3. Advent",
+        "advent4"                  => "Adventszeit: 4. Advent",
+        "adventseason"             => "Sezon adwentowy",
+        "carnivalseason1"          => "Faschingszeit: Weiberfastnacht",
+        "carnivalseason2"          => "Faschingszeit",
+        "carnivalseason3"          => "Faschingszeit: Fastnachtssamstag",
+        "carnivalseason4"          => "Faschingszeit: Fastnachtssonntag",
+        "carnivalseason5"          => "Faschingszeit: Rosenmontag",
+        "carnivalseason6"          => "Faschingszeit: Fastnacht",
+        "ashwednesday"             => "Aschermittwoch",
+        "eastersun"                => "Osterzeit: Ostersonntag",
+        "eastermon"                => "Osterzeit: Ostermontag",
+        "eastersat"                => "Osterzeit: Ostersamstag",
+        "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
+        "easterseason"             => "Osterzeit",
+        "passiontidebegin"         => "Passionszeit: Passionssonntag",
+        "passiontide"              => "Passionszeit",
+        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekthu"              => "Karwoche: Gründonnerstag",
+        "holyweekfri"              => "Karwoche: Karfreitag",
+        "holyweeksat"              => "Karwoche: Karsamstag",
+        "holyweek"                 => "Karwoche",
+        "halloweenbegin"           => "Halloweenzeit: Begin der Halloweenzeit",
+        "halloween"                => "Halloweenzeit: Halloween",
+        "halloweenseason"          => "Halloweenzeit",
+        "lentenbegin"              => "Fastenzeit: Begin der Fastenzeit",
+        "lentenw1"                 => "Fastenzeit: Fastenwoche 1",
+        "lentenw2"                 => "Fastenzeit: Fastenwoche 2",
+        "lentenw3"                 => "Fastenzeit: Fastenwoche 3",
+        "lentenw4"                 => "Fastenzeit: Fastenwoche 4",
+        "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
+        "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
+        "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
+        "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
+        "sbeerseason"              => "Starkbierfest",
+        "oktoberfestbegin"         => "Oktoberfestzeit: Begin des Oktoberfests",
+        "oktoberfestend"           => "Oktoberfestzeit: Ende des Oktoberfests",
+        "oktoberfestseason"        => "Oktoberfestzeit",
+        "ramadanbegin"             => "Ramadan: 1. Ramadan",
+        "ramadanw1"                => "Ramadan: Fastenwoche 1",
+        "ramadanw2"                => "Ramadan: Fastenwoche 2",
+        "ramadanw3"                => "Ramadan: Fastenwoche 3",
+        "ramadanw4"                => "Ramadan: Fastenwoche 4",
+        "ramadanend"               => "Ramadan: Fastenbrechen",
     }
 );
 
@@ -2054,7 +2280,24 @@ sub Get($@) {
 
         push @ret, $tHOpen;
 
+        if ( defined( $Schedule{'.SeasonSocial'} ) ) {
+            push @ret, $trOpen;
+            push @ret, $thOpen2 . encode_utf8( $tt->{season} ) . $thClose;
+            push @ret, $trClose . $trOpenOdd . $tdOpen2;
+            my $l;
+
+            foreach my $e ( @{ $Schedule{'.SeasonSocial'} } ) {
+                $l .= $lb if ($l);
+                $l .= encode_utf8($e);
+            }
+
+            push @ret, $l . $tdClose . $trClose;
+        }
+
         if ( defined( $Schedule{'.scheduleAllday'} ) ) {
+            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose
+              if ( defined( $Schedule{'.SeasonSocial'} ) );
+
             push @ret, $trOpen;
             push @ret, $thOpen2 . encode_utf8( $tt->{alldayevents} ) . $thClose;
             push @ret, $trClose . $trOpenOdd . $tdOpen2;
@@ -2079,10 +2322,13 @@ sub Get($@) {
             }
 
             push @ret, $l . $tdClose . $trClose;
-            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose;
         }
 
         if ( defined( $Schedule{'.scheduleDay'} ) ) {
+            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose
+              if ( defined( $Schedule{'.SeasonSocial'} )
+                || defined( $Schedule{'.scheduleAllay'} ) );
+
             push @ret, $trOpen;
             push @ret, $thOpen2 . encode_utf8( $tt->{dayevents} ) . $thClose;
             push @ret, $trClose . $trOpenOdd . $tdOpen2;
@@ -2108,63 +2354,96 @@ sub Get($@) {
             }
 
             push @ret, $l . $tdClose . $trClose;
-            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose;
         }
 
-        push @ret, $tHOpen . $trOpen;
-        push @ret, $thOpen . encode_utf8( $astrott->{time} ) . $thClose;
-        push @ret, $thOpen . encode_utf8( $tt->{event} ) . $thClose;
-        push @ret, $trClose;
-        push @ret, $tHClose . $tBOpen;
+        if ( defined( $Schedule{'.schedule'} ) ) {
+            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose
+              if ( defined( $Schedule{'.SeasonSocial'} )
+                || defined( $Schedule{'.scheduleDay'} )
+                || defined( $Schedule{'.scheduleAllay'} ) );
 
-        my $linecount = 1;
-        foreach my $t ( sort { $a <=> $b } keys %{ $Schedule{'.schedule'} } ) {
-            next if ( $t == 24. );
-            my $l = $linecount % 2 == 0 ? $trOpenEven : $trOpenOdd;
+            push @ret, $tHOpen . $trOpen;
+            push @ret, $thOpen . encode_utf8( $astrott->{time} ) . $thClose;
+            push @ret, $thOpen . encode_utf8( $tt->{event} ) . $thClose;
+            push @ret, $trClose;
+            push @ret, $tHClose . $tBOpen;
 
-            $l .= $tdOpen
-              . (
-                $t == 0.
-                ? '00:00:00'
-                : FHEM::Astro::HHMMSS($t)
-              ) . $tdClose;
-            $l .= $tdOpen;
+            my $linecount = 1;
+            foreach
+              my $t ( sort { $a <=> $b } keys %{ $Schedule{'.schedule'} } )
+            {
+                next if ( $t == 24. );
+                my $l = $linecount % 2 == 0 ? $trOpenEven : $trOpenOdd;
 
-            foreach my $e ( @{ $Schedule{'.schedule'}{$t} } ) {
-                if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
-                    if ( defined( $Astro{$1} ) ) {
-                        $l .= FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
-                            defined($2) ? $2 : '' );
+                $l .= $tdOpen
+                  . (
+                    $t == 0.
+                    ? '00:00:00'
+                    : FHEM::Astro::HHMMSS($t)
+                  ) . $tdClose;
+                $l .= $tdOpen;
+
+                foreach my $e ( @{ $Schedule{'.schedule'}{$t} } ) {
+                    if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+                        if ( defined( $Astro{$1} ) ) {
+                            $l .=
+                              FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
+                                defined($2) ? $2 : '' );
+                        }
+                        elsif ( defined( $Schedule{$1} ) ) {
+                            $l .= FormatReading( $1, $h, $lc_numeric,
+                                defined($2) ? $2 : '' );
+                        }
+                        else {
+                            $l .= encode_utf8($e);
+                        }
                     }
-                    elsif ( defined( $Schedule{$1} ) ) {
-                        $l .= FormatReading( $1, $h, $lc_numeric,
-                            defined($2) ? $2 : '' );
-                    }
-                    else {
-                        $l .= encode_utf8($e);
-                    }
+                    $l .= $lb;
                 }
-                $l .= $lb;
+
+                $l .= $tdClose;
+
+                $l .= $trClose;
+                push @ret, $l;
+                $linecount++;
             }
-
-            $l .= $tdClose;
-
-            $l .= $trClose;
-            push @ret, $l;
-            $linecount++;
         }
 
-        push @ret, $tBClose;
+        unless ( defined( $Schedule{'.SeasonSocial'} )
+            || defined( $Schedule{'.scheduleAllday'} )
+            || defined( $Schedule{'.scheduleDay'} )
+            || defined( $Schedule{'.schedule'} ) )
+        {
+            push @ret, $trOpen;
+            push @ret, $tdOpen . $space . $tdClose;
+            push @ret, $trClose;
+
+            push @ret, $trOpen;
+            push @ret, $tdOpen . encode_utf8( $tt->{noevents} ) . $tdClose;
+            push @ret, $trClose;
+
+            push @ret, $trOpen;
+            push @ret, $tdOpen . $space . $tdClose;
+            push @ret, $trClose;
+        }
 
         if ( defined( $Schedule{'.scheduleTom'} ) ) {
-            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose;
+            if (   defined( $Schedule{'.SeasonSocial'} )
+                || defined( $Schedule{'.schedule'} )
+                || defined( $Schedule{'.scheduleDay'} )
+                || defined( $Schedule{'.scheduleAllay'} ) )
+            {
+                push @ret,
+                  $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose;
+                push @ret, $tBClose;
+                push @ret, $tFOpen;
+            }
 
-            push @ret, $tFOpen;
             push @ret, $trOpen;
             push @ret, $thOpen2 . encode_utf8( $tt->{teasernext} ) . $thClose;
             push @ret, $trClose;
 
-            $linecount = 1;
+            my $linecount = 1;
             foreach
               my $t ( sort { $a <=> $b } keys %{ $Schedule{'.scheduleTom'} } )
             {
@@ -2200,8 +2479,20 @@ sub Get($@) {
                 $linecount++;
             }
 
-            push @ret, $tFClose;
+            if (   defined( $Schedule{'.SeasonSocial'} )
+                || defined( $Schedule{'.schedule'} )
+                || defined( $Schedule{'.scheduleDay'} )
+                || defined( $Schedule{'.scheduleAllay'} ) )
+            {
+                push @ret, $tFClose;
+            }
+            else {
+                push @ret, $tBClose;
+            }
         }
+
+        push @ret, $tBClose
+          unless ( defined( $Schedule{'.scheduleTom'} ) );
 
         push @ret, $tClose . $blockClose;
 
@@ -2583,6 +2874,12 @@ sub Compute($;$$) {
             : AttrVal( $name, "Schedule", $attrs{Schedule} )
         )
       );
+    unless ( defined( $params->{"Schedule"} )
+        || AttrVal( $name, "Schedule", 0 ) )
+    {
+        shift @schedsch;
+        shift @schedsch;
+    }
     my @infoDays =
       split(
         ',',
@@ -2592,6 +2889,12 @@ sub Compute($;$$) {
             : AttrVal( $name, "InformativeDays", $attrs{InformativeDays} )
         )
       );
+    unless ( defined( $params->{"InformativeDays"} )
+        || AttrVal( $name, "InformativeDays", 0 ) )
+    {
+        shift @infoDays;
+        shift @infoDays;
+    }
     my @socialSeasons =
       split(
         ',',
@@ -2601,6 +2904,12 @@ sub Compute($;$$) {
             : AttrVal( $name, "SocialSeasons", $attrs{SocialSeasons} )
         )
       );
+    unless ( defined( $params->{"SocialSeasons"} )
+        || AttrVal( $name, "SocialSeasons", 0 ) )
+    {
+        shift @socialSeasons;
+        shift @socialSeasons;
+    }
 
     # prepare Astro attributes
     if ( IsDevice( $AstroDev, "Astro" ) ) {
@@ -2725,59 +3034,122 @@ sub Compute($;$$) {
           if ( !$dayOffset );
     }
 
-    # Add specific events to schedule
-    if ( grep ( /^Advent$/, @socialSeasons )
-        && IsAdventSeason( $D->{day}, $D->{month}, $D->{year} ) =~
-        /^[^:]+: (.+)/ )
-    {
-        AddToSchedule( $S, '*', $1 );
+    # Add predefined informative days to schedule
+    unless ( grep ( /^none$/, @infoDays ) ) {
+        if (   grep ( /^ValentinesDay$/, @infoDays )
+            && $D->{month} == 2.
+            && $D->{day} == 14. )
+        {
+            AddToSchedule( $S, '*', $tt->{valentinesday} );
+        }
+        if ( grep ( /^AshWednesday$/, @infoDays )
+            && IsSpecificDay( '2 -46', $D->{day}, $D->{month}, $D->{year} ) )
+        {
+            AddToSchedule( $S, '*', $tt->{ashwednesday} );
+        }
+        if (   grep ( /^DanceIntoMay$/, @infoDays )
+            && $D->{month} == 4.
+            && $D->{day} == 30. )
+        {
+            AddToSchedule( $S, '*', $tt->{danceintomay} );
+        }
+        if ( grep ( /^MothersDay$/, @infoDays )
+            && IsSpecificDay( '3 2 Sun 05', $D->{day}, $D->{month}, $D->{year} )
+          )
+        {
+            AddToSchedule( $S, '*', $tt->{mothersday} );
+        }
+        if ( grep ( /^FathersDay$/, @infoDays )
+            && IsSpecificDay( '2 39', $D->{day}, $D->{month}, $D->{year} ) )
+        {
+            AddToSchedule( $S, '*', $tt->{fathersday} );
+        }
+        if (
+            grep ( /^Pentecost$/, @infoDays )
+            && (   IsSpecificDay( '2 49', $D->{day}, $D->{month}, $D->{year} )
+                || IsSpecificDay( '2 50', $D->{day}, $D->{month}, $D->{year} ) )
+          )
+        {
+            AddToSchedule( $S, '*', $tt->{pentecost} );
+        }
+        if ( grep ( /^HarvestFestival$/, @infoDays )
+            && IsSpecificDay( '3 1 Sun 10', $D->{day}, $D->{month}, $D->{year} )
+          )
+        {
+            AddToSchedule( $S, '*', $tt->{harvestfestival} );
+        }
+        if (   grep ( /^Martinmas$/, @infoDays )
+            && $D->{month} == 11.
+            && $D->{day} == 11. )
+        {
+            AddToSchedule( $S, '*', $tt->{martinmas} );
+        }
+        if (
+            grep ( /^DayOfPrayerandRepentance$/, @infoDays )
+            && IsSpecificDay(
+                '5 -1 Wed 11 24',
+                $D->{day}, $D->{month}, $D->{year}
+            )
+          )
+        {
+            AddToSchedule( $S, '*', $tt->{dayofprayerandrepentance} );
+        }
+        if (
+            grep ( /^RemembranceDay$/, @infoDays )
+            && IsSpecificDay(
+                '5 -6 Sun 12 25',
+                $D->{day}, $D->{month}, $D->{year}
+            )
+          )
+        {
+            AddToSchedule( $S, '*', $tt->{remembranceday} );
+        }
+        if (
+            grep ( /^LastSundayBeforeAdvent$/, @infoDays )
+            && IsSpecificDay(
+                '5 -5 Sun 12 25',
+                $D->{day}, $D->{month}, $D->{year}
+            )
+          )
+        {
+            AddToSchedule( $S, '*', $tt->{lastsundaybeforeadvent} );
+        }
+        if (   grep ( /^StNicholasDay$/, @infoDays )
+            && $D->{month} == 12.
+            && $D->{day} == 6. )
+        {
+            AddToSchedule( $S, '*', $tt->{stnicholasday} );
+        }
     }
-    if ( grep ( /^Carnival$/, @socialSeasons )
-        && IsCarnivalSeason( $D->{day}, $D->{month}, $D->{year} ) =~
-        /^[^:]+: (.+)/ )
-    {
-        AddToSchedule( $S, '*', $1 );
-    }
-    if (   grep ( /^ChristmasEve$/, @infoDays )
-        && $D->{month} == 12.
-        && $D->{day} == 24. )
-    {
-        AddToSchedule( $S, '?', $tt->{christmaseve} );
-        AddToSchedule( $S, 18., $tt->{christmaseve} );
-    }
-    if ( grep ( /^Easter$/, @socialSeasons )
-        && IsEasterSeason( $D->{day}, $D->{month}, $D->{year} ) =~
-        /^[^:]+: (.+)/ )
-    {
-        AddToSchedule( $S, '*', $1 );
-    }
-    if ( grep ( /^Halloween$/, @socialSeasons )
-        && IsHalloween( $D->{day}, $D->{month}, $D->{year} ) =~ /^[^:]+: (.+)/ )
-    {
-        AddToSchedule( $S, '*', $1 );
-    }
-    if ( grep ( /^HolyWeek$/, @socialSeasons )
-        && IsHolyWeek( $D->{day}, $D->{month}, $D->{year} ) =~ /^[^:]+: (.+)/ )
-    {
-        AddToSchedule( $S, '*', $1 );
-    }
-    if ( grep ( /^Lent$/, @socialSeasons )
-        && IsLent( $D->{day}, $D->{month}, $D->{year} ) =~ /^[^:]+: (.+)/ )
-    {
-        AddToSchedule( $S, '*', $1 );
-    }
-    if ( grep ( /^StrongBeer$/, @socialSeasons )
-        && IsStrongBeerSeason( $D->{day}, $D->{month}, $D->{year} ) =~
-        /^[^:]+: (.+)/ )
-    {
-        AddToSchedule( $S, '*', $1 );
+
+    # social seasons
+    $S->{SeasonSocial} = '---';
+    unless ( grep ( /^none$/, @socialSeasons ) ) {
+        foreach my $season (@socialSeasons) {
+            $S->{ 'SeasonSocial' . $season } = 0;
+            no strict "refs";
+            my $ret =
+              &{ 'IsSeason' . $season }( $D->{day}, $D->{month}, $D->{year} );
+            use strict "refs";
+            if ( $ret =~ /^([^0][^:]+)(?:: (.+))?$/ ) {
+                $S->{ 'SeasonSocial' . $season } = 1;
+                push @{ $S->{'.SeasonSocial'} }, $1
+                  unless ( defined( $S->{'.SeasonSocial'} )
+                    && grep( /^$1$/, @{ $S->{'.SeasonSocial'} } ) );
+                AddToSchedule( $S, '*', $2 ) if ( defined($2) );
+            }
+        }
+        $S->{SeasonSocial} = join( ', ', @{ $S->{'.SeasonSocial'} } )
+          if ( defined( $S->{'.SeasonSocial'} )
+            && int( @{ $S->{'.SeasonSocial'} } ) > 0. );
     }
 
     # add HolidayDevices to schedule
     my $holidayDevs = AttrVal( $name, "HolidayDevices", "" );
     foreach my $dev ( split( ',', $holidayDevs ) ) {
         if ( IsDevice( $dev, "holiday" ) ) {
-            my $date = sprintf( '%02d-%02d', $D->{month}, $D->{day} );
+            my $date =
+              sprintf( '%d-%02d-%02d', $D->{year}, $D->{month}, $D->{day} );
             my $event = ::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
                 foreach my $e ( split( ',', $event ) ) {
@@ -2811,7 +3183,8 @@ sub Compute($;$$) {
     my $informativeDevs = AttrVal( $name, "InformativeDevices", "" );
     foreach my $dev ( split( ',', $informativeDevs ) ) {
         if ( IsDevice( $dev, "holiday" ) ) {
-            my $date = sprintf( '%02d-%02d', $D->{month}, $D->{day} );
+            my $date =
+              sprintf( '%d-%02d-%02d', $D->{year}, $D->{month}, $D->{day} );
             my $event = ::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
                 foreach my $e ( split( ',', $event ) ) {
@@ -3650,7 +4023,142 @@ sub Compute($;$$) {
     return (undef);
 }
 
-sub IsAdventSeason($$;$$) {
+# This is based on code from 95_holiday.pm / holiday_refresh()
+#  as there is no dedicated function to use
+sub IsSpecificDay($$$;$) {
+    my ( $l, $d, $m, $y ) = @_;
+
+    $y = ( localtime( gettimeofday() ) )[5] + 1900. unless ( defined($y) );
+    my $fordate = sprintf( "%02d-%02d", $m, $d );
+    my @fd = localtime( mktime( 1, 1, 1, $d, $m - 1, $y - 1900., 0, 0, -1 ) );
+
+    # Exact date: 1 MM-DD
+    if ( $l =~ m/^1/ ) {
+        my @args = split( " ", $l, 3 );
+        return 1
+          if ( $args[1] eq $fordate );
+    }
+
+    # Easter date: 2 +1
+    elsif ( $l =~ m/^2/ ) {
+        my @a = split( " ", $l, 3 );
+        my ( $Om, $Od ) = GetWesternEaster($y);
+        my $timex = mktime( 0, 0, 12, $Od, $Om - 1, $y - 1900., 0, 0, -1 );
+        $timex = $timex + $a[1] * 86400.;
+        my ( $msecond, $mminute, $mhour, $mday, $mmonth, $myear, $mrest ) =
+          localtime($timex);
+        $myear  = $myear + 1900.;
+        $mmonth = $mmonth + 1.;
+        return 0 if ( $mday != $fd[3] || $mmonth != $fd[4] + 1. );
+        return 1;
+    }
+
+    # Relative date: 3 -1 Mon 03
+    elsif ( $l =~ m/^3/ ) {
+        my @a = split( " ", $l, 5 );
+        my %wd = (
+            "Sun" => 0,
+            "Mon" => 1,
+            "Tue" => 2,
+            "Wed" => 3,
+            "Thu" => 4,
+            "Fri" => 5,
+            "Sat" => 6
+        );
+        my @md = ( 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 );
+        $md[1] = 29
+          if ( UConv::IsLeapYear( $fd[5] + 1900. ) && $fd[4] == 1. );
+        my $wd = $wd{ $a[2] };
+        if ( !defined($wd) ) {
+            return wantarray ? ( undef, "Wrong timespec: $l" ) : undef;
+        }
+        return 0 if ( $wd != $fd[6] );               # Weekday
+        return 0 if ( $a[3] != ( $fd[4] + 1. ) );    # Month
+        if ( $a[1] > 0. ) {                          # N'th day from the start
+            my $d = $fd[3] - ( $a[1] - 1. ) * 7.;
+            return 0 if ( $d < 1. || $d > 7. );
+        }
+        elsif ( $a[1] < 0. ) {                       # N'th day from the end
+            my $d = $fd[3] - ( $a[1] + 1. ) * 7.;
+            my $md = $md[ $fd[4] ];
+            return 0 if ( $d > $md || $d < $md - 6. );
+        }
+        return 1;
+    }
+
+    # Interval: 4 MM-DD MM-DD Holiday
+    elsif ( $l =~ m/^4/ ) {
+        my @args = split( " ", $l, 4 );
+        return 1
+          if ( $args[1] <= $fordate && $args[2] >= $fordate );
+    }
+
+    # nth weekday since MM-DD / before MM-DD
+    elsif ( $l =~ m/^5/ ) {
+        my @a = split( " ", $l, 6 );
+        my %wd = (
+            "Sun" => 0,
+            "Mon" => 1,
+            "Tue" => 2,
+            "Wed" => 3,
+            "Thu" => 4,
+            "Fri" => 5,
+            "Sat" => 6
+        );
+
+        my $wd = $wd{ $a[2] };
+        if ( !defined($wd) ) {
+            return wantarray ? ( 0, "Wrong weekday spec: $l" ) : 0;
+        }
+
+        return 0 if $wd != $fd[6];
+
+        my $yday     = $fd[7];
+        my $tgt      = mktime( 0, 0, 1, $a[4], $a[3] - 1., $fd[5], 0, 0, -1 );
+        my $tgtmin   = $tgt;
+        my $tgtmax   = $tgt;
+        my $weeksecs = 7. * 86400.;
+        my $cd       = mktime( 0, 0, 1, $fd[3], $fd[4], $fd[5], 0, 0, -1 );
+
+        if ( $a[1] =~ /^-([0-9])*$/ ) {
+            $tgtmin -= $1 * $weeksecs;
+            $tgtmax = $tgtmin + $weeksecs;
+            return 1
+              if ( ( $cd >= $tgtmin ) && ( $cd < $tgtmax ) );
+        }
+        elsif ( $a[1] =~ /^\+?([0-9])*$/ ) {
+            $tgtmin += ( $1 - 1 ) * $weeksecs;
+            $tgtmax = $tgtmin + $weeksecs;
+            return 1
+              if ( ( $cd > $tgtmin ) && ( $cd <= $tgtmax ) );
+        }
+        else {
+            return wantarray ? ( 0, "Wrong distance spec: $l" ) : 0;
+        }
+    }
+
+    # own calculation
+    elsif ( $l =~ m/^6/ ) {
+        my @args = split( " ", $l, 4 );
+        my $res = "?";
+        no strict "refs";
+        eval { $res = &{ $args[1] }( $args[2] ); };
+        use strict "refs";
+        return wantarray
+          ? (
+            undef,
+            "[FHEM::DaySchedule::IsSpecificDay]: Error in own function: $@"
+          )
+          : undef
+          if ($@);
+        return 1
+          if ( $res eq $fordate );
+    }
+
+    return 0;
+}
+
+sub IsSeasonAdvent($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $now   = gettimeofday();
@@ -3658,6 +4166,7 @@ sub IsAdventSeason($$;$$) {
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my $christmas = timegm_modern( 0, 0, 0, 25, 11,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my $christmaseve = $christmas - 86400.;
     my ( $secC, $minC, $hourC, $dayC, $monthC, $yearC, $wdayC, $ydayC, $isdstC )
       = localtime($christmas);
     my $adv4 = $christmas - 86400. * $wdayC;
@@ -3665,7 +4174,7 @@ sub IsAdventSeason($$;$$) {
     my $adv2 = $adv3 - 86400. * 7;
     my $adv1 = $adv2 - 86400. * 7;
 
-    return 0 unless ( $today >= $adv1 && $today <= $christmas );
+    return 0 unless ( $today >= $adv1 && $today < $christmaseve );
 
     if ($lang) {
         if ( exists( $transtable{ uc($lang) } ) ) {
@@ -3676,16 +4185,16 @@ sub IsAdventSeason($$;$$) {
         }
     }
 
-    if ( $today >= $adv1 && $today < $adv1 + 86400. ) {
+    if ( $today == $adv1 ) {
         return ref($tt) ? $tt->{advent1} : 2;
     }
-    elsif ( $today >= $adv2 && $today < $adv2 + 86400. ) {
+    elsif ( $today == $adv2 ) {
         return ref($tt) ? $tt->{advent2} : 3;
     }
-    elsif ( $today >= $adv3 && $today < $adv3 + 86400. ) {
+    elsif ( $today == $adv3 ) {
         return ref($tt) ? $tt->{advent3} : 4;
     }
-    elsif ( $today >= $adv4 && $today < $adv4 + 86400. ) {
+    elsif ( $today == $adv4 ) {
         return ref($tt) ? $tt->{advent4} : 5;
     }
     else {
@@ -3693,7 +4202,7 @@ sub IsAdventSeason($$;$$) {
     }
 }
 
-sub IsCarnivalSeason($$;$$) {
+sub IsSeasonCarnival($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
@@ -3706,9 +4215,8 @@ sub IsCarnivalSeason($$;$$) {
     my $carnival4 = $carnival3 + 86400.;
     my $carnival5 = $carnival4 + 86400.;
     my $carnival6 = $carnival5 + 86400.;
-    my $carnival7 = $carnival6 + 86400.;
 
-    return 0 unless ( $today >= $carnival1 && $today <= $carnival7 );
+    return 0 unless ( $today >= $carnival1 && $today <= $carnival6 );
 
     if ($lang) {
         if ( exists( $transtable{ uc($lang) } ) ) {
@@ -3719,30 +4227,85 @@ sub IsCarnivalSeason($$;$$) {
         }
     }
 
-    if ( $today >= $carnival1 && $today < $carnival2 ) {
+    if ( $today == $carnival1 ) {
         return ref($tt) ? $tt->{carnivalseason1} : 1;
     }
-    elsif ( $today >= $carnival2 && $today < $carnival3 ) {
+    elsif ( $today == $carnival2 ) {
         return ref($tt) ? $tt->{carnivalseason2} : 2;
     }
-    elsif ( $today >= $carnival3 && $today < $carnival4 ) {
+    elsif ( $today == $carnival3 ) {
         return ref($tt) ? $tt->{carnivalseason3} : 3;
     }
-    elsif ( $today >= $carnival4 && $today < $carnival5 ) {
+    elsif ( $today == $carnival4 ) {
         return ref($tt) ? $tt->{carnivalseason4} : 4;
     }
-    elsif ( $today >= $carnival5 && $today < $carnival6 ) {
+    elsif ( $today == $carnival5 ) {
         return ref($tt) ? $tt->{carnivalseason5} : 5;
     }
-    elsif ( $today >= $carnival6 && $today < $carnival7 ) {
-        return ref($tt) ? $tt->{carnivalseason6} : 6;
-    }
     else {
-        return ref($tt) ? $tt->{carnivalseason7} : 7;
+        return ref($tt) ? $tt->{carnivalseason6} : 6;
     }
 }
 
-sub IsEasterSeason($$;$$) {
+sub IsSeasonChanukka($$;$$) {
+
+    return 0;
+}
+
+sub IsSeasonChristmas($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+    return IsSeasonChristmasLong( $d, $m, $y, $lang, 1 );
+}
+
+sub IsSeasonChristmasLong($$;$$$) {
+    my ( $d, $m, $y, $lang, $short ) = @_;
+
+    my $now   = gettimeofday();
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my $christmaseve = timegm_modern( 0, 0, 0, 24, 11,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my $christmas1  = $christmaseve + 86400.;
+    my $christmas2  = $christmas1 + 86400.;
+    my $newyearseve = $christmas2 + 86400. * 5.;
+    my $newyear     = timegm_modern( 0, 0, 0, 1, 0,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my $christmasend = $newyear + 86400. * 5.;
+
+    if ($short) {
+        return 0
+          unless ( $today >= $christmaseve && $today <= $christmas2 );
+    }
+    else {
+        return 0
+          unless ( ( $today >= $christmaseve && $today <= $newyearseve )
+            || ( $today >= $newyear && $today <= $christmasend ) );
+    }
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    if ( $today == $christmaseve ) {
+        return ref($tt) ? $tt->{christmaseve} : 2;
+    }
+    elsif ( $today == $christmas1 ) {
+        return ref($tt) ? $tt->{christmas1} : 3;
+    }
+    elsif ( $today == $christmas2 ) {
+        return ref($tt) ? $tt->{christmas2} : 4;
+    }
+    else {
+        return ref($tt) ? $tt->{christmasseason} : 1;
+    }
+}
+
+sub IsSeasonEaster($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
@@ -3780,11 +4343,9 @@ sub IsEasterSeason($$;$$) {
     else {
         return ref($tt) ? $tt->{easterseason} : 1;
     }
-
-    return 0;
 }
 
-sub IsHalloween($$;$$) {
+sub IsSeasonHalloween($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     return 0 unless ( $m == 10. && $d >= 24. && $d <= 30. );
@@ -3798,12 +4359,18 @@ sub IsHalloween($$;$$) {
         }
     }
 
-    return ref($tt) ? $tt->{halloween} : 1
-      if ( $d == 30. );
-    return ref($tt) ? $tt->{halloweenseason} : 1;
+    if ( $d == 24. ) {
+        return ref($tt) ? $tt->{halloweenbegin} : 1;
+    }
+    elsif ( $d == 30. ) {
+        return ref($tt) ? $tt->{halloween} : 2;
+    }
+    else {
+        return ref($tt) ? $tt->{halloweenseason} : 1;
+    }
 }
 
-sub IsHolyWeek($$;$$) {
+sub IsSeasonHolyWeek($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
@@ -3826,43 +4393,51 @@ sub IsHolyWeek($$;$$) {
         }
     }
 
-    if ( $today >= $hwBegin && $today < $hwBegin + 86400. ) {
+    if ( $today == $hwBegin ) {
         return ref($tt) ? $tt->{holyweekpalm} : 2;
     }
-    elsif ( $today >= $hwThu && $today < $hwThu + 86400. ) {
+    elsif ( $today == $hwThu ) {
         return ref($tt) ? $tt->{holyweekthu} : 3;
     }
-    elsif ( $today >= $hwFri && $today < $hwFri + 86400. ) {
+    elsif ( $today == $hwFri ) {
         return ref($tt) ? $tt->{holyweekfri} : 4;
     }
-    elsif ( $today >= $hwSat && $today < $hwSat + 86400. ) {
+    elsif ( $today == $hwSat ) {
         return ref($tt) ? $tt->{holyweeksat} : 5;
     }
     else {
         return ref($tt) ? $tt->{holyweek} : 1;
     }
+}
+
+sub IsSeasonPessach($$;$$) {
 
     return 0;
 }
 
-sub IsLent($$;$$) {
+sub IsSeasonRamadan($$;$$) {
+
+    return 0;
+}
+
+sub IsSeasonLenten($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
         ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
 
-    my $easterSun = GetWesternEaster($y);
-    my $lentBegin = $easterSun - 86400. * 46;
-    my $lentW1    = $easterSun - 86400. * 45;
-    my $lentW2    = $easterSun - 86400. * 41;
-    my $lentW3    = $lentW2 + 86400. * 7;
-    my $lentW4    = $lentW3 + 86400. * 7;
-    my $lentW5    = $lentW4 + 86400. * 7;
-    my $lentW6    = $lentW5 + 86400. * 7;
-    my $lentW7    = $lentW6 + 86400. * 7;
-    my $lentEnd   = $easterSun - 86400. * 3;
+    my $easterSun   = GetWesternEaster($y);
+    my $lentenBegin = $easterSun - 86400. * 46;
+    my $lentenW1    = $easterSun - 86400. * 45;
+    my $lentenW2    = $easterSun - 86400. * 42;
+    my $lentenW3    = $lentenW2 + 86400. * 7.;
+    my $lentenW4    = $lentenW3 + 86400. * 7.;
+    my $lentenW5    = $lentenW4 + 86400. * 7.;
+    my $lentenW6    = $lentenW5 + 86400. * 7.;
+    my $lentenW7    = $lentenW6 + 86400. * 7.;
+    my $lentenEnd   = $easterSun - 86400.;
 
-    return 0 unless ( $today >= $lentBegin && $today <= $lentEnd );
+    return 0 unless ( $today >= $lentenBegin && $today <= $lentenEnd );
 
     if ($lang) {
         if ( exists( $transtable{ uc($lang) } ) ) {
@@ -3873,51 +4448,49 @@ sub IsLent($$;$$) {
         }
     }
 
-    if ( $today >= $lentBegin && $today < $lentBegin + 86400. ) {
-        return ref($tt) ? $tt->{lentbegin} : 2;
+    if ( $today == $lentenBegin ) {
+        return ref($tt) ? $tt->{lentenbegin} : 2;
     }
-    elsif ( $today >= $lentW1 && $today < $lentW2 ) {
-        return ref($tt) ? $tt->{lentw1} : 3;
+    elsif ( $today >= $lentenW1 && $today < $lentenW2 ) {
+        return ref($tt) ? $tt->{lentenw1} : 3;
     }
-    elsif ( $today >= $lentW2 && $today < $lentW3 ) {
-        return ref($tt) ? $tt->{lentw2} : 4;
+    elsif ( $today >= $lentenW2 && $today < $lentenW3 ) {
+        return ref($tt) ? $tt->{lentenw2} : 4;
     }
-    elsif ( $today >= $lentW3 && $today < $lentW4 ) {
-        return ref($tt) ? $tt->{lentw3} : 5;
+    elsif ( $today >= $lentenW3 && $today < $lentenW4 ) {
+        return ref($tt) ? $tt->{lentenw3} : 5;
     }
-    elsif ( $today >= $lentW4 && $today < $lentW5 ) {
-        return ref($tt) ? $tt->{lentw4} : 6;
+    elsif ( $today >= $lentenW4 && $today < $lentenW5 ) {
+        return ref($tt) ? $tt->{lentenw4} : 6;
     }
-    elsif ( $today >= $lentW5 && $today < $lentW6 ) {
-        return ref($tt) ? $tt->{lentw5} : 7;
+    elsif ( $today >= $lentenW5 && $today < $lentenW6 ) {
+        return ref($tt) ? $tt->{lentenw5} : 7;
     }
-    elsif ( $today >= $lentW6 && $today < $lentW7 ) {
-        return ref($tt) ? $tt->{lentw6} : 8;
+    elsif ( $today >= $lentenW6 && $today < $lentenW7 ) {
+        return ref($tt) ? $tt->{lentenw6} : 8;
     }
-    elsif ( $today >= $lentW7 && $today < $lentEnd ) {
-        return ref($tt) ? $tt->{lentw7} : 9;
+    elsif ( $today >= $lentenW7 && $today < $lentenEnd ) {
+        return ref($tt) ? $tt->{lentenw7} : 9;
     }
     else {
-        return ref($tt) ? $tt->{lentend} : 10;
+        return ref($tt) ? $tt->{lentenend} : 10;
     }
 }
 
-sub IsStrongBeerSeason($$;$$) {
+sub IsSeasonStrongBeer($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $now   = gettimeofday();
     my $today = timegm_modern( 0, 0, 0, $d, $m - 1.,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
 
-    my $josef = timegm_modern( 0, 0, 0, 19., 3. - 1.,
+    my $josef = timegm_modern( 0, 0, 0, 19, 2,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my ( $secJ, $minJ, $hourJ, $dayJ, $monthJ, $yearJ, $wdayJ, $ydayJ, $isdstJ )
       = localtime($josef);
 
-    my $sbeerBegin =
-      $josef - 86400. * $wdayJ - 86400. * 2.;    # likely a Friday to begin with
-    my $sbeerEnd =
-      $sbeerBegin + 86400. * 16.;    # should end after 17 days in total
+    my $sbeerBegin = $josef - 86400. * $wdayJ - 86400. * 2.;
+    my $sbeerEnd   = $sbeerBegin + 86400. * 23.;
 
     return 0 unless ( $today >= $sbeerBegin && $today <= $sbeerEnd );
 
@@ -3930,50 +4503,126 @@ sub IsStrongBeerSeason($$;$$) {
         }
     }
 
-    return ref($tt) ? $tt->{sbeerseason} : 1;
+    if ( $today == $sbeerBegin ) {
+        return ref($tt) ? $tt->{sbeerseasonbegin} : 2;
+    }
+    else {
+        return ref($tt) ? $tt->{sbeerseason} : 1;
+    }
 }
 
-# sub IsOktoberfest($$;$$) {
-#     my ( $d, $m, $y, $lang ) = @_;
-#
-#     if ($lang) {
-#         if ( exists( $transtable{ uc($lang) } ) ) {
-#             $tt = $transtable{ uc($lang) };
-#         }
-#         else {
-#             $tt = $transtable{EN};
-#         }
-#     }
-#     return ref($tt) ? $tt->{oktoberfestseason} : 1;
-# }
-#
-# sub IsWiesn($$;$$) {
-#     my ( $d, $m, $y, $lang ) = @_;
-#     my $s = IsOktoberfest( $d, $m, $y, $lang );
-#     if ($lang) {
-#         if ( exists( $transtable{ uc($lang) } ) ) {
-#             $tt = $transtable{ uc($lang) };
-#         }
-#         else {
-#             $tt = $transtable{EN};
-#         }
-#     }
-#     return $s ? ( ref($tt) ? $tt->{wiesnseason} : 1 ) : 0;
-# }
+sub IsSeasonTurnOfTheYear($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
 
-# sub IsPassion($$;$$) {
-#     my ( $d, $m, $y, $lang ) = @_;
-#
-#     if ($lang) {
-#         if ( exists( $transtable{ uc($lang) } ) ) {
-#             $tt = $transtable{ uc($lang) };
-#         }
-#         else {
-#             $tt = $transtable{EN};
-#         }
-#     }
-#     return ref($tt) ? $tt->{passionseason} : 1;
-# }
+    my $now   = gettimeofday();
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my $turnbegin = timegm_modern( 0, 0, 0, 27, 11,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my $newyearseve = $turnbegin + 86400. * 4.;
+    my $newyear     = timegm_modern( 0, 0, 0, 1, 0,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my $turnend = $newyear + 86400. * 5.;
+
+    return 0
+      unless ( ( $today >= $turnbegin && $today <= $newyearseve )
+        || ( $today >= $newyear && $today <= $turnend ) );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    if ( $today == $newyearseve ) {
+        return ref($tt) ? $tt->{newyearseve} : 2;
+    }
+    elsif ( $today == $newyear ) {
+        return ref($tt) ? $tt->{newyear} : 3;
+    }
+    else {
+        return ref($tt) ? $tt->{turnoftheyear} : 1;
+    }
+}
+
+sub IsSeasonOktoberfest($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+
+    my $now   = gettimeofday();
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1.,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+
+    my $midsept = timegm_modern( 0, 0, 0, 15, 8,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my ( $secS, $minS, $hourS, $dayS, $monthS, $yearS, $wdayS, $ydayS, $isdstS )
+      = localtime($midsept);
+    my $oct1st = timegm_modern( 0, 0, 0, 1, 9,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my ( $secO, $minO, $hourO, $dayO, $monthO, $yearO, $wdayO, $ydayO, $isdstO )
+      = localtime($oct1st);
+    my $oct3rd = timegm_modern( 0, 0, 0, 3, 9,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+
+    my $oktoberfestBegin =
+        $wdayS == 6.
+      ? $midsept + 86400. * 7.
+      : $midsept + 86400. * ( 7. - $wdayS ) - 86400.;
+    my $oktoberfestEnd = $oct1st + 86400. * ( 7. - $wdayO );
+    $oktoberfestEnd = $oct3rd if ( $wdayO == 0. || $wdayO == 6. );
+
+    return 0
+      unless ( $today >= $oktoberfestBegin && $today <= $oktoberfestEnd );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    if ( $today == $oktoberfestBegin ) {
+        return ref($tt) ? $tt->{oktoberfestbegin} : 2;
+    }
+    elsif ( $today == $oktoberfestEnd ) {
+        return ref($tt) ? $tt->{oktoberfestend} : 3;
+    }
+    else {
+        return ref($tt) ? $tt->{oktoberfestseason} : 1;
+    }
+}
+
+sub IsSeasonPassiontide($$;$$) {
+    my ( $d, $m, $y, $lang ) = @_;
+
+    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+        ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
+
+    my $easterSun = GetWesternEaster($y);
+    my $ptBegin   = $easterSun - 86400. * 14.;
+
+    return 0 unless ( $today >= $ptBegin && $today < $easterSun );
+
+    if ($lang) {
+        if ( exists( $transtable{ uc($lang) } ) ) {
+            $tt = $transtable{ uc($lang) };
+        }
+        else {
+            $tt = $transtable{EN};
+        }
+    }
+
+    if ( $today == $ptBegin ) {
+        return ref($tt) ? $tt->{passiontidebegin} : 2;
+    }
+    else {
+        return ref($tt) ? $tt->{passiontide} : 1;
+    }
+}
 
 sub AddToSchedule {
     my ( $h, $e, $n ) = @_;
@@ -3982,21 +4631,26 @@ sub AddToSchedule {
     $n = trim($n);
     if ( $e =~ m/^\d+(?:\.\d+)?$/ ) {
         push @{ $h->{".schedule"}{$e} }, $n
-          unless ( grep( m/^$n$/, @{ $h->{".schedule"}{$e} } ) );
+          unless ( grep( m/^$n$/i, @{ $h->{".schedule"}{$e} } ) );
     }
     elsif ( $e eq '*' ) {
-        push @{ $h->{".scheduleAllday"} }, $n
-          unless ( grep( m/^$n$/, @{ $h->{".scheduleAllday"} } ) );
+        push @{ $h->{".scheduleAllday"} },
+          $n
+          unless (
+            grep( m/^$n$/i, @{ $h->{".scheduleAllday"} } )
+            || ( defined( $h->{'.SeasonSocial'} )
+                && grep( m/^$n$/i, @{ $h->{'.SeasonSocial'} } ) )
+          );
     }
     elsif ( $e eq '?' ) {
         push @{ $h->{".scheduleDay"} }, $n
-          unless ( grep( m/^$n$/, @{ $h->{".scheduleDay"} } ) );
+          unless ( grep( m/^$n$/i, @{ $h->{".scheduleDay"} } ) );
     }
     elsif ( $e =~ /^t(.+)/ ) {
         my $t = $1;
         $t = 0. unless ( $t =~ /^\d/ );
         push @{ $h->{".scheduleTom"}{$t} }, $n
-          unless ( grep( m/^$n$/, @{ $h->{".scheduleTom"}{$t} } ) );
+          unless ( grep( m/^$n$/i, @{ $h->{".scheduleTom"}{$t} } ) );
     }
     elsif ( $e =~ /^y(.+)/ ) {
         my $t = $1;
