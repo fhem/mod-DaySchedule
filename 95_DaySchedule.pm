@@ -75,7 +75,7 @@ my %attrs = (
     "InformativeDays" =>
 "multiple-strict,none,AshWednesday,ValentinesDay,DanceIntoMay,MothersDay,FathersDay,Pentecost,HarvestFestival,Martinmas,DayOfPrayerandRepentance,RemembranceDay,LastSundayBeforeAdvent,StNicholasDay",
     "SocialSeasons" =>
-"multiple-strict,none,Ramadan,Carnival,StrongBeer,Pessach,HolyWeek,Passiontide,Lenten,Easter,Oktoberfest,Halloween,Advent,Chanukka,TurnOfTheYear,Christmas,ChristmasLong",
+"multiple-strict,none,Ramadan,Carnival,StrongBeerFestival,Pessach,HolyWeek,Lenten,Easter,Oktoberfest,Halloween,Advent,AdventEarly,Chanukka,TurnOfTheYear,Christmas,ChristmasLong",
     "SeasonalHrs"     => undef,
     "timezone"        => undef,
     "VacationDevices" => undef,
@@ -201,9 +201,7 @@ our %transtable = (
         "eastersat"                => "Osterzeit: Ostersamstag",
         "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
         "easterseason"             => "Osterzeit",
-        "passiontidebegin"         => "Passionszeit: Passionssonntag",
-        "passiontide"              => "Passionszeit",
-        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekpalm"             => "Karwoche: Palm- und Passionssonntag",
         "holyweekthu"              => "Karwoche: Gründonnerstag",
         "holyweekfri"              => "Karwoche: Karfreitag",
         "holyweeksat"              => "Karwoche: Karsamstag",
@@ -219,6 +217,12 @@ our %transtable = (
         "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
         "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
         "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentensun1"               => "Fastenzeit: 1. Fastensonntag",
+        "lentensun2"               => "Fastenzeit: 2. Fastensonntag",
+        "lentensun3"               => "Fastenzeit: 3. Fastensonntag",
+        "lentensun4"               => "Fastenzeit: 4. Fastensonntag",
+        "lentensun5"               => "Fastenzeit: 5. Fastensonntag",
+        "lentensun6"               => "Fastenzeit: 6. Fastensonntag",
         "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
         "sbeerseasonbegin"  => "Starkbierfest: Beginn des Starkbierfests",
         "sbeerseason"       => "Starkbierfest",
@@ -348,9 +352,7 @@ our %transtable = (
         "eastersat"                => "Osterzeit: Ostersamstag",
         "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
         "easterseason"             => "Osterzeit",
-        "passiontidebegin"         => "Passionszeit: Passionssonntag",
-        "passiontide"              => "Passionszeit",
-        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekpalm"             => "Karwoche: Palm- und Passionssonntag",
         "holyweekthu"              => "Karwoche: Gründonnerstag",
         "holyweekfri"              => "Karwoche: Karfreitag",
         "holyweeksat"              => "Karwoche: Karsamstag",
@@ -366,6 +368,12 @@ our %transtable = (
         "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
         "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
         "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentensun1"               => "Fastenzeit: 1. Fastensonntag",
+        "lentensun2"               => "Fastenzeit: 2. Fastensonntag",
+        "lentensun3"               => "Fastenzeit: 3. Fastensonntag",
+        "lentensun4"               => "Fastenzeit: 4. Fastensonntag",
+        "lentensun5"               => "Fastenzeit: 5. Fastensonntag",
+        "lentensun6"               => "Fastenzeit: 6. Fastensonntag",
         "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
         "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
         "sbeerseason"              => "Starkbierfest",
@@ -494,9 +502,7 @@ our %transtable = (
         "eastersat"                => "Osterzeit: Ostersamstag",
         "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
         "easterseason"             => "Osterzeit",
-        "passiontidebegin"         => "Passionszeit: Passionssonntag",
-        "passiontide"              => "Passionszeit",
-        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekpalm"             => "Karwoche: Palm- und Passionssonntag",
         "holyweekthu"              => "Karwoche: Gründonnerstag",
         "holyweekfri"              => "Karwoche: Karfreitag",
         "holyweeksat"              => "Karwoche: Karsamstag",
@@ -512,6 +518,12 @@ our %transtable = (
         "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
         "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
         "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentensun1"               => "Fastenzeit: 1. Fastensonntag",
+        "lentensun2"               => "Fastenzeit: 2. Fastensonntag",
+        "lentensun3"               => "Fastenzeit: 3. Fastensonntag",
+        "lentensun4"               => "Fastenzeit: 4. Fastensonntag",
+        "lentensun5"               => "Fastenzeit: 5. Fastensonntag",
+        "lentensun6"               => "Fastenzeit: 6. Fastensonntag",
         "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
         "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
         "sbeerseason"              => "Starkbierfest",
@@ -640,9 +652,7 @@ our %transtable = (
         "eastersat"                => "Osterzeit: Ostersamstag",
         "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
         "easterseason"             => "Osterzeit",
-        "passiontidebegin"         => "Passionszeit: Passionssonntag",
-        "passiontide"              => "Passionszeit",
-        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekpalm"             => "Karwoche: Palm- und Passionssonntag",
         "holyweekthu"              => "Karwoche: Gründonnerstag",
         "holyweekfri"              => "Karwoche: Karfreitag",
         "holyweeksat"              => "Karwoche: Karsamstag",
@@ -658,6 +668,12 @@ our %transtable = (
         "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
         "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
         "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentensun1"               => "Fastenzeit: 1. Fastensonntag",
+        "lentensun2"               => "Fastenzeit: 2. Fastensonntag",
+        "lentensun3"               => "Fastenzeit: 3. Fastensonntag",
+        "lentensun4"               => "Fastenzeit: 4. Fastensonntag",
+        "lentensun5"               => "Fastenzeit: 5. Fastensonntag",
+        "lentensun6"               => "Fastenzeit: 6. Fastensonntag",
         "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
         "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
         "sbeerseason"              => "Starkbierfest",
@@ -786,9 +802,7 @@ our %transtable = (
         "eastersat"                => "Osterzeit: Ostersamstag",
         "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
         "easterseason"             => "Osterzeit",
-        "passiontidebegin"         => "Passionszeit: Passionssonntag",
-        "passiontide"              => "Passionszeit",
-        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekpalm"             => "Karwoche: Palm- und Passionssonntag",
         "holyweekthu"              => "Karwoche: Gründonnerstag",
         "holyweekfri"              => "Karwoche: Karfreitag",
         "holyweeksat"              => "Karwoche: Karsamstag",
@@ -804,6 +818,12 @@ our %transtable = (
         "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
         "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
         "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentensun1"               => "Fastenzeit: 1. Fastensonntag",
+        "lentensun2"               => "Fastenzeit: 2. Fastensonntag",
+        "lentensun3"               => "Fastenzeit: 3. Fastensonntag",
+        "lentensun4"               => "Fastenzeit: 4. Fastensonntag",
+        "lentensun5"               => "Fastenzeit: 5. Fastensonntag",
+        "lentensun6"               => "Fastenzeit: 6. Fastensonntag",
         "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
         "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
         "sbeerseason"              => "Starkbierfest",
@@ -932,9 +952,7 @@ our %transtable = (
         "eastersat"                => "Osterzeit: Ostersamstag",
         "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
         "easterseason"             => "Osterzeit",
-        "passiontidebegin"         => "Passionszeit: Passionssonntag",
-        "passiontide"              => "Passionszeit",
-        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekpalm"             => "Karwoche: Palm- und Passionssonntag",
         "holyweekthu"              => "Karwoche: Gründonnerstag",
         "holyweekfri"              => "Karwoche: Karfreitag",
         "holyweeksat"              => "Karwoche: Karsamstag",
@@ -950,6 +968,12 @@ our %transtable = (
         "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
         "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
         "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentensun1"               => "Fastenzeit: 1. Fastensonntag",
+        "lentensun2"               => "Fastenzeit: 2. Fastensonntag",
+        "lentensun3"               => "Fastenzeit: 3. Fastensonntag",
+        "lentensun4"               => "Fastenzeit: 4. Fastensonntag",
+        "lentensun5"               => "Fastenzeit: 5. Fastensonntag",
+        "lentensun6"               => "Fastenzeit: 6. Fastensonntag",
         "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
         "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
         "sbeerseason"              => "Starkbierfest",
@@ -1078,9 +1102,7 @@ our %transtable = (
         "eastersat"                => "Osterzeit: Ostersamstag",
         "easterwhitesun"           => "Osterzeit: Weißer Sonntag",
         "easterseason"             => "Osterzeit",
-        "passiontidebegin"         => "Passionszeit: Passionssonntag",
-        "passiontide"              => "Passionszeit",
-        "holyweekpalm"             => "Karwoche: Palmsonntag",
+        "holyweekpalm"             => "Karwoche: Palm- und Passionssonntag",
         "holyweekthu"              => "Karwoche: Gründonnerstag",
         "holyweekfri"              => "Karwoche: Karfreitag",
         "holyweeksat"              => "Karwoche: Karsamstag",
@@ -1096,6 +1118,12 @@ our %transtable = (
         "lentenw5"                 => "Fastenzeit: Fastenwoche 5",
         "lentenw6"                 => "Fastenzeit: Fastenwoche 6",
         "lentenw7"                 => "Fastenzeit: Große Fastenwoche",
+        "lentensun1"               => "Fastenzeit: 1. Fastensonntag",
+        "lentensun2"               => "Fastenzeit: 2. Fastensonntag",
+        "lentensun3"               => "Fastenzeit: 3. Fastensonntag",
+        "lentensun4"               => "Fastenzeit: 4. Fastensonntag",
+        "lentensun5"               => "Fastenzeit: 5. Fastensonntag",
+        "lentensun6"               => "Fastenzeit: 6. Fastensonntag",
         "lentenend"                => "Fastenzeit: Ende der Fastenzeit",
         "sbeerseasonbegin"         => "Starkbierfest: Begin des Starkbierfests",
         "sbeerseason"              => "Starkbierfest",
@@ -4158,6 +4186,12 @@ sub IsSpecificDay($$$;$) {
 
 sub IsSeasonAdvent($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
+    return IsSeasonAdventEarly( $d, $m, $y, $lang, 0 );
+}
+
+sub IsSeasonAdventEarly($$;$$$) {
+    my ( $d, $m, $y, $lang, $early ) = @_;
+    $early = 1 unless ( defined($early) );
 
     my $now   = gettimeofday();
     my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
@@ -4172,7 +4206,11 @@ sub IsSeasonAdvent($$;$$) {
     my $adv2 = $adv3 - 86400. * 7;
     my $adv1 = $adv2 - 86400. * 7;
 
-    return 0 unless ( $today >= $adv1 && $today < $christmaseve );
+    my $advbeginearly = timegm_modern( 0, 0, 0, 27, 10,
+        ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
+    my $advbegin = $early ? $advbeginearly : $adv1;
+
+    return 0 unless ( $today >= $advbegin && $today < $christmaseve );
 
     if ($lang) {
         if ( exists( $transtable{ uc($lang) } ) ) {
@@ -4252,11 +4290,12 @@ sub IsSeasonChanukka($$;$$) {
 
 sub IsSeasonChristmas($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
-    return IsSeasonChristmasLong( $d, $m, $y, $lang, 1 );
+    return IsSeasonChristmasLong( $d, $m, $y, $lang, 0 );
 }
 
 sub IsSeasonChristmasLong($$;$$$) {
-    my ( $d, $m, $y, $lang, $short ) = @_;
+    my ( $d, $m, $y, $lang, $long ) = @_;
+    $long = 1 unless ( defined($long) );
 
     my $now   = gettimeofday();
     my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
@@ -4270,14 +4309,14 @@ sub IsSeasonChristmasLong($$;$$$) {
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my $christmasend = $newyear + 86400. * 5.;
 
-    if ($short) {
-        return 0
-          unless ( $today >= $christmaseve && $today <= $christmas2 );
-    }
-    else {
+    if ($long) {
         return 0
           unless ( ( $today >= $christmaseve && $today <= $newyearseve )
             || ( $today >= $newyear && $today <= $christmasend ) );
+    }
+    else {
+        return 0
+          unless ( $today >= $christmaseve && $today <= $christmas2 );
     }
 
     if ($lang) {
@@ -4449,33 +4488,51 @@ sub IsSeasonLenten($$;$$) {
     if ( $today == $lentenBegin ) {
         return ref($tt) ? $tt->{lentenbegin} : 2;
     }
+    elsif ( $today == $lentenW2 ) {
+        return ref($tt) ? $tt->{lentensun1} : 4;
+    }
+    elsif ( $today == $lentenW3 ) {
+        return ref($tt) ? $tt->{lentensun2} : 6;
+    }
+    elsif ( $today == $lentenW4 ) {
+        return ref($tt) ? $tt->{lentensun3} : 8;
+    }
+    elsif ( $today == $lentenW5 ) {
+        return ref($tt) ? $tt->{lentensun4} : 10;
+    }
+    elsif ( $today == $lentenW6 ) {
+        return ref($tt) ? $tt->{lentensun5} : 12;
+    }
+    elsif ( $today == $lentenW7 ) {
+        return ref($tt) ? $tt->{lentensun6} : 14;
+    }
     elsif ( $today >= $lentenW1 && $today < $lentenW2 ) {
         return ref($tt) ? $tt->{lentenw1} : 3;
     }
     elsif ( $today >= $lentenW2 && $today < $lentenW3 ) {
-        return ref($tt) ? $tt->{lentenw2} : 4;
+        return ref($tt) ? $tt->{lentenw2} : 5;
     }
     elsif ( $today >= $lentenW3 && $today < $lentenW4 ) {
-        return ref($tt) ? $tt->{lentenw3} : 5;
+        return ref($tt) ? $tt->{lentenw3} : 7;
     }
     elsif ( $today >= $lentenW4 && $today < $lentenW5 ) {
-        return ref($tt) ? $tt->{lentenw4} : 6;
+        return ref($tt) ? $tt->{lentenw4} : 9;
     }
     elsif ( $today >= $lentenW5 && $today < $lentenW6 ) {
-        return ref($tt) ? $tt->{lentenw5} : 7;
+        return ref($tt) ? $tt->{lentenw5} : 11;
     }
     elsif ( $today >= $lentenW6 && $today < $lentenW7 ) {
-        return ref($tt) ? $tt->{lentenw6} : 8;
+        return ref($tt) ? $tt->{lentenw6} : 13;
     }
     elsif ( $today >= $lentenW7 && $today < $lentenEnd ) {
-        return ref($tt) ? $tt->{lentenw7} : 9;
+        return ref($tt) ? $tt->{lentenw7} : 15;
     }
     else {
-        return ref($tt) ? $tt->{lentenend} : 10;
+        return ref($tt) ? $tt->{lentenend} : 16;
     }
 }
 
-sub IsSeasonStrongBeer($$;$$) {
+sub IsSeasonStrongBeerFestival($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $now   = gettimeofday();
@@ -4591,34 +4648,6 @@ sub IsSeasonOktoberfest($$;$$) {
     }
     else {
         return ref($tt) ? $tt->{oktoberfestseason} : 1;
-    }
-}
-
-sub IsSeasonPassiontide($$;$$) {
-    my ( $d, $m, $y, $lang ) = @_;
-
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
-        ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
-
-    my $easterSun = GetWesternEaster($y);
-    my $ptBegin   = $easterSun - 86400. * 14.;
-
-    return 0 unless ( $today >= $ptBegin && $today < $easterSun );
-
-    if ($lang) {
-        if ( exists( $transtable{ uc($lang) } ) ) {
-            $tt = $transtable{ uc($lang) };
-        }
-        else {
-            $tt = $transtable{EN};
-        }
-    }
-
-    if ( $today == $ptBegin ) {
-        return ref($tt) ? $tt->{passiontidebegin} : 2;
-    }
-    else {
-        return ref($tt) ? $tt->{passiontide} : 1;
     }
 }
 
