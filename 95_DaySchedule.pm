@@ -2360,7 +2360,7 @@ sub Get($@) {
             push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose
               if ( defined( $Schedule{'.SeasonSocial'} )
                 || defined( $Schedule{'.scheduleDay'} )
-                || defined( $Schedule{'.scheduleAllay'} ) );
+                || defined( $Schedule{'.scheduleAllday'} ) );
 
             push @ret, $tHOpen . $trOpen;
             push @ret, $thOpen . encode_utf8( $astrott->{time} ) . $thClose;
@@ -2415,15 +2415,13 @@ sub Get($@) {
             || defined( $Schedule{'.schedule'} ) )
         {
             push @ret, $trOpen;
-            push @ret, $tdOpen . $space . $tdClose;
-            push @ret, $trClose;
-
-            push @ret, $trOpen;
-            push @ret, $tdOpen . encode_utf8( $tt->{noevents} ) . $tdClose;
-            push @ret, $trClose;
-
-            push @ret, $trOpen;
-            push @ret, $tdOpen . $space . $tdClose;
+            push @ret,
+                $tdOpen
+              . $lb
+              . encode_utf8( $tt->{noevents} )
+              . $lb
+              . $lb
+              . $tdClose;
             push @ret, $trClose;
         }
 
@@ -2431,7 +2429,7 @@ sub Get($@) {
             if (   defined( $Schedule{'.SeasonSocial'} )
                 || defined( $Schedule{'.schedule'} )
                 || defined( $Schedule{'.scheduleDay'} )
-                || defined( $Schedule{'.scheduleAllay'} ) )
+                || defined( $Schedule{'.scheduleAllday'} ) )
             {
                 push @ret,
                   $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose;
@@ -2482,7 +2480,7 @@ sub Get($@) {
             if (   defined( $Schedule{'.SeasonSocial'} )
                 || defined( $Schedule{'.schedule'} )
                 || defined( $Schedule{'.scheduleDay'} )
-                || defined( $Schedule{'.scheduleAllay'} ) )
+                || defined( $Schedule{'.scheduleAllday'} ) )
             {
                 push @ret, $tFClose;
             }
