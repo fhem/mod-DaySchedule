@@ -78,6 +78,8 @@ my %attrs = (
     "SeasonalHrs"     => undef,
     "timezone"        => undef,
     "VacationDevices" => undef,
+    "WeekendDevices"  => undef,
+    "WorkdayDevices"  => undef,
 );
 
 my $json;
@@ -87,19 +89,20 @@ my $astrott;
 # Export variables to other programs
 our %transtable = (
     EN => {
-        "dayschedule"    => "Day schedule",
-        "dayscheduleyes" => "Day schedule yesterday",
-        "dayscheduletod" => "Day schedule today",
-        "dayscheduletom" => "Day schedule tomorrow",
-        "yesterday"      => "yesterday",
-        "today"          => "today",
-        "tomorrow"       => "tomorrow",
-        "event"          => "Event",
-        "events"         => "Events",
-        "noevents"       => "There are no events.",
-        "alldayevents"   => "All day events",
-        "dayevents"      => "Events during the day",
-        "teasernext"     => "Teaser for next day",
+        "overview"     => "Summary",
+        "dayschedule"  => "Day schedule",
+        "yesterday"    => "yesterday",
+        "today"        => "today",
+        "tomorrow"     => "tomorrow",
+        "event"        => "Event",
+        "events"       => "Events",
+        "noevents"     => "There are no events.",
+        "alldayevents" => "All day events",
+        "dayevents"    => "Events during the day",
+        "teasernext"   => "Teaser for next day",
+        "daylight"     => "Daylight",
+        "daytype"      => "Day Type",
+        "description"  => "Description",
 
         #
         "cardinaldirection" => "Cardinal direction",
@@ -153,8 +156,9 @@ our %transtable = (
         "workday"   => [ "Workday", "WD" ],
 
         #
-        "season"    => "Season",
-        "metseason" => "Meteorological Season",
+        "season"          => "Season",
+        "seasonoftheyear" => "Season of the year",
+        "metseason"       => "Meteorological Season",
 
         #
         "phenseason"  => "Phenological Season",
@@ -260,19 +264,20 @@ our %transtable = (
     },
 
     DE => {
-        "dayschedule"    => "Tagesablaufplan",
-        "dayscheduleyes" => "Tagesablaufplan gestern",
-        "dayscheduletod" => "Tagesablaufplan heute",
-        "dayscheduletom" => "Tagesablaufplan morgen",
-        "yesterday"      => "gestern",
-        "today"          => "heute",
-        "tomorrow"       => "morgen",
-        "event"          => "Ereignis",
-        "events"         => "Ereignisse",
-        "noevents"       => "Es finden keine Ereignisse statt.",
-        "alldayevents"   => "Ganztägige Ereignisse",
-        "dayevents"      => "Ereignisse im Laufe des Tages",
-        "teasernext"     => "Vorschau für nächsten Tag",
+        "overview"     => "Überblick",
+        "dayschedule"  => "Tagesablaufplan",
+        "yesterday"    => "gestern",
+        "today"        => "heute",
+        "tomorrow"     => "morgen",
+        "event"        => "Ereignis",
+        "events"       => "Ereignisse",
+        "noevents"     => "Es finden keine Ereignisse statt.",
+        "alldayevents" => "Ganztägige Ereignisse",
+        "dayevents"    => "Ereignisse im Laufe des Tages",
+        "teasernext"   => "Vorschau für nächsten Tag",
+        "daylight"     => "Tageslicht",
+        "daytype"      => "Tagestyp",
+        "description"  => "Beschreibung",
 
         #
         "cardinaldirection" => "Himmelsrichtung",
@@ -326,8 +331,9 @@ our %transtable = (
         "workday"   => [ "Arbeitstag", "AT" ],
 
         #
-        "season"    => "Saison",
-        "metseason" => "Meteorologische Jahreszeit",
+        "season"          => "Saison",
+        "seasonoftheyear" => "Jahreszeit",
+        "metseason"       => "Meteorologische Jahreszeit",
 
         #
         "phenseason"  => "Phänologische Jahreszeit",
@@ -432,19 +438,20 @@ our %transtable = (
     },
 
     ES => {
-        "dayschedule"    => "Horario diario",
-        "dayscheduleyes" => "Horario del día de ayer",
-        "dayscheduletod" => "Horario del día de hoy",
-        "dayscheduletom" => "Horario de mañana",
-        "yesterday"      => "ayer",
-        "today"          => "hoy",
-        "tomorrow"       => "mañana",
-        "event"          => "Evento",
-        "events"         => "Eventos",
-        "noevents"       => "No hay eventos.",
-        "alldayevents"   => "Eventos todo el dia",
-        "dayevents"      => "Eventos durante el día",
-        "teasernext"     => "Vista previa para el día siguiente",
+        "overview"     => "Sumario",
+        "dayschedule"  => "Horario diario",
+        "yesterday"    => "ayer",
+        "today"        => "hoy",
+        "tomorrow"     => "mañana",
+        "event"        => "Evento",
+        "events"       => "Eventos",
+        "noevents"     => "No hay eventos.",
+        "alldayevents" => "Eventos todo el dia",
+        "dayevents"    => "Eventos durante el día",
+        "teasernext"   => "Vista previa para el día siguiente",
+        "daylight"     => "Luz del día",
+        "daytype"      => "Tipo de día",
+        "description"  => "Descripción",
 
         #
         "cardinaldirection" => "Punto cardinal",
@@ -498,8 +505,9 @@ our %transtable = (
         "workday"   => [ "Trabajo", "Tra" ],
 
         #
-        "season"    => "Condimentar",
-        "metseason" => "Temporada Meteorológica",
+        "season"          => "Condimentar",
+        "seasonoftheyear" => "Temporada de año",
+        "metseason"       => "Temporada Meteorológica",
 
         #
         "phenseason"  => "Temporada Fenologica",
@@ -605,19 +613,20 @@ our %transtable = (
     },
 
     FR => {
-        "dayschedule"    => "Horaire de la journée",
-        "dayscheduleyes" => "Horaire de la journée d'hier",
-        "dayscheduletod" => "Horaire de la journée aujourd'hui",
-        "dayscheduletom" => "Horaire de la journée de demain",
-        "yesterday"      => "hier",
-        "today"          => "aujourd'hui",
-        "tomorrow"       => "demain",
-        "event"          => "Événement",
-        "events"         => "Événements",
-        "noevents"       => "Il n'y a pas d'événements.",
-        "alldayevents"   => "Événements d'une journée",
-        "dayevents"      => "Événements pendant la journée",
-        "teasernext"     => "Aperçu pour le lendemain",
+        "overview"     => "Récapitulatif",
+        "dayschedule"  => "Horaire de la journée",
+        "yesterday"    => "hier",
+        "today"        => "aujourd'hui",
+        "tomorrow"     => "demain",
+        "event"        => "Événement",
+        "events"       => "Événements",
+        "noevents"     => "Il n'y a pas d'événements.",
+        "alldayevents" => "Événements d'une journée",
+        "dayevents"    => "Événements pendant la journée",
+        "teasernext"   => "Aperçu pour le lendemain",
+        "daylight"     => "Lumière du jour",
+        "daytype"      => "Type de jour",
+        "description"  => "Description",
 
         #
         "cardinaldirection" => "Direction cardinale",
@@ -671,8 +680,9 @@ our %transtable = (
         "workday"   => [ "Ouvrable", "Ouv" ],
 
         #
-        "season"    => "Assaisonner",
-        "metseason" => "Saison Météorologique",
+        "season"          => "Assaisonner",
+        "seasonoftheyear" => "Saison de l'année",
+        "metseason"       => "Saison Météorologique",
 
         #
         "phenseason"  => "Saison Phénologique",
@@ -779,19 +789,20 @@ our %transtable = (
     },
 
     IT => {
-        "dayschedule"    => "Programma giornaliero",
-        "dayscheduleyes" => "Programma giornaliero ieri",
-        "dayscheduletod" => "Programma giornaliero oggi",
-        "dayscheduletom" => "Programmazione del giorno domani",
-        "yesterday"      => "ieri",
-        "today"          => "oggigiorno",
-        "tomorrow"       => "domani",
-        "event"          => "Evento",
-        "events"         => "Eventi",
-        "noevents"       => "Non ci sono eventi.",
-        "alldayevents"   => "Eventi per tutto il giorno",
-        "dayevents"      => "Eventi durante il giorno",
-        "teasernext"     => "Anteprima per il giorno successivo",
+        "overview"     => "Riepilogo",
+        "dayschedule"  => "Programma giornaliero",
+        "yesterday"    => "ieri",
+        "today"        => "oggigiorno",
+        "tomorrow"     => "domani",
+        "event"        => "Evento",
+        "events"       => "Eventi",
+        "noevents"     => "Non ci sono eventi.",
+        "alldayevents" => "Eventi per tutto il giorno",
+        "dayevents"    => "Eventi durante il giorno",
+        "teasernext"   => "Anteprima per il giorno successivo",
+        "daylight"     => "Luce diurna",
+        "daytype"      => "Tipo di giorno",
+        "description"  => "Descrizione",
 
         #
         "cardinaldirection" => "Direzione cardinale",
@@ -845,8 +856,9 @@ our %transtable = (
         "workday"   => [ "Lavorativo", "Lav" ],
 
         #
-        "season"    => "Periodo",
-        "metseason" => "Stagione Meteorologica",
+        "season"          => "Periodo",
+        "seasonoftheyear" => "Stagione dell'anno",
+        "metseason"       => "Stagione Meteorologica",
 
         #
         "phenseason"  => "Stagione Fenologica",
@@ -953,19 +965,20 @@ our %transtable = (
     },
 
     NL => {
-        "dayschedule"    => "Dagschema",
-        "dayscheduleyes" => "Dagschema gisteren",
-        "dayscheduletod" => "Dagschema vandaag",
-        "dayscheduletom" => "Dagschema morgen",
-        "yesterday"      => "gisteren",
-        "today"          => "vandaag",
-        "tomorrow"       => "morgen",
-        "event"          => "Evenement",
-        "events"         => "Evenementen",
-        "noevents"       => "Er zijn geen evenementen.",
-        "alldayevents"   => "De hele dag evenementen",
-        "dayevents"      => "Evenementen overdag",
-        "teasernext"     => "Voorbeeld voor de volgende dag",
+        "overview"     => "Summier",
+        "dayschedule"  => "Dagschema",
+        "yesterday"    => "gisteren",
+        "today"        => "vandaag",
+        "tomorrow"     => "morgen",
+        "event"        => "Evenement",
+        "events"       => "Evenementen",
+        "noevents"     => "Er zijn geen evenementen.",
+        "alldayevents" => "De hele dag evenementen",
+        "dayevents"    => "Evenementen overdag",
+        "teasernext"   => "Voorbeeld voor de volgende dag",
+        "daylight"     => "Daglicht",
+        "daytype"      => "Dagtype",
+        "description"  => "Beschrijving",
 
         #
         "cardinaldirection" => "Hoofdrichting",
@@ -1019,8 +1032,9 @@ our %transtable = (
         "workday"   => [ "Werkdag", "WD" ],
 
         #
-        "season"    => "Jaargetijde",
-        "metseason" => "Meteorologisch Seizoen",
+        "season"          => "Jaargetijde",
+        "seasonoftheyear" => "Seizoen van het jaar",
+        "metseason"       => "Meteorologisch Seizoen",
 
         #
         "phenseason"  => "Fenologisch Seizoen",
@@ -1126,19 +1140,20 @@ our %transtable = (
     },
 
     PL => {
-        "dayschedule"    => "Rozkład dnia",
-        "dayscheduleyes" => "Rozkład dnia wczorajszego",
-        "dayscheduletod" => "Rozkład dnia dzisiaj",
-        "dayscheduletom" => "Rozkład dnia jutro",
-        "yesterday"      => "wczoraj",
-        "today"          => "aktualnie",
-        "tomorrow"       => "przyszłość",
-        "event"          => "Zdarzenie",
-        "events"         => "Zdarzenia",
-        "noevents"       => "Nie ma żadnych wydarzeń.",
-        "alldayevents"   => "Wydarzenia całodniowe",
-        "dayevents"      => "Wydarzenia w ciągu dnia",
-        "teasernext"     => "Podgląd dla następnego dnia",
+        "overview"     => "Streszczenie",
+        "dayschedule"  => "Rozkład dnia",
+        "yesterday"    => "wczoraj",
+        "today"        => "aktualnie",
+        "tomorrow"     => "przyszłość",
+        "event"        => "Zdarzenie",
+        "events"       => "Zdarzenia",
+        "noevents"     => "Nie ma żadnych wydarzeń.",
+        "alldayevents" => "Wydarzenia całodniowe",
+        "dayevents"    => "Wydarzenia w ciągu dnia",
+        "teasernext"   => "Podgląd dla następnego dnia",
+        "daylight"     => "światło dzienne",
+        "daytype"      => "Typ dnia",
+        "description"  => "Opis",
 
         #
         "cardinaldirection" => "Kierunek główny",
@@ -1192,8 +1207,9 @@ our %transtable = (
         "workday"   => [ "Pracy", "PR" ],
 
         #
-        "season"    => "Sezon",
-        "metseason" => "Sezon Meteorologiczny",
+        "season"          => "Sezon",
+        "seasonoftheyear" => "Sezon roku",
+        "metseason"       => "Sezon Meteorologiczny",
 
         #
         "phenseason"  => "Sezon Fenologiczny",
@@ -1509,6 +1525,8 @@ sub Initialize ($) {
         $attrs{HolidayDevices} = 'multiple-strict,' . join( ',', @calDevices );
         $attrs{InformativeDevices} = $attrs{HolidayDevices};
         $attrs{VacationDevices}    = $attrs{HolidayDevices};
+        $attrs{WeekendDevices}     = $attrs{HolidayDevices};
+        $attrs{WorkdayDevices}     = $attrs{HolidayDevices};
     }
 
     $hash->{AttrList} = join( " ",
@@ -1711,6 +1729,30 @@ sub Attr(@) {
 
             # VacationDevices modified at runtime
             $key eq "VacationDevices" and do {
+
+                # check value
+                foreach ( split( ",", $value ) ) {
+                    return
+                      "$do $name attribute $key has invalid device name format "
+                      . $_
+                      unless ( goodDeviceName($_) );
+                }
+            };
+
+            # WeekendDevices modified at runtime
+            $key eq "WeekendDevices" and do {
+
+                # check value
+                foreach ( split( ",", $value ) ) {
+                    return
+                      "$do $name attribute $key has invalid device name format "
+                      . $_
+                      unless ( goodDeviceName($_) );
+                }
+            };
+
+            # WorkdayDevices modified at runtime
+            $key eq "WorkdayDevices" and do {
 
                 # check value
                 foreach ( split( ",", $value ) ) {
@@ -2409,12 +2451,15 @@ sub Get($@) {
         my $colorRed    = '';
         my $colorGreen  = '';
         my $colorClose  = '';
+        my $h3Open      = '';
+        my $h3Close     = '';
 
         if ($html) {
             $blockOpen   = '<div class="makeTable wide internals">';
             $tTitleOpen  = '<span class="mkTitle">';
             $tTitleClose = '</span>';
-            $tOpen       = '<table class="block wide internals wrapcolumns">';
+            $tOpen =
+'<table class="block wide internals wrapcolumns" style="width:568px; margin-top:10px;">';
             $tCOpen =
 '<caption style="text-align: left; font-size: larger; white-space: nowrap;">';
             $tCClose    = '</caption>';
@@ -2446,12 +2491,14 @@ sub Get($@) {
             $colorRed    = '<span style="color: red">';
             $colorGreen  = '<span style="color: green">';
             $colorClose  = '</span>';
+            $h3Open      = '<h3>';
+            $h3Close     = '</h3>';
         }
 
         my $space = $html ? '&nbsp;' : ' ';
         my $lb    = $html ? '<br />' : "\n";
 
-        my $dschedule = $tt->{dayschedule};
+        my $dschedule = "";
         my (
             $secY,  $minY,  $hourY, $dayY, $monthY,
             $yearY, $wdayY, $ydayY, $isdstY
@@ -2473,118 +2520,119 @@ sub Get($@) {
             && $monthY == $Date{month}
             && $dayY == $Date{day} )
         {
-            $dschedule = $tt->{dayscheduleyes};
+            $dschedule = ucfirst( $tt->{yesterday} ) . ' ';
         }
         elsif ($year == $Date{year}
             && $month == $Date{month}
             && $day == $Date{day} )
         {
-            $dschedule = $tt->{dayscheduletod};
+            $dschedule = ucfirst( $tt->{today} ) . ' ';
         }
         elsif ($yearT == $Date{year}
             && $monthT == $Date{month}
             && $dayT == $Date{day} )
         {
-            $dschedule = $tt->{dayscheduletom};
+            $dschedule = ucfirst( $tt->{tomorrow} ) . ' ';
+        }
+
+        push @ret, $blockOpen;
+
+        push @ret,
+            $h3Open
+          . encode_utf8( $dschedule . $Schedule{DayDatetime} )
+          . $h3Close;
+
+        ######## Overview Begin
+
+        push @ret, $tOpen;
+        push @ret, $tCOpen . encode_utf8( $tt->{overview} ) . $tCClose;
+
+        push @ret, $tBOpen;
+
+        if ( $Schedule{DayDesc} ne '---' ) {
+            push @ret, $trOpen;
+            push @ret, $thOpen . encode_utf8( $tt->{description} ) . $thClose;
+
+            my $desc = $Schedule{DayDesc};
+            if ( $html && $desc =~ /\n/ ) {
+                $desc =~ s/^(.+)/<li>$1/gm;
+                $desc =~ s/\n/<\/li>/gm;
+                $desc .= '</li>' unless ( $desc =~ /<\/li>$/ );
+            }
+
+            push @ret, $tdOpen . encode_utf8($desc) . $tdClose;
+
+            push @ret, $trClose;
         }
 
         push @ret,
-            $blockOpen
-          . $tOpen
-          . $tCOpen
-          . encode_utf8( $dschedule . ' ' . $Schedule{DayDatetime} ) . ' ('
-          . encode_utf8( $Schedule{DayType} ) . ')'
-          . $tCClose;
+            $trOpen
+          . $thOpen
+          . encode_utf8( $tt->{daylight} )
+          . $thClose
+          . $tdOpen
+          . encode_utf8( $Astro{SunRise}
+              . chr(0x2013)
+              . $Astro{SunSet} . ' ('
+              . $Astro{SunHrsVisible}
+              . chr(0x00A0)
+              . ' h)' )
+          . $tdClose
+          . $trClose;
 
-        push @ret, $tHOpen;
+        push @ret,
+            $trOpen
+          . $thOpen
+          . encode_utf8( $tt->{daytype} )
+          . $thClose
+          . $tdOpen
+          . encode_utf8( $Schedule{DayType} )
+          . $tdClose
+          . $trClose;
 
         if ( defined( $Schedule{'.SeasonSocial'} ) ) {
             push @ret, $trOpen;
-            push @ret, $thOpen2 . encode_utf8( $tt->{season} ) . $thClose;
-            push @ret, $trClose . $trOpenOdd . $tdOpen2;
-            my $l;
+            push @ret, $thOpen . encode_utf8( $tt->{season} ) . $thClose;
 
+            push @ret, $tdOpen;
+            my $l;
             foreach my $e ( @{ $Schedule{'.SeasonSocial'} } ) {
                 $l .= $lb if ($l);
                 $l .= encode_utf8($e);
             }
+            push @ret, $l . $tdClose;
 
-            push @ret, $l . $tdClose . $trClose;
+            push @ret, $trClose;
         }
 
-        if ( defined( $Schedule{'.scheduleAllday'} ) ) {
-            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose
-              if ( defined( $Schedule{'.SeasonSocial'} ) );
+        push @ret,
+            $trOpen
+          . $thOpen
+          . encode_utf8( $tt->{seasonoftheyear} )
+          . $thClose
+          . $tdOpen
+          . encode_utf8(
+            defined( $Schedule{SeasonPheno} )
+            ? $Schedule{SeasonPheno}
+            : $Astro{ObsSeason}
+          )
+          . $tdClose
+          . $trClose;
 
-            push @ret, $trOpen;
-            push @ret, $thOpen2 . encode_utf8( $tt->{alldayevents} ) . $thClose;
-            push @ret, $trClose . $trOpenOdd . $tdOpen2;
-            my $l;
+        push @ret, $tBClose . $tClose;
 
-            foreach my $e ( @{ $Schedule{'.scheduleAllday'} } ) {
-                $l .= $lb if ($l);
-
-                if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
-                    if ( defined( $Astro{$1} ) ) {
-                        $l .= FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
-                            defined($2) ? $2 : '' );
-                    }
-                    elsif ( defined( $Schedule{$1} ) ) {
-                        $l .= FormatReading( $1, $h, $lc_numeric,
-                            defined($2) ? $2 : '' );
-                    }
-                    else {
-                        $l .= encode_utf8($e);
-                    }
-                }
-            }
-
-            push @ret, $l . $tdClose . $trClose;
-        }
-
-        if ( defined( $Schedule{'.scheduleDay'} ) ) {
-            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose
-              if ( defined( $Schedule{'.SeasonSocial'} )
-                || defined( $Schedule{'.scheduleAllday'} ) );
-
-            push @ret, $trOpen;
-            push @ret, $thOpen2 . encode_utf8( $tt->{dayevents} ) . $thClose;
-            push @ret, $trClose . $trOpenOdd . $tdOpen2;
-
-            my $l;
-
-            foreach my $e ( @{ $Schedule{'.scheduleDay'} } ) {
-                $l .= $lb if ($l);
-
-                if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
-                    if ( defined( $Astro{$1} ) ) {
-                        $l .= FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
-                            defined($2) ? $2 : '' );
-                    }
-                    elsif ( defined( $Schedule{$1} ) ) {
-                        $l .= FormatReading( $1, $h, $lc_numeric,
-                            defined($2) ? $2 : '' );
-                    }
-                    else {
-                        $l .= encode_utf8($e);
-                    }
-                }
-            }
-
-            push @ret, $l . $tdClose . $trClose;
-        }
+        ######## Overview End
 
         if ( defined( $Schedule{'.schedule'} ) ) {
-            push @ret, $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose
-              if ( defined( $Schedule{'.SeasonSocial'} )
-                || defined( $Schedule{'.scheduleDay'} )
-                || defined( $Schedule{'.scheduleAllday'} ) );
+            push @ret, $tOpen;
+            push @ret, $tCOpen . encode_utf8( $tt->{dayschedule} ) . $tCClose;
 
             push @ret, $tHOpen . $trOpen;
             push @ret, $thOpen . encode_utf8( $astrott->{time} ) . $thClose;
             push @ret, $thOpen . encode_utf8( $tt->{event} ) . $thClose;
-            push @ret, $trClose;
-            push @ret, $tHClose . $tBOpen;
+            push @ret, $trClose . $tHClose;
+
+            push @ret, $tBOpen;
 
             my $linecount = 1;
             foreach
@@ -2625,94 +2673,87 @@ sub Get($@) {
                 push @ret, $l;
                 $linecount++;
             }
+            push @ret, $tBClose . $tClose;
         }
 
-        unless ( defined( $Schedule{'.SeasonSocial'} )
-            || defined( $Schedule{'.scheduleAllday'} )
-            || defined( $Schedule{'.scheduleDay'} )
-            || defined( $Schedule{'.schedule'} ) )
-        {
-            push @ret, $trOpen;
-            push @ret,
-                $tdOpen
-              . $lb
-              . encode_utf8( $tt->{noevents} )
-              . $lb
-              . $lb
-              . $tdClose;
-            push @ret, $trClose;
-        }
+        # unless ( defined( $Schedule{'.SeasonSocial'} )
+        #     || defined( $Schedule{'.scheduleAllday'} )
+        #     || defined( $Schedule{'.scheduleDay'} )
+        #     || defined( $Schedule{'.schedule'} ) )
+        # {
+        #     push @ret, $tOpen;
+        #     push @ret, $tCOpen . encode_utf8( $tt->{dayschedule} ) . $tCClose;
+        #
+        #     push @ret, $tBOpen;
+        #
+        #     push @ret, $trOpen;
+        #     push @ret,
+        #         $tdOpen
+        #       . $lb
+        #       . encode_utf8( $tt->{noevents} )
+        #       . $lb
+        #       . $lb
+        #       . $tdClose;
+        #     push @ret, $trClose;
+        #
+        #     push @ret, $tBClose . $tClose;
+        # }
 
-        if ( defined( $Schedule{'.scheduleTom'} ) ) {
-            if (   defined( $Schedule{'.SeasonSocial'} )
-                || defined( $Schedule{'.schedule'} )
-                || defined( $Schedule{'.scheduleDay'} )
-                || defined( $Schedule{'.scheduleAllday'} ) )
-            {
-                push @ret,
-                  $trOpenEven . $tdOpen2 . $space . $tdClose . $trClose;
-                push @ret, $tBClose;
-                push @ret, $tFOpen;
-            }
+        # if ( defined( $Schedule{'.scheduleTom'} ) ) {
+        #
+        #     push @ret, $trOpen;
+        #     push @ret, $thOpen2 . encode_utf8( $tt->{teasernext} ) . $thClose;
+        #     push @ret, $trClose;
+        #
+        #     my $linecount = 1;
+        #     foreach
+        #       my $t ( sort { $a <=> $b } keys %{ $Schedule{'.scheduleTom'} } )
+        #     {
+        #         my $l = $linecount % 2 == 0 ? $trOpenEven : $trOpenOdd;
+        #
+        #         $l .= $tdOpen
+        #           . (
+        #             $t == 0.
+        #             ? '00:00:00'
+        #             : FHEM::Astro::HHMMSS($t)
+        #           ) . $tdClose;
+        #         $l .= $tdOpen;
+        #
+        #         foreach my $e ( @{ $Schedule{'.scheduleTom'}{$t} } ) {
+        #             if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+        #                 if ( defined( $Astro{$1} ) ) {
+        #                     $l .=
+        #                       FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
+        #                         defined($2) ? $2 : '' );
+        #                 }
+        #                 else {
+        #                     $l .= FormatReading( $1, $h, $lc_numeric,
+        #                         defined($2) ? $2 : '' );
+        #                 }
+        #             }
+        #             $l .= $lb;
+        #         }
+        #
+        #         $l .= $tdClose;
+        #
+        #         $l .= $trClose;
+        #         push @ret, $l;
+        #         $linecount++;
+        #     }
+        #
+        #     if (   defined( $Schedule{'.SeasonSocial'} )
+        #         || defined( $Schedule{'.schedule'} )
+        #         || defined( $Schedule{'.scheduleDay'} )
+        #         || defined( $Schedule{'.scheduleAllday'} ) )
+        #     {
+        #         push @ret, $tFClose;
+        #     }
+        #     else {
+        #         push @ret, $tBClose;
+        #     }
+        # }
 
-            push @ret, $trOpen;
-            push @ret, $thOpen2 . encode_utf8( $tt->{teasernext} ) . $thClose;
-            push @ret, $trClose;
-
-            my $linecount = 1;
-            foreach
-              my $t ( sort { $a <=> $b } keys %{ $Schedule{'.scheduleTom'} } )
-            {
-                my $l = $linecount % 2 == 0 ? $trOpenEven : $trOpenOdd;
-
-                $l .= $tdOpen
-                  . (
-                    $t == 0.
-                    ? '00:00:00'
-                    : FHEM::Astro::HHMMSS($t)
-                  ) . $tdClose;
-                $l .= $tdOpen;
-
-                foreach my $e ( @{ $Schedule{'.scheduleTom'}{$t} } ) {
-                    if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
-                        if ( defined( $Astro{$1} ) ) {
-                            $l .=
-                              FHEM::Astro::FormatReading( $1, $h, $lc_numeric,
-                                defined($2) ? $2 : '' );
-                        }
-                        else {
-                            $l .= FormatReading( $1, $h, $lc_numeric,
-                                defined($2) ? $2 : '' );
-                        }
-                    }
-                    $l .= $lb;
-                }
-
-                $l .= $tdClose;
-
-                $l .= $trClose;
-                push @ret, $l;
-                $linecount++;
-            }
-
-            if (   defined( $Schedule{'.SeasonSocial'} )
-                || defined( $Schedule{'.schedule'} )
-                || defined( $Schedule{'.scheduleDay'} )
-                || defined( $Schedule{'.scheduleAllday'} ) )
-            {
-                push @ret, $tFClose;
-            }
-            else {
-                push @ret, $tBClose;
-            }
-        }
-
-        push @ret, $tBClose
-          unless ( defined( $Schedule{'.scheduleTom'} ) );
-
-        push @ret, $tClose . $blockClose;
-
-        push @ret, $tdClose . $trClose . $tClose . $blockClose;
+        push @ret, $blockClose;
         return $header . join( "\n", @ret ) . $footer;
     }
     else {
@@ -3033,7 +3074,6 @@ sub Compute($;$$) {
       : ( $dayOffset ? $Date{$dayOffset} : \%Date );
     my $S = $dayOffset ? {} : \%Schedule;
 
-    # readjust language
     my $lang = uc(
         AttrVal(
             $name,
@@ -3044,10 +3084,39 @@ sub Compute($;$$) {
             )
         )
     );
+    my $lc_numeric = AttrVal(
+        $name,
+        "lc_numeric",
+        AttrVal(
+            $AstroDev,
+            "lc_numeric",
+            AttrVal( "global", "lc_numeric",
+                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef ) )
+
+        )
+    );
+    $lc_numeric = $params->{"lc_numeric"}
+      if ( defined( $params->{"lc_numeric"} ) );
+    my $lc_time = AttrVal(
+        $name,
+        "lc_time",
+        AttrVal(
+            $AstroDev,
+            "lc_time",
+            AttrVal( "global", "lc_time",
+                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef ) )
+
+        )
+    );
+    $lc_time = $params->{"lc_time"}
+      if ( defined( $params->{"lc_time"} ) );
+
+    # readjust language
     if ( defined( $params->{"language"} )
         && exists( $transtable{ uc( $params->{"language"} ) } ) )
     {
-        $tt = $transtable{ uc( $params->{"language"} ) };
+        $lang = uc( $params->{"language"} );
+        $tt   = $transtable{$lang};
     }
     elsif ( exists( $transtable{ uc($lang) } ) ) {
         $tt = $transtable{ uc($lang) };
@@ -3473,8 +3542,8 @@ sub Compute($;$$) {
         if ( IsDevice( $dev, "holiday" ) ) {
             my $event = ::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
+                $S->{DayTypeN} = 1;
                 foreach my $e ( split( ',', $event ) ) {
-                    $S->{DayTypeN} = 1;
                     AddToSchedule( $S, '*', decode_utf8($e) );
                 }
             }
@@ -3492,8 +3561,8 @@ sub Compute($;$$) {
                     my $edate = substr( $event, 0, 10 );
                     $event = substr( $event, 17 );
                     if ( $edate eq $dateISO ) {
+                        $S->{DayTypeN} = 1;
                         foreach my $e ( split( ',', $event ) ) {
-                            $S->{DayTypeN} = 1;
                             AddToSchedule( $S, '*', decode_utf8($e) );
                         }
                     }
@@ -3502,7 +3571,11 @@ sub Compute($;$$) {
         }
     }
 
-    $S->{DayTypeN} = 2 if ( IsWe($date) );
+    my $workdayDevs = AttrVal( $name, "WorkdayDevices", "" );
+    my $weekendDevs = AttrVal( $name, "WeekendDevices", "" );
+    if ( $workdayDevs eq '' && $weekendDevs eq '' ) {
+        $S->{DayTypeN} = 2 if ( IsWe($date) );
+    }
 
     # add HolidayDevices to schedule
     my $holidayDevs = AttrVal( $name, "HolidayDevices", "" );
@@ -3510,8 +3583,8 @@ sub Compute($;$$) {
         if ( IsDevice( $dev, "holiday" ) ) {
             my $event = ::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
+                $S->{DayTypeN} = 3;
                 foreach my $e ( split( ',', $event ) ) {
-                    $S->{DayTypeN} = 3;
                     AddToSchedule( $S, '*', decode_utf8($e) );
                 }
             }
@@ -3527,10 +3600,78 @@ sub Compute($;$$) {
                     my $edate = substr( $event, 0, 10 );
                     $event = substr( $event, 17 );
                     if ( $edate eq $dateISO ) {
+                        $S->{DayTypeN} = 3;
                         foreach my $e ( split( ',', $event ) ) {
-                            $S->{DayTypeN} = 3;
                             AddToSchedule( $S, '*', decode_utf8($e) );
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    # add WorkdayDevices to schedule:
+    #  handle every entry as being a working day
+    foreach my $dev ( split( ',', $workdayDevs ) ) {
+        if ( IsDevice( $dev, "holiday" ) ) {
+            my $event = ::holiday_refresh( $dev, $date );
+            if ( $event eq "none" ) {
+                $S->{DayTypeN} = 2;
+            }
+            else {
+                foreach my $e ( split( ',', $event ) ) {
+                    AddToSchedule( $S, '*', decode_utf8($e) );
+                }
+            }
+        }
+        elsif ( IsDevice( $dev, "Calendar" ) ) {
+            my $date =
+              sprintf( '%02d.%02d.%04d', $D->{day}, $D->{month}, $D->{year} );
+            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+                "format:text filter:mode=~'alarm|start|upcoming'" );
+            if ($list) {
+                chomp($list);
+                my @events = split( '\n', $list );
+                my $found = 0;
+                foreach my $event (@events) {
+                    chomp($event);
+                    my $edate = substr( $event, 0, 10 );
+                    $event = substr( $event, 17 );
+                    if ( $edate eq $dateISO ) {
+                        $found = 1;
+                        foreach my $e ( split( ',', $event ) ) {
+                            AddToSchedule( $S, '*', decode_utf8($e) );
+                        }
+                    }
+                }
+                $S->{DayTypeN} = 2 unless ($found);
+            }
+        }
+    }
+
+    # add WeekendDevices to schedule:
+    #  handle every entry as being a weekend day
+    foreach my $dev ( split( ',', $weekendDevs ) ) {
+        if ( IsDevice( $dev, "holiday" ) ) {
+            my $event = ::holiday_refresh( $dev, $date );
+            if ( $event ne "none" ) {
+                $S->{DayTypeN} = 2;
+            }
+        }
+        elsif ( IsDevice( $dev, "Calendar" ) ) {
+            my $date =
+              sprintf( '%02d.%02d.%04d', $D->{day}, $D->{month}, $D->{year} );
+            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+                "format:text filter:mode=~'alarm|start|upcoming'" );
+            if ($list) {
+                chomp($list);
+                my @events = split( '\n', $list );
+                foreach my $event (@events) {
+                    chomp($event);
+                    my $edate = substr( $event, 0, 10 );
+                    $event = substr( $event, 17 );
+                    if ( $edate eq $dateISO ) {
+                        $S->{DayTypeN} = 2;
                     }
                 }
             }
@@ -4311,6 +4452,61 @@ sub Compute($;$$) {
         $S->{SchedUpcoming} = "---";
     }
 
+    # DayDesc
+    if ( defined( $S->{'.scheduleAllday'} ) || defined( $S->{'.scheduleDay'} ) )
+    {
+        my $l;
+
+        if ( defined( $Schedule{'.scheduleAllday'} ) ) {
+            foreach my $e ( @{ $Schedule{'.scheduleAllday'} } ) {
+                $l .= "\n" if ($l);
+
+                if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+                    if ( defined( $Astro{$1} ) ) {
+                        $l .=
+                          decode_utf8 FHEM::Astro::FormatReading( $1,
+                            { long => 3 },
+                            $lc_numeric, defined($2) ? $2 : '' );
+                    }
+                    elsif ( defined( $Schedule{$1} ) ) {
+                        $l .= decode_utf8 FormatReading( $1, { long => 3 },
+                            $lc_numeric, defined($2) ? $2 : '' );
+                    }
+                    else {
+                        $l .= $e;
+                    }
+                }
+            }
+        }
+
+        if ( defined( $Schedule{'.scheduleDay'} ) ) {
+            foreach my $e ( @{ $Schedule{'.scheduleDay'} } ) {
+                $l .= "\n" if ($l);
+
+                if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+                    if ( defined( $Astro{$1} ) ) {
+                        $l .=
+                          decode_utf8 FHEM::Astro::FormatReading( $1,
+                            { long => 3 },
+                            $lc_numeric, defined($2) ? $2 : '' );
+                    }
+                    elsif ( defined( $Schedule{$1} ) ) {
+                        $l .= decode_utf8 FormatReading( $1, { long => 3 },
+                            $lc_numeric, defined($2) ? $2 : '' );
+                    }
+                    else {
+                        $l .= $e;
+                    }
+                }
+            }
+        }
+
+        $S->{DayDesc} = $l;
+    }
+    else {
+        $S->{DayDesc} = '---';
+    }
+
     delete local $ENV{TZ};
     tzset();
 
@@ -4602,7 +4798,8 @@ sub IsSeasonCarnivalLong($$;$$$) {
     }
     else {
         $carnivalBegin = $carnival1 - 86400. * 11.;
-        return 0 unless ( $today >= $carnivalBegin && $today <= $carnivalEnd );
+        return 0
+          unless ( $today >= $carnivalBegin && $today <= $carnivalEnd );
     }
 
     if ($lang) {
@@ -4721,7 +4918,8 @@ sub IsSeasonEasterTraditional($$;$$) {
         $easterTimeEnd = $easterWSun;
     }
 
-    return 0 unless ( $today >= $easterTimeBegin && $today <= $easterTimeEnd );
+    return 0
+      unless ( $today >= $easterTimeBegin && $today <= $easterTimeEnd );
 
     if ($lang) {
         if ( exists( $transtable{ uc($lang) } ) ) {
