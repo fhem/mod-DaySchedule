@@ -1470,6 +1470,17 @@ sub Initialize ($) {
     $hash->{UndefFn}  = "FHEM::DaySchedule::Undef";
     $hash->{AttrFn}   = "FHEM::DaySchedule::Attr";
     $hash->{NotifyFn} = "FHEM::DaySchedule::Notify";
+
+    my @astroDevices = ::devspec2array("TYPE=Astro");
+    $attrs{AstroDevice} = join( ',', @astroDevices )
+      if (@astroDevices);
+    my @calDevices = ::devspec2array("TYPE=holiday,TYPE=Calendar");
+    if (@calDevices) {
+        $attrs{HolidayDevices} = 'multiple-strict,' . join( ',', @calDevices );
+        $attrs{InformativeDevices} = $attrs{HolidayDevices};
+        $attrs{VacationDevices}    = $attrs{HolidayDevices};
+    }
+
     $hash->{AttrList} = join( " ",
         map { defined( $attrs{$_} ) ? "$_:$attrs{$_}" : $_ } sort keys %attrs )
       . " "
@@ -1522,6 +1533,9 @@ sub Notify ($$) {
     my $TYPE    = $hash->{TYPE};
     my $devName = $dev->{NAME};
     my $devType = GetType($devName);
+
+    # Update attribute values
+    Initialize( $modules{$TYPE} );
 
     if ( $devName eq "global" ) {
         my $events = deviceEvents( $dev, 1 );
@@ -1630,6 +1644,26 @@ sub Attr(@) {
                       "$do $name attribute $key has invalid device name format "
                       . $_
                       unless ( goodDeviceName($_) );
+                }
+            };
+
+            # InformativeDays modified at runtime
+            $key eq "InformativeDays" and do {
+                my @skel = split( ',', $attrs{InformativeDays} );
+                shift @skel;
+
+                # check value 1/2
+                return "$do $name attribute $key must be one or many of "
+                  . join( ',', @skel )
+                  if ( !$value || $value eq "" );
+
+                # check value 2/2
+                my @vals = split( ',', $value );
+                foreach my $val (@vals) {
+                    return
+"$do $name attribute value $val is invalid, must be one or many of "
+                      . join( ',', @skel )
+                      unless ( grep( m/^$val$/, @skel ) );
                 }
             };
 
@@ -2738,7 +2772,7 @@ sub FormatReading($$;$$) {
             $ret = $ret . $sep . $tt->{"toce"}
               if ( $r =~ /^DaySeasonalHrT/ );
             $ret = $ret . $sep . $tt->{"toobs"}
-              if ( $r eq "DaySeasonalHrTNext" );
+              if ( $r eq "DaySeasonalHrNextT" );
             $ret = $tt->{"hoursofvisibility"} . $sep . $ret
               if ( $r eq "DaySeasonalHrsDay" );
             $ret = $tt->{"latecl"} . $sep . $ret
@@ -3757,8 +3791,8 @@ sub Compute($;$$) {
     }
     $daypartnext -= 24. if ( $daypartnext >= 24. );
 
-    $S->{".DaySeasonalHrTNext"} = $daypartnext;
-    $S->{DaySeasonalHrTNext} =
+    $S->{".DaySeasonalHrNextT"} = $daypartnext;
+    $S->{DaySeasonalHrNextT} =
       $daypartnext == 0. ? '00:00:00' : FHEM::Astro::HHMMSS($daypartnext);
     $S->{DaySeasonalHr} = $daypart;
     $S->{DaySeasonalHrR} =
@@ -4864,7 +4898,8 @@ sub AddToSchedule {
           $n
           unless (
             grep( m/^$n$/i, @{ $h->{".scheduleAllday"} } )
-            || ( defined( $h->{'.SeasonSocial'} )
+            || (   $n ne 'Halloween'
+                && defined( $h->{'.SeasonSocial'} )
                 && grep( m/^$n$/i, @{ $h->{'.SeasonSocial'} } ) )
           );
     }
@@ -4991,7 +5026,7 @@ sub Update($@) {
             next;
         }
         my $k = ".$comp";
-        $k = '.DaySeasonalHrTNext' if ( $comp eq 'SeasonalHr' );
+        $k = '.DaySeasonalHrNextT' if ( $comp eq 'SeasonalHr' );
         my $t;
         if ( defined( $Schedule{$k} )
             && $Schedule{$k} =~ /^\d+(?:\.\d+)?$/ )
