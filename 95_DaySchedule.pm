@@ -147,6 +147,10 @@ our %transtable = (
         #
         "week"      => "week",
         "remaining" => "remaining",
+        "weekend"   => [ "Weekend", "W/E" ],
+        "holiday"   => [ "Holiday", "Hol" ],
+        "vacation"  => [ "Vacation", "Vac" ],
+        "workday"   => [ "Workday", "WD" ],
 
         #
         "season"    => "Season",
@@ -316,6 +320,10 @@ our %transtable = (
         #
         "week"      => "Woche",
         "remaining" => "verbleibend",
+        "weekend"   => [ "Wochenende", "WE" ],
+        "holiday"   => [ "Feiertag", "FT" ],
+        "vacation"  => [ "Urlaubstag", "UL" ],
+        "workday"   => [ "Arbeitstag", "AT" ],
 
         #
         "season"    => "Saison",
@@ -484,6 +492,10 @@ our %transtable = (
         #
         "week"      => "Semana",
         "remaining" => "restantes",
+        "weekend"   => [ "Fin de semana", "Fin" ],
+        "holiday"   => [ "Día festivo", "Fes" ],
+        "vacation"  => [ "Vacaciones", "Vac" ],
+        "workday"   => [ "Trabajo", "Tra" ],
 
         #
         "season"    => "Condimentar",
@@ -653,6 +665,10 @@ our %transtable = (
         #
         "week"      => "Semaine",
         "remaining" => "restant",
+        "weekend"   => [ "Fin de semaine", "Fin" ],
+        "holiday"   => [ "Férié", "Fér" ],
+        "vacation"  => [ "Vacances", "Vac" ],
+        "workday"   => [ "Ouvrable", "Ouv" ],
 
         #
         "season"    => "Assaisonner",
@@ -823,6 +839,10 @@ our %transtable = (
         #
         "week"      => "Settimana",
         "remaining" => "rimanente",
+        "weekend"   => [ "Fine settimana", "Fin" ],
+        "holiday"   => [ "Vacanza", "Vac" ],
+        "vacation"  => [ "Riposo", "Rip" ],
+        "workday"   => [ "Lavorativo", "Lav" ],
 
         #
         "season"    => "Periodo",
@@ -993,6 +1013,10 @@ our %transtable = (
         #
         "week"      => "Wee",
         "remaining" => "resterende",
+        "weekend"   => [ "Weekend", "We" ],
+        "holiday"   => [ "Feestdag", "Fe" ],
+        "vacation"  => [ "Snipperdag", "Sn" ],
+        "workday"   => [ "Werkdag", "WD" ],
 
         #
         "season"    => "Jaargetijde",
@@ -1162,6 +1186,10 @@ our %transtable = (
         #
         "week"      => "Tydzień",
         "remaining" => "pozostały",
+        "weekend"   => [ "Weekend", "WE" ],
+        "holiday"   => [ "Urlop", "UR" ],
+        "vacation"  => [ "Wakacje", "WA" ],
+        "workday"   => [ "Pracy", "PR" ],
 
         #
         "season"    => "Sezon",
@@ -1403,6 +1431,8 @@ our %seasonppos = (
     earlyspring => [ 37.136633, -8.817837 ],    #South-West Portugal
     earlyfall   => [ 60.161880, 24.937267 ],    #South Finland / Helsinki
 );
+
+my @daytypes = ( 'workday', 'vacation', 'weekend', 'holiday' );
 
 # Run before package compilation
 BEGIN {
@@ -2421,15 +2451,6 @@ sub Get($@) {
         my $space = $html ? '&nbsp;' : ' ';
         my $lb    = $html ? '<br />' : "\n";
 
-        my $datetime = $Date{datetime};
-        my $wdays    = $Date{wdays};
-        my $wdayl    = $Date{wdayl} . ",";
-        $datetime =~ s/$wdays/$wdayl/g;
-        my $months = $Date{months};
-        my $monthl = $Date{monthl};
-        $datetime =~ s/$months/$monthl/g;
-        $datetime =~ s/\d{2}:\d{2}:\d{2} //g;
-
         my $dschedule = $tt->{dayschedule};
         my (
             $secY,  $minY,  $hourY, $dayY, $monthY,
@@ -2471,7 +2492,8 @@ sub Get($@) {
             $blockOpen
           . $tOpen
           . $tCOpen
-          . encode_utf8( $dschedule . ' ' . $datetime )
+          . encode_utf8( $dschedule . ' ' . $Schedule{DayDatetime} ) . ' ('
+          . encode_utf8( $Schedule{DayType} ) . ')'
           . $tCClose;
 
         push @ret, $tHOpen;
@@ -3438,16 +3460,22 @@ sub Compute($;$$) {
             && int( @{ $S->{'.SeasonSocial'} } ) > 0. );
     }
 
-    # add HolidayDevices to schedule
-    my $holidayDevs = AttrVal( $name, "HolidayDevices", "" );
-    foreach my $dev ( split( ',', $holidayDevs ) ) {
+    $S->{DayTypeN} = 0;
+
+    my $date =
+      sprintf( '%d-%02d-%02d', $D->{year}, $D->{month}, $D->{day} );
+    my $dateISO =
+      sprintf( '%02d.%02d.%04d', $D->{day}, $D->{month}, $D->{year} );
+
+    # add VacationDevices to schedule
+    my $vacationDevs = AttrVal( $name, "VacationDevices", "" );
+    foreach my $dev ( split( ',', $vacationDevs ) ) {
         if ( IsDevice( $dev, "holiday" ) ) {
-            my $date =
-              sprintf( '%d-%02d-%02d', $D->{year}, $D->{month}, $D->{day} );
             my $event = ::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
                 foreach my $e ( split( ',', $event ) ) {
-                    AddToSchedule( $S, '*', $e );
+                    $S->{DayTypeN} = 1;
+                    AddToSchedule( $S, '*', decode_utf8($e) );
                 }
             }
         }
@@ -3463,9 +3491,10 @@ sub Compute($;$$) {
                     chomp($event);
                     my $edate = substr( $event, 0, 10 );
                     $event = substr( $event, 17 );
-                    if ( $edate eq $date ) {
+                    if ( $edate eq $dateISO ) {
                         foreach my $e ( split( ',', $event ) ) {
-                            AddToSchedule( $S, '*', $e );
+                            $S->{DayTypeN} = 1;
+                            AddToSchedule( $S, '*', decode_utf8($e) );
                         }
                     }
                 }
@@ -3473,22 +3502,21 @@ sub Compute($;$$) {
         }
     }
 
-    # add InformativeDevices to schedule
-    my $informativeDevs = AttrVal( $name, "InformativeDevices", "" );
-    foreach my $dev ( split( ',', $informativeDevs ) ) {
+    $S->{DayTypeN} = 2 if ( IsWe($date) );
+
+    # add HolidayDevices to schedule
+    my $holidayDevs = AttrVal( $name, "HolidayDevices", "" );
+    foreach my $dev ( split( ',', $holidayDevs ) ) {
         if ( IsDevice( $dev, "holiday" ) ) {
-            my $date =
-              sprintf( '%d-%02d-%02d', $D->{year}, $D->{month}, $D->{day} );
             my $event = ::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
                 foreach my $e ( split( ',', $event ) ) {
-                    AddToSchedule( $S, '*', $e );
+                    $S->{DayTypeN} = 3;
+                    AddToSchedule( $S, '*', decode_utf8($e) );
                 }
             }
         }
         elsif ( IsDevice( $dev, "Calendar" ) ) {
-            my $date =
-              sprintf( '%02d.%02d.%04d', $D->{day}, $D->{month}, $D->{year} );
             my $list = Calendar_Get( $defs{$dev}, "get", "events",
                 "format:text filter:mode=~'alarm|start|upcoming'" );
             if ($list) {
@@ -3498,9 +3526,44 @@ sub Compute($;$$) {
                     chomp($event);
                     my $edate = substr( $event, 0, 10 );
                     $event = substr( $event, 17 );
-                    if ( $edate eq $date ) {
+                    if ( $edate eq $dateISO ) {
                         foreach my $e ( split( ',', $event ) ) {
-                            AddToSchedule( $S, '*', $e );
+                            $S->{DayTypeN} = 3;
+                            AddToSchedule( $S, '*', decode_utf8($e) );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    $S->{DayType}  = $tt->{ $daytypes[ $S->{DayTypeN} ] }[0];
+    $S->{DayTypeS} = $tt->{ $daytypes[ $S->{DayTypeN} ] }[1];
+
+    # add InformativeDevices to schedule
+    my $informativeDevs = AttrVal( $name, "InformativeDevices", "" );
+    foreach my $dev ( split( ',', $informativeDevs ) ) {
+        if ( IsDevice( $dev, "holiday" ) ) {
+            my $event = ::holiday_refresh( $dev, $date );
+            if ( $event ne "none" ) {
+                foreach my $e ( split( ',', $event ) ) {
+                    AddToSchedule( $S, '*', decode_utf8($e) );
+                }
+            }
+        }
+        elsif ( IsDevice( $dev, "Calendar" ) ) {
+            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+                "format:text filter:mode=~'alarm|start|upcoming'" );
+            if ($list) {
+                chomp($list);
+                my @events = split( '\n', $list );
+                foreach my $event (@events) {
+                    chomp($event);
+                    my $edate = substr( $event, 0, 10 );
+                    $event = substr( $event, 17 );
+                    if ( $edate eq $dateISO ) {
+                        foreach my $e ( split( ',', $event ) ) {
+                            AddToSchedule( $S, '*', decode_utf8($e) );
                         }
                     }
                 }
@@ -3577,10 +3640,30 @@ sub Compute($;$$) {
         ? ( $D->{sec} == 0 ? "" : ":" )
         : ":" . UConv::arabic2roman( $D->{min} )
       ) . ( $D->{sec} == 0. ? "" : ":" . UConv::arabic2roman( $D->{sec} ) );
+
+    my $datetime = $D->{datetime};
+    $datetime =~ s/\d{2}:\d{2}:\d{2} //g;
+    my $wdays = $D->{wdays};
+    $datetime =~ s/$wdays/$wdays,/g;
+    my $datetimel = $datetime;
+    my $wdayl     = $D->{wdayl};
+    $datetimel =~ s/$wdays/$wdayl/g;
+    my $months = $D->{months};
+    my $monthl = $D->{monthl};
+    $datetimel =~ s/$months/$monthl/g;
+
+    $S->{DayDatetime}      = $datetimel;
+    $S->{DayDatetimeS}     = $datetime;
+    $S->{DayWeekday}       = $D->{wdayl};
+    $S->{DayWeekdayS}      = $D->{wdays};
+    $S->{DayWeekdayN}      = $D->{wday};
     $S->{Weekofyear}       = $D->{weekofyear};
     $S->{".isdstultimo"}   = $D->{isdstultimo};
     $S->{YearIsLY}         = $D->{isly};
     $S->{YearRemainD}      = $D->{yearremdays};
+    $S->{Month}            = $D->{monthl};
+    $S->{MonthS}           = $D->{months};
+    $S->{WeekdayN}         = $D->{wday};
     $S->{MonthRemainD}     = $D->{monthremdays};
     $S->{".YearProgress"}  = $D->{yearprogress};
     $S->{".MonthProgress"} = $D->{monthprogress};
@@ -4234,6 +4317,56 @@ sub Compute($;$$) {
     return $A, $S
       if ($dayOffset);
     return (undef);
+}
+
+# This is based on code from fhem.pl / IsWe()
+#  as it is not allowing to request for a specific date
+sub IsWe(;$$) {
+    my ( $when, $wday ) = @_;
+
+    if ( $when && $when =~ m/^(?:(\d{4})-(\d{2})-(\d{2}))$/ ) {
+        $wday =
+          ( localtime( mktime( 1, 1, 1, $3, $2 - 1, $1 - 1900., 0, 0, -1 ) ) )
+          [6];
+    }
+    elsif ( !$when || $when !~ m/^(yesterday|tomorrow|\d{4}-\d{2}-\d{2})$/ ) {
+        $when = "today";
+    }
+    $wday = ( localtime( gettimeofday() ) )[6] if ( !defined($wday) );
+
+    my ( $we, $wf );
+    my $h2wedev = AttrVal( "global", "holiday2we", "" );
+    if ( $h2wedev ne '' ) {
+        foreach my $h2we ( split( ",", $h2wedev ) ) {
+            my $b =
+              IsDevice( $h2we, 'holiday' )
+              ? ::holiday_refresh( $h2we, $when )
+              : 0;
+            if ( $b && $b ne "none" ) {
+                return 0 if ( $h2we eq "noWeekEnd" );
+                $we = 1 if ( $b && $b ne "none" );
+            }
+            $wf = 1 if ( $h2we eq "weekEnd" );
+        }
+    }
+    else {
+        $when = 'today' if ( $when =~ m/^(\d{4}-\d{2}-\d{2})$/ );
+    }
+
+    if ( !$wf && !$we ) {
+        $we = (
+            $when eq "yesterday"
+            ? ( $wday == 0 || $wday == 1 )
+            : (
+                $when eq "today"
+                ? ( $wday == 6 || $wday == 0 )
+
+                  # tomorrow
+                : ( $wday == 5 || $wday == 6 )
+            )
+        );
+    }
+    return $we ? 1 : 0;
 }
 
 # This is based on code from 95_holiday.pm / holiday_refresh()
