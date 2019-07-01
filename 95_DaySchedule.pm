@@ -1936,7 +1936,7 @@ sub Set($@) {
             my $d   = "wl_" . $name;
             my $cl  = defined( $hash->{CL} ) ? $hash->{CL} : undef;
             my $ret = CommandDefine( $cl,
-"$d weblink htmlCode { FHEM::DaySchedule::Get(\$defs{'$name'},['DaySchedule','schedule'],{html=>1}) }"
+"$d weblink htmlCode { FHEM::DaySchedule::Get(\$defs{'$name'},['DaySchedule','schedule'],{html=>1,backlink=>1}) }"
             );
             return $ret if ($ret);
             if ( my $room = AttrVal( $name, "room", undef ) ) {
@@ -2491,7 +2491,7 @@ sub Get($@) {
             $colorRed    = '<span style="color: red">';
             $colorGreen  = '<span style="color: green">';
             $colorClose  = '</span>';
-            $h3Open      = '<h3>';
+            $h3Open      = '<h3 style="margin-top:0;">';
             $h3Close     = '</h3>';
         }
 
@@ -2537,6 +2537,28 @@ sub Get($@) {
 
         push @ret, $blockOpen;
 
+        my $aliasname = AttrVal(
+            $name,
+            'alias_' . uc($lang),
+            AttrVal(
+                $name,
+                'alias_' . lc($lang),
+                AttrVal( $name, 'alias', undef )
+            )
+        );
+
+        if (   defined( $h->{backlink} )
+            && $html
+            && ( $aliasname || !exists( $FW_hiddenroom{detail} ) ) )
+        {
+            $aliasname = $name unless ($aliasname);
+            unless ( exists( $FW_hiddenroom{detail} ) ) {
+                $aliasname =
+                  '<a href="?detail=' . $name . '">' . $aliasname . '</a>';
+            }
+            push @ret, $aliasname;
+        }
+
         push @ret,
             $h3Open
           . encode_utf8( $dschedule . $Schedule{DayDatetime} )
@@ -2550,7 +2572,7 @@ sub Get($@) {
         push @ret, $tBOpen;
 
         if ( $Schedule{DayDesc} ne '---' ) {
-            push @ret, $trOpen;
+            push @ret, $trOpenOdd;
             push @ret, $thOpen . encode_utf8( $tt->{description} ) . $thClose;
 
             my $desc = $Schedule{DayDesc};
@@ -2566,7 +2588,7 @@ sub Get($@) {
         }
 
         push @ret,
-            $trOpen
+            $trOpenOdd
           . $thOpen
           . encode_utf8( $tt->{daylight} )
           . $thClose
@@ -2581,7 +2603,7 @@ sub Get($@) {
           . $trClose;
 
         push @ret,
-            $trOpen
+            $trOpenOdd
           . $thOpen
           . encode_utf8( $tt->{daytype} )
           . $thClose
@@ -2591,7 +2613,7 @@ sub Get($@) {
           . $trClose;
 
         if ( defined( $Schedule{'.SeasonSocial'} ) ) {
-            push @ret, $trOpen;
+            push @ret, $trOpenOdd;
             push @ret, $thOpen . encode_utf8( $tt->{season} ) . $thClose;
 
             push @ret, $tdOpen;
@@ -2606,7 +2628,7 @@ sub Get($@) {
         }
 
         push @ret,
-            $trOpen
+            $trOpenOdd
           . $thOpen
           . encode_utf8( $tt->{seasonoftheyear} )
           . $thClose
