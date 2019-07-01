@@ -1604,7 +1604,7 @@ sub Define ($@) {
         $attr{$name}{icon}        = 'time_calendar';
         $attr{$name}{recomputeAt} = 'NewDay,SeasonalHr';
         $attr{$name}{Schedule} =
-'ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,Daytime,SunRise,SunSet,SunSign,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning';
+'MoonPhaseS,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,Daytime,SunRise,SunSet,SunSign,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning';
         $attr{$name}{SocialSeasons} =
 'Carnival,Easter,Oktoberfest,Halloween,Advent,TurnOfTheYear,Christmas';
         $attr{$name}{stateFormat} = 'Daytime';
