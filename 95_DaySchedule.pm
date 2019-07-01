@@ -1936,7 +1936,7 @@ sub Set($@) {
             my $d   = "wl_" . $name;
             my $cl  = defined( $hash->{CL} ) ? $hash->{CL} : undef;
             my $ret = CommandDefine( $cl,
-"$d weblink htmlCode { FHEM::DaySchedule::Get(\$defs{'$name'},['DaySchedule','schedule'],{html=>1,backlink=>1}) }"
+"$d weblink htmlCode { FHEM::DaySchedule::Get(\$defs{'$name'},['DaySchedule','schedule'],{html=>1,backlink=>1,dailyschedule=>0}) }"
             );
             return $ret if ($ret);
             if ( my $room = AttrVal( $name, "room", undef ) ) {
@@ -2380,7 +2380,15 @@ sub Get($@) {
                     ? '<a href="?detail='
                       . $name
                       . '">back to <span style="font-style: italic;">'
-                      . AttrVal( $name, 'alias', $name )
+                      . AttrVal(
+                        $name,
+                        'alias_' . uc($lang),
+                        AttrVal(
+                            $name,
+                            'alias_' . lc($lang),
+                            AttrVal( $name, 'alias', $name )
+                        )
+                      )
                       . '</span></a>&nbsp;&nbsp;&nbsp;&nbsp;'
                     : ''
                   )
@@ -2645,7 +2653,15 @@ sub Get($@) {
 
         ######## Overview End
 
-        if ( defined( $Schedule{'.schedule'} ) ) {
+        if (
+            (
+                   !ref($h)
+                || !defined( $h->{dailyschedule} )
+                || $h->{dailyschedule} ne '0'
+            )
+            && defined( $Schedule{'.schedule'} )
+          )
+        {
             push @ret, $tOpen;
             push @ret, $tCOpen . encode_utf8( $tt->{dayschedule} ) . $tCClose;
 
