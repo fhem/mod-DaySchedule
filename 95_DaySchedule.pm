@@ -2839,19 +2839,6 @@ sub Get($@) {
             push @ret, $trClose;
         }
 
-        if ( grep( /^ObsIsDST$/, @schedsch ) && $Astro{ObsIsDST} == 1. ) {
-            push @ret,
-                $trOpenOdd
-              . $thOpen
-              . encode_utf8( $astrott->{dst} )
-              . $thClose
-              . $tdOpen
-              . encode_utf8(
-                $Schedule{DayTypeSym} . chr(0x00A0) . $Schedule{DayType} )
-              . $tdClose
-              . $trClose;
-        }
-
         push @ret,
             $trOpenOdd
           . $thOpen
