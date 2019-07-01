@@ -1315,90 +1315,6 @@ our %transtable = (
     }
 );
 
-our %readingsLabel = (
-    "AstroTwilightEvening"  => [ "duskastro",  undef ],
-    "AstroTwilightMorning"  => [ "dawnastro",  undef ],
-    "CivilTwilightEvening"  => [ "duskcivil",  undef ],
-    "CivilTwilightMorning"  => [ "dawncivil",  undef ],
-    "CustomTwilightEvening" => [ "duskcustom", undef ],
-    "CustomTwilightMorning" => [ "dawncustom", undef ],
-
-    #
-    "MoonAge"               => [ "age",               "°" ],
-    "MoonAlt"               => [ "alt",               "°" ],
-    "MoonAz"                => [ "az",                "°" ],
-    "MoonCompass"           => [ "cardinaldirection", undef ],
-    "MoonCompassI"          => [ "cardinaldirection", undef ],
-    "MoonCompassS"          => [ "cardinaldirection", undef ],
-    "MoonDec"               => [ "dec",               "°" ],
-    "MoonDiameter"          => [ "diameter",          "'" ],
-    "MoonDistance"          => [ "distance toce",     "km" ],
-    "MoonDistanceObserver"  => [ "distance toobs",    "km" ],
-    "MoonHrsVisible"        => [ "hoursofvisibility", "h" ],
-    "MoonLat"               => [ "latitude",          "°" ],
-    "MoonLon"               => [ "longitude",         "°" ],
-    "MoonPhaseI"            => [ "phase",             undef ],
-    "MoonPhaseN"            => [ "progress",          "%" ],
-    "MoonPhaseS"            => [ "phase",             undef ],
-    "MoonRa"                => [ "ra",                "h" ],
-    "MoonRise"              => [ "rise",              undef ],
-    "MoonSet"               => [ "set",               undef ],
-    "MoonSign"              => [ "sign",              undef ],
-    "MoonTransit"           => [ "transit",           undef ],
-    "NauticTwilightEvening" => [ "dusknautic",        undef ],
-    "NauticTwilightMorning" => [ "dawnnautic",        undef ],
-
-    #
-    "ObsAlt"        => [ "altitude",    "m" ],
-    "ObsDate"       => [ "date",        undef ],
-    "ObsDayofyear"  => [ "dayofyear",   "day", 1 ],
-    "Daytime"       => [ "dayphase",    undef ],
-    "DaytimeN"      => [ "dayphase",    undef ],
-    "ObsIsDST"      => [ "dst",         undef ],
-    "YearIsLY"      => [ "leapyear",    undef ],
-    "ObsJD"         => [ "jdate",       undef ],
-    "ObsLat"        => [ "latitude",    "°" ],
-    "ObsLMST"       => [ "lmst",        undef ],
-    "ObsLon"        => [ "longitude",   "°" ],
-    "SeasonMeteo"   => [ "metseason",   undef ],
-    "SeasonMeteoN"  => [ "metseason",   undef ],
-    "MonthProgress" => [ "progress",    "%" ],
-    "MonthRemainD"  => [ "remaining",   "1:day|days", 1 ],
-    "SeasonPheno"   => [ "phenoseason", undef ],
-    "SeasonPhenoN"  => [ "phenoseason", undef ],
-    "ObsSeason"     => [ "season",      undef ],
-    "DaySeasonalHr" =>
-      [ "12(DaySeasonalHrsDay):temporalhour|seasonalhour", undef ],
-    "DaySeasonalHrR" =>
-      [ "12(DaySeasonalHrsDay):temporalhour|seasonalhour", undef ],
-    "ObsSeasonN"   => [ "season",    undef ],
-    "ObsTime"      => [ "time",      undef ],
-    "ObsTimeR"     => [ "time",      undef ],
-    "ObsTimezone"  => [ "timezone",  undef ],
-    "Weekofyear"   => [ "week",      undef ],
-    "YearProgress" => [ "progress",  "%" ],
-    "YearRemainD"  => [ "remaining", "1:day|days", 1 ],
-
-    #
-    "SunAlt"              => [ "alt",               undef ],
-    "SunAz"               => [ "az",                "°" ],
-    "SunCompass"          => [ "cardinaldirection", undef ],
-    "SunCompassI"         => [ "cardinaldirection", undef ],
-    "SunCompassS"         => [ "cardinaldirection", undef ],
-    "SunDec"              => [ "dec",               "°" ],
-    "SunDiameter"         => [ "diameter",          "'" ],
-    "SunDistance"         => [ "distance toce",     "km" ],
-    "SunDistanceObserver" => [ "distance toobs",    "km" ],
-    "SunHrsInvisible"     => [ "hoursofnight",      "h" ],
-    "SunHrsVisible"       => [ "hoursofsunlight",   "h" ],
-    "SunLon"              => [ "longitude",         "°" ],
-    "SunRa"               => [ "ra",                "h" ],
-    "SunRise"             => [ "rise",              undef ],
-    "SunSet"              => [ "set",               undef ],
-    "SunSign"             => [ "sign",              undef ],
-    "SunTransit"          => [ "transit",           undef ],
-);
-
 our @dayphases = (
 
     # night
@@ -1437,10 +1353,134 @@ our %seasonmn = (
     "winter" => [ 12, 2 ],     #01.12. - 28./29.2.
 );
 
+our @seasonsicon = ( chr(0x26C4), chr(0x1F331), '☀️', chr(0x1F342), );
+
+our @zodiacicon = (
+    chr(0x2648), chr(0x2649), chr(0x264A), chr(0x264B),
+    chr(0x264C), chr(0x264D), chr(0x264E), chr(0x264F),
+    chr(0x2650), chr(0x2651), chr(0x2652), chr(0x2653)
+);
+
+our @phasesicon = (
+    chr(0x1F311), chr(0x1F312), chr(0x1F313), chr(0x1F314),
+    chr(0x1F315), chr(0x1F316), chr(0x1F317), chr(0x1F318)
+);
+
+our %transtableHolidays = (
+    DE => {
+        'Valentinstag'              => 'valentinesday',
+        'Aschermittwoch'            => 'ashwednesday',
+        'Walpurgisnacht'            => 'walpurgisnight',
+        'Muttertag'                 => 'mothersday',
+        'Vatertag'                  => 'fathersday',
+        'Pfingstsonntag'            => 'pentecostsun',
+        'Pfingstmontag'             => 'pentecostmon',
+        'Erntedankfest'             => 'harvestfestival',
+        'Allerseelen'               => 'allsoulsday',
+        'Martinisingen'             => 'martinising',
+        'Martinstag'                => 'martinmas',
+        'Buß- und Bettag'          => 'dayofprayerandrepentance',
+        'Volkstrauertag'            => 'remembranceday',
+        'Totensonntag'              => 'lastsundaybeforeadvent',
+        'Nikolaus'                  => 'stnicholasday',
+        'Heilige Drei Könige'      => 'biblicalmagi',
+        'Internationaler Frauentag' => 'internationalwomensday',
+        'St. Patrick\'s Day'        => 'stpatricksday',
+        'Tag der Arbeit'            => 'laborday',
+        'Tag der Befreiung'         => 'liberationday',
+        'Christi Himmelfahrt'       => 'ascension',
+        'Fronleichnam'              => 'corpuschristi',
+        'Mariä Himmelfahrt'        => 'assumptionday',
+        'Weltkindertag'             => 'worldchildrensday',
+        'Tag der Deutschen Einheit' => 'germanunificationday',
+        'Reformationstag'           => 'reformationday',
+        'Allerheiligen'             => 'allsaintsday',
+        'Silvester'                 => 'newyearseve',
+
+        #
+        'Tanz in den Mai'      => 'walpurgisnight',
+        'Pfingsten'            => 'pentecostsun',
+        'Martinsingen'         => 'martinising',
+        'Heilige Drei Koenige' => 'biblicalmagi',
+        'St Patrick\'s Day'    => 'stpatricksday',
+        'St. Patricks Day'     => 'stpatricksday',
+        'St Patricks Day'      => 'stpatricksday',
+    },
+);
+
+our %holidaysicon = (
+    'valentinesday'            => chr(0x0),
+    'ashwednesday'             => chr(0x0),
+    'walpurgisnight'           => chr(0x0),
+    'mothersday'               => chr(0x0),
+    'fathersday'               => chr(0x0),
+    'pentecostsun'             => chr(0x0),
+    'pentecostmon'             => chr(0x0),
+    'harvestfestival'          => chr(0x0),
+    'allsoulsday'              => chr(0x0),
+    'martinising'              => chr(0x0),
+    'martinmas'                => chr(0x0),
+    'dayofprayerandrepentance' => chr(0x0),
+    'remembranceday'           => chr(0x0),
+    'lastsundaybeforeadvent'   => chr(0x0),
+    'stnicholasday'            => chr(0x0),
+    'biblicalmagi'             => chr(0x0),
+    'internationalwomensday'   => chr(0x0),
+    'stpatricksday'            => chr(0x0),
+    'laborday'                 => chr(0x0),
+    'liberationday'            => chr(0x0),
+    'ascension'                => chr(0x0),
+    'corpuschristi'            => chr(0x0),
+    'assumptionday'            => chr(0x0),
+    'worldchildrensday'        => chr(0x0),
+    'germanunificationday'     => chr(0x0),
+    'reformationday'           => chr(0x0),
+    'allsaintsday'             => chr(0x0),
+    'newyearseve'              => chr(0x0),
+    'carnivalseason1'          => chr(0x0),
+    'carnivalseason2'          => chr(0x0),
+    'carnivalseason3'          => chr(0x0),
+    'carnivalseason4'          => chr(0x0),
+    'carnivalseason5'          => chr(0x0),
+    'carnivalseason6'          => chr(0x0),
+    'faschingseason1'          => chr(0x0),
+    'faschingseason2'          => chr(0x0),
+    'faschingseason3'          => chr(0x0),
+    'faschingseason4'          => chr(0x0),
+    'faschingseason5'          => chr(0x0),
+    'faschingseason6'          => chr(0x0),
+);
+
+our %seasonssocialicon = (
+    Carnival           => chr(0x1F3A0),
+    CarnivalLong       => chr(0x1F3AD),
+    Fasching           => chr(0x1F38A),
+    FaschingLong       => chr(0x1F3AD),
+    StrongBeerFestival => chr(0x1F37B),
+    HolyWeek           => '✝️',
+    Easter             => chr(0x1F430),
+    EasterTraditional  => chr(0x1F95A),
+    Lenten             => chr(0x1F957),
+    Oktoberfest        => chr(0x1F3A1),
+    Halloween          => chr(0x1F383),
+    Advent             => chr(0x1F56F),
+    AdventEarly        => chr(0x1F490),
+    TurnOfTheYear      => chr(0x1F389),
+    Christmas          => chr(0x1F385),
+    ChristmasLong      => chr(0x1F384),
+);
+
 our @seasonsp = (
-    "winter",      "earlyspring", "firstspring", "fullspring",
-    "earlysummer", "midsummer",   "latesummer",  "earlyfall",
-    "fullfall",    "latefall"
+    [ "winter",      chr(0x26C4) ],
+    [ "earlyspring", chr(0x1F331) ],
+    [ "firstspring", chr(0x1F331) ],
+    [ "fullspring",  chr(0x1F331) ],
+    [ "earlysummer", '☀️' ],
+    [ "midsummer",   '☀️' ],
+    [ "latesummer",  '☀️' ],
+    [ "earlyfall",   chr(0x1F342) ],
+    [ "fullfall",    chr(0x1F342) ],
+    [ "latefall",    chr(0x1F342) ]
 );
 
 our %seasonppos = (
@@ -1448,7 +1488,12 @@ our %seasonppos = (
     earlyfall   => [ 60.161880, 24.937267 ],    #South Finland / Helsinki
 );
 
-my @daytypes = ( 'workday', 'vacation', 'weekend', 'holiday' );
+my @daytypes = (
+    [ 'workday',  chr(0x1F454) ],
+    [ 'vacation', chr(0x1F334) ],
+    [ 'weekend',  chr(0x1F4C6) ],
+    [ 'holiday',  chr(0x1F4C5) ]
+);
 
 # Run before package compilation
 BEGIN {
@@ -1469,6 +1514,7 @@ BEGIN {
           FW_hiddenroom
           FW_webArgs
           IsDevice
+          IsWe
           FmtDateTime
           GetType
           goodDeviceName
@@ -1936,7 +1982,7 @@ sub Set($@) {
             my $d   = "wl_" . $name;
             my $cl  = defined( $hash->{CL} ) ? $hash->{CL} : undef;
             my $ret = CommandDefine( $cl,
-"$d weblink htmlCode { FHEM::DaySchedule::Get(\$defs{'$name'},['DaySchedule','schedule'],{html=>1,backlink=>1,dailyschedule=>0}) }"
+"$d weblink htmlCode { FHEM::DaySchedule::Get(\$defs{'$name'},['DaySchedule','schedule'],{html=>1,backlink=>'$d',dailyschedule=>0}) }"
             );
             return $ret if ($ret);
             if ( my $room = AttrVal( $name, "room", undef ) ) {
@@ -2143,10 +2189,13 @@ sub Get($@) {
     #-- disable automatic links to FHEM devices
     delete $FW_webArgs{addLinks};
 
+    # get/version
     if ( $aref->[0] eq "version" ) {
         return version->parse( FHEM::DaySchedule::->VERSION() )->normal;
 
     }
+
+    # get/json
     elsif ( $aref->[0] eq "json" ) {
         Compute( $hash, undef, $h );
 
@@ -2199,6 +2248,8 @@ sub Get($@) {
             return $json->encode( { %Astro, %Schedule } );
         }
     }
+
+    # get/text
     elsif ( $aref->[0] eq "text" ) {
         Compute( $hash, undef, $h );
         my $ret = "";
@@ -2345,6 +2396,8 @@ sub Get($@) {
 
         return $ret;
     }
+
+    # get/schedule
     elsif ( $aref->[0] eq "schedule" ) {
         Compute( $hash, undef, $h );
         my @ret;
@@ -2371,7 +2424,7 @@ sub Get($@) {
             if ( !defined( $h->{navigation} ) || $h->{navigation} ne "0" ) {
                 $header .=
                     '<div class="wide">'
-                  . '<div class="detLink DayScheduleJump" style="float: right; text-align: right; white-space: nowrap;">'
+                  . '<div class="detLink DayScheduleJump" style="float:right; text-align:right; white-space:nowrap;">'
                   .
 
                   (
@@ -2379,7 +2432,7 @@ sub Get($@) {
                       && !exists( $FW_hiddenroom{detail} )
                     ? '<a href="?detail='
                       . $name
-                      . '">back to <span style="font-style: italic;">'
+                      . '">back to <span style="font-style:italic;">'
                       . AttrVal(
                         $name,
                         'alias_' . uc($lang),
@@ -2480,15 +2533,15 @@ sub Get($@) {
             $trOpen     = '<tr class="column">';
             $trOpenEven = '<tr class="column even">';
             $trOpenOdd  = '<tr class="column odd">';
-            $thOpen     = '<th style="text-align: left; vertical-align: top;">';
+            $thOpen     = '<th style="text-align:left; vertical-align:top;">';
             $thOpen2 =
-              '<th style="text-align: left; vertical-align: top;" colspan="2">';
+              '<th style="text-align: left; vertical-align:top;" colspan="2">';
             $thOpen3 =
-              '<th style="text-align: left; vertical-align: top;" colspan="3">';
-            $tdOpen      = '<td style="vertical-align: top;">';
-            $tdOpen2     = '<td style="vertical-align: top;" colspan="2">';
-            $tdOpen3     = '<td style="vertical-align: top;" colspan="3">';
-            $tdOpen4     = '<td style="vertical-align: top;" colspan="4">';
+              '<th style="text-align: left; vertical-align:top;" colspan="3">';
+            $tdOpen      = '<td style="vertical-align:top;">';
+            $tdOpen2     = '<td style="vertical-align:top;" colspan="2">';
+            $tdOpen3     = '<td style="vertical-align:top;" colspan="3">';
+            $tdOpen4     = '<td style="vertical-align:top;" colspan="4">';
             $strongOpen  = '<strong>';
             $strongClose = '</strong>';
             $tdClose     = '</td>';
@@ -2496,8 +2549,8 @@ sub Get($@) {
             $trClose     = '</tr>';
             $tClose      = '</table>';
             $blockClose  = '</div>';
-            $colorRed    = '<span style="color: red">';
-            $colorGreen  = '<span style="color: green">';
+            $colorRed    = '<span style="color:red">';
+            $colorGreen  = '<span style="color:green">';
             $colorClose  = '</span>';
             $h3Open      = '<h3 style="margin-top:0;">';
             $h3Close     = '</h3>';
@@ -2505,6 +2558,22 @@ sub Get($@) {
 
         my $space = $html ? '&nbsp;' : ' ';
         my $lb    = $html ? '<br />' : "\n";
+
+        my @schedsch =
+          split(
+            ',',
+            (
+                defined( $h->{"Schedule"} )
+                ? $h->{"Schedule"}
+                : AttrVal( $name, "Schedule", $attrs{Schedule} )
+            )
+          );
+        unless ( defined( $h->{"Schedule"} )
+            || AttrVal( $name, "Schedule", 0 ) )
+        {
+            shift @schedsch;
+            shift @schedsch;
+        }
 
         my $dschedule = "";
         my (
@@ -2562,7 +2631,10 @@ sub Get($@) {
             $aliasname = $name unless ($aliasname);
             unless ( exists( $FW_hiddenroom{detail} ) ) {
                 $aliasname =
-                  '<a href="?detail=' . $name . '">' . $aliasname . '</a>';
+                    '<a href="?detail='
+                  . ( IsDevice( $h->{backlink} ) ? $h->{backlink} : $name )
+                  . '">'
+                  . $aliasname . '</a>';
             }
             push @ret, $aliasname;
         }
@@ -2579,6 +2651,36 @@ sub Get($@) {
 
         push @ret, $tBOpen;
 
+        if (   grep( /^Daytime|DaySeasonalHr$/, @schedsch )
+            && $year == $Date{year}
+            && $month == $Date{month}
+            && $day == $Date{day} )
+        {
+            push @ret, $trOpenOdd;
+            push @ret, $thOpen . encode_utf8( $tt->{dayphase} ) . $thClose;
+            push @ret,
+              $tdOpen
+              . encode_utf8(
+                (
+                    grep( /^Daytime$/, @schedsch )
+                      && $Schedule{Daytime} ne '---' ? $Schedule{Daytime}
+                    : FormatReading(
+                        'DaySeasonalHr', { long => 1, language => $lang },
+                        $lc_numeric
+                    )
+                )
+                . ' ('
+                  . chr(0x029D6)
+                  . chr(0x202F)
+                  . (
+                    $Schedule{'.DaySeasonalHrNextT'} == 0. ? '00:00'
+                    : FHEM::Astro::HHMM( $Schedule{'.DaySeasonalHrNextT'} )
+                  )
+                  . ')'
+              ) . $tdClose;
+            push @ret, $trClose;
+        }
+
         if ( $Schedule{DayDesc} ne '---' ) {
             push @ret, $trOpenOdd;
             push @ret, $thOpen . encode_utf8( $tt->{description} ) . $thClose;
@@ -2588,6 +2690,7 @@ sub Get($@) {
                 $desc =~ s/^(.+)/<li>$1/gm;
                 $desc =~ s/\n/<\/li>/gm;
                 $desc .= '</li>' unless ( $desc =~ /<\/li>$/ );
+                $desc = '<ul>' . $desc . '</ul>';
             }
 
             push @ret, $tdOpen . encode_utf8($desc) . $tdClose;
@@ -2601,12 +2704,26 @@ sub Get($@) {
           . encode_utf8( $tt->{daylight} )
           . $thClose
           . $tdOpen
-          . encode_utf8( $Astro{SunRise}
-              . chr(0x2013)
-              . $Astro{SunSet} . ' ('
-              . $Astro{SunHrsVisible}
+          . encode_utf8(
+                chr(0x1F305)
               . chr(0x00A0)
-              . ' h)' )
+              . (
+                $Astro{SunRise} ne '---' || $Astro{SunSet} ne '---'
+                ? (
+                    (
+                        $Astro{SunRise} ne '---' ? $Astro{SunRise} : chr(0x221E)
+                    )
+                    . chr(0x2013)
+                      . (
+                        $Astro{SunSet} ne '---' ? $Astro{SunSet} : chr(0x221E)
+                      )
+                  )
+                : '---'
+              )
+              . ' ('
+              . $Astro{SunHrsVisible}
+              . chr(0x202F) . 'h)'
+          )
           . $tdClose
           . $trClose;
 
@@ -2616,9 +2733,93 @@ sub Get($@) {
           . encode_utf8( $tt->{daytype} )
           . $thClose
           . $tdOpen
-          . encode_utf8( $Schedule{DayType} )
+          . encode_utf8(
+            $Schedule{DayTypeSym} . chr(0x00A0) . $Schedule{DayType} )
           . $tdClose
           . $trClose;
+
+        if ( grep( /^MoonRise|MoonSet|MoonPhaseS$/, @schedsch ) ) {
+            push @ret,
+                $trOpenOdd
+              . $thOpen
+              . encode_utf8( $astrott->{moon} )
+              . $thClose
+              . $tdOpen
+              . encode_utf8(
+                    $Schedule{MoonPhaseSym}
+                  . chr(0x00A0)
+                  . (
+                    grep( /^MoonPhaseS$/, @schedsch )
+                    ? $Astro{MoonPhaseS} . ' | '
+                    : ''
+                  )
+                  . (
+                    $Astro{MoonRise} ne '---' || $Astro{MoonSet} ne '---'
+                    ? (
+                        (
+                              $Astro{MoonRise} ne '---'
+                            ? $Astro{MoonRise}
+                            : chr(0x267E)
+                        )
+                        . chr(0x2013)
+                          . (
+                              $Astro{MoonSet} ne '---'
+                            ? $Astro{MoonSet}
+                            : chr(0x267E)
+                          )
+                      )
+                    : '---'
+                  )
+                  . ' ('
+                  . $Astro{MoonHrsVisible}
+                  . chr(0x202F) . 'h)'
+              )
+              . $tdClose
+              . $trClose;
+        }
+
+        if ( grep( /^SunSign|MoonSign$/, @schedsch ) ) {
+            push @ret,
+                $trOpenOdd
+              . $thOpen
+              . encode_utf8( $astrott->{sign} )
+              . $thClose
+              . $tdOpen
+              . encode_utf8(
+                (
+                    grep( /^SunSign$/, @schedsch )
+                    ? (
+                        grep( /^MoonSign$/, @schedsch )
+                        ? $astrott->{sun} . ':' . chr(0x00A0)
+                        : ''
+                      )
+                      . $Schedule{SunSignSym}
+                      . ( grep( /^MoonSign$/, @schedsch ) ? '' : chr(0x00A0) )
+                      . $Astro{SunSign}
+                    : ''
+                )
+                . (
+                    grep( /^SunSign$/, @schedsch )
+                      && grep( /^MoonSign$/, @schedsch )
+                    ? $space . $space . $space . $space
+                    : ''
+                  )
+                  . (
+                    grep( /^MoonSign$/, @schedsch )
+                    ? (
+                        grep( /^SunSign$/, @schedsch )
+                        ? $astrott->{moon} . ':' . chr(0x00A0)
+                        : ''
+                      )
+                      . $Schedule{MoonSignSym}
+                      . ( grep( /^SunSign$/, @schedsch ) ? '' : chr(0x00A0) )
+                      . $Astro{MoonSign}
+                    : ''
+                  )
+              )
+              . $tdClose
+              . $trClose;
+        }
 
         if ( defined( $Schedule{'.SeasonSocial'} ) ) {
             push @ret, $trOpenOdd;
@@ -2626,13 +2827,29 @@ sub Get($@) {
 
             push @ret, $tdOpen;
             my $l;
+            my $i = 0;
             foreach my $e ( @{ $Schedule{'.SeasonSocial'} } ) {
                 $l .= $lb if ($l);
-                $l .= encode_utf8($e);
+                $l .=
+                  encode_utf8( @{ $Schedule{'.SeasonSocialSym'} }[$i] . $e );
+                $i++;
             }
             push @ret, $l . $tdClose;
 
             push @ret, $trClose;
+        }
+
+        if ( grep( /^ObsIsDST$/, @schedsch ) && $Astro{ObsIsDST} == 1. ) {
+            push @ret,
+                $trOpenOdd
+              . $thOpen
+              . encode_utf8( $astrott->{dst} )
+              . $thClose
+              . $tdOpen
+              . encode_utf8(
+                $Schedule{DayTypeSym} . chr(0x00A0) . $Schedule{DayType} )
+              . $tdClose
+              . $trClose;
         }
 
         push @ret,
@@ -2642,9 +2859,33 @@ sub Get($@) {
           . $thClose
           . $tdOpen
           . encode_utf8(
-            defined( $Schedule{SeasonPheno} )
-            ? $Schedule{SeasonPheno}
-            : $Astro{ObsSeason}
+            (
+                grep( /^SeasonPheno$/, @schedsch )
+                  && defined( $Schedule{SeasonPheno} )
+                ? $Schedule{SeasonPhenoSym}
+                  . chr(0x00A0)
+                  . $Schedule{SeasonPheno}
+                : (
+                    grep( /^SeasonMeteo$/, @schedsch )
+                      && defined( $Schedule{SeasonMeteo} )
+                    ? $Schedule{SeasonMeteoSym}
+                      . chr(0x00A0)
+                      . $Schedule{SeasonMeteo}
+                    : $Schedule{ObsSeasonSym} . chr(0x00A0) . $Astro{ObsSeason}
+                )
+            )
+            . (
+                grep( /^ObsIsDST$/, @schedsch )
+                  && $Astro{ObsIsDST} == 1.
+                ? $space
+                  . $space
+                  . $space
+                  . $space
+                  . chr(0x1F552)
+                  . chr(0x00A0)
+                  . $astrott->{dst}
+                : ''
+            )
           )
           . $tdClose
           . $trClose;
@@ -2794,6 +3035,8 @@ sub Get($@) {
         push @ret, $blockClose;
         return $header . join( "\n", @ret ) . $footer;
     }
+
+    # get/?
     else {
         return "$name with unknown argument $aref->[0], choose one of "
           . join( " ",
@@ -3534,7 +3777,8 @@ sub Compute($;$$) {
     }
 
     # social seasons
-    $S->{SeasonSocial} = '---';
+    $S->{SeasonSocial}    = '---';
+    $S->{SeasonSocialSym} = chr(0x27B0);
     unless ( grep ( /^none$/, @socialSeasons ) ) {
         foreach my $season (@socialSeasons) {
             my $r = $season;
@@ -3544,9 +3788,15 @@ sub Compute($;$$) {
               if ( $season eq 'CarnivalLong'
                 || $season eq 'Fasching'
                 || $season eq 'FaschingLong' );
-            $r = 'Easter'    if ( $season eq 'EasterTraditional' );
-            $r = 'Advent'    if ( $season eq 'AdventEarly' );
-            $r = 'Christmas' if ( $season eq 'ChristmasLong' );
+            $r = 'Easter'
+              if ( $season eq 'EasterTraditional'
+                && !grep ( /^Easter$/, @socialSeasons ) );
+            $r = 'Advent'
+              if ( $season eq 'AdventEarly'
+                && !grep ( /^Advent$/, @socialSeasons ) );
+            $r = 'Christmas'
+              if ( $season eq 'ChristmasLong'
+                && !grep ( /^Christmas$/, @socialSeasons ) );
 
             $S->{ 'SeasonSocial' . $r } = 0
               unless ( defined( $S->{ 'SeasonSocial' . $r } ) );
@@ -3556,15 +3806,22 @@ sub Compute($;$$) {
             use strict "refs";
             if ( $ret =~ /^([^0][^:]+)(?:: (.+))?$/ ) {
                 $S->{ 'SeasonSocial' . $r } = 1;
-                push @{ $S->{'.SeasonSocial'} }, $1
-                  unless ( defined( $S->{'.SeasonSocial'} )
-                    && grep( /^$1$/, @{ $S->{'.SeasonSocial'} } ) );
+                unless ( defined( $S->{'.SeasonSocial'} )
+                    && grep( /^$1$/, @{ $S->{'.SeasonSocial'} } ) )
+                {
+                    push @{ $S->{'.SeasonSocial'} }, $1;
+                    push @{ $S->{'.SeasonSocialSym'} },
+                      $seasonssocialicon{$season};
+                }
                 AddToSchedule( $S, '*', $2 ) if ( defined($2) );
             }
         }
-        $S->{SeasonSocial} = join( ', ', @{ $S->{'.SeasonSocial'} } )
-          if ( defined( $S->{'.SeasonSocial'} )
-            && int( @{ $S->{'.SeasonSocial'} } ) > 0. );
+        if ( defined( $S->{'.SeasonSocial'} )
+            && int( @{ $S->{'.SeasonSocial'} } ) > 0. )
+        {
+            $S->{SeasonSocial}    = join( ', ', @{ $S->{'.SeasonSocial'} } );
+            $S->{SeasonSocialSym} = join( '',   @{ $S->{'.SeasonSocialSym'} } );
+        }
     }
 
     $S->{DayTypeN} = 0;
@@ -3716,8 +3973,9 @@ sub Compute($;$$) {
         }
     }
 
-    $S->{DayType}  = $tt->{ $daytypes[ $S->{DayTypeN} ] }[0];
-    $S->{DayTypeS} = $tt->{ $daytypes[ $S->{DayTypeN} ] }[1];
+    $S->{DayType}    = $tt->{ $daytypes[ $S->{DayTypeN} ][0] }[0];
+    $S->{DayTypeS}   = $tt->{ $daytypes[ $S->{DayTypeN} ][0] }[1];
+    $S->{DayTypeSym} = $daytypes[ $S->{DayTypeN} ][1];
 
     # add InformativeDevices to schedule
     my $informativeDevs = AttrVal( $name, "InformativeDevices", "" );
@@ -3793,6 +4051,8 @@ sub Compute($;$$) {
           UConv::direction2compasspoint( $A->{SunAz}, 1, $lang );
         $S->{SunCompass} =
           UConv::direction2compasspoint( $A->{SunAz}, 2, $lang );
+        $S->{SunCompassSym} =
+          UConv::direction2compasspoint( $A->{SunAz}, 3, $lang );
     }
     else {
         $S->{SunCompassI} = '---';
@@ -3806,6 +4066,8 @@ sub Compute($;$$) {
           UConv::direction2compasspoint( $A->{MoonAz}, 1, $lang );
         $S->{MoonCompass} =
           UConv::direction2compasspoint( $A->{MoonAz}, 2, $lang );
+        $S->{MoonCompassSym} =
+          UConv::direction2compasspoint( $A->{MoonAz}, 3, $lang );
     }
     else {
         $S->{MoonCompassI} = '---';
@@ -4090,6 +4352,12 @@ sub Compute($;$$) {
         $S->{Daytime}  = "---";
     }
 
+    # Extend Astro data with symbols
+    $S->{ObsSeasonSym} = $seasonsicon[ $A->{ObsSeasonN} ];
+    $S->{MoonPhaseSym} = $phasesicon[ $A->{MoonPhaseI} ];
+    $S->{MoonSignSym}  = $zodiacicon[ $A->{MoonSignN} ];
+    $S->{SunSignSym}   = $zodiacicon[ $A->{SunSignN} ];
+
     # check meteorological season
     for ( my $i = 0 ; $i < 4 ; $i++ ) {
         my $key = $FHEM::Astro::seasons{'N'}[$i];
@@ -4107,8 +4375,9 @@ sub Compute($;$$) {
           )
         {
             my $k = $FHEM::Astro::seasons{ $A->{ObsLat} < 0 ? 'S' : 'N' }[$i];
-            $S->{SeasonMeteo}  = $astrott->{$k};
-            $S->{SeasonMeteoN} = $i;
+            $S->{SeasonMeteo}    = $astrott->{$k};
+            $S->{SeasonMeteoN}   = $i;
+            $S->{SeasonMeteoSym} = $seasonsicon[$i];
             last;
         }
     }
@@ -4209,17 +4478,14 @@ sub Compute($;$$) {
                 }
             }
         }
-        our @seasonsp = (
-            "winter",      "Earlyspring", "firstspring", "fullspring",
-            "earlysummer", "midsummer",   "latesummer",  "Earlyfall",
-            "fullfall",    "latefall"
-        );
 
         if ( $pheno == 0. ) {
-            $S->{SeasonPheno} = $astrott->{ $seasonsp[$pheno] };
+            $S->{SeasonPheno}    = $astrott->{ $seasonsp[0][0] };
+            $S->{SeasonPhenoSym} = $seasonsp[0][1];
         }
         else {
-            $S->{SeasonPheno} = $tt->{ $seasonsp[$pheno] };
+            $S->{SeasonPheno}    = $tt->{ $seasonsp[$pheno][0] };
+            $S->{SeasonPhenoSym} = $seasonsp[$pheno][1];
         }
         $S->{SeasonPhenoN} = $pheno;
     }
@@ -4322,6 +4588,12 @@ sub Compute($;$$) {
         AddToSchedule( $S, '*', "SeasonMeteo " . $S->{SeasonMeteo} )
           if ( grep ( /^SeasonMeteo$/, @schedsch ) );
     }
+
+#FIXME
+# for change from Summer to Fall and Winter to Spring
+#  --> empty values?
+# 2019.07.01 15:14:43.410 1: PERL WARNING: Use of uninitialized value in concatenation (.) or string at ./FHEM/95_DaySchedule.pm line 4490.
+# 2019.07.01 15:14:50.712 1: PERL WARNING: Use of uninitialized value in concatenation (.) or string at ./FHEM/95_DaySchedule.pm line 4503.
 
     #  Phenological season is going to change tomorrow
     if (   ref($St)
@@ -4551,56 +4823,6 @@ sub Compute($;$$) {
     return $A, $S
       if ($dayOffset);
     return (undef);
-}
-
-# This is based on code from fhem.pl / IsWe()
-#  as it is not allowing to request for a specific date
-sub IsWe(;$$) {
-    my ( $when, $wday ) = @_;
-
-    if ( $when && $when =~ m/^(?:(\d{4})-(\d{2})-(\d{2}))$/ ) {
-        $wday =
-          ( localtime( mktime( 1, 1, 1, $3, $2 - 1, $1 - 1900., 0, 0, -1 ) ) )
-          [6];
-    }
-    elsif ( !$when || $when !~ m/^(yesterday|tomorrow|\d{4}-\d{2}-\d{2})$/ ) {
-        $when = "today";
-    }
-    $wday = ( localtime( gettimeofday() ) )[6] if ( !defined($wday) );
-
-    my ( $we, $wf );
-    my $h2wedev = AttrVal( "global", "holiday2we", "" );
-    if ( $h2wedev ne '' ) {
-        foreach my $h2we ( split( ",", $h2wedev ) ) {
-            my $b =
-              IsDevice( $h2we, 'holiday' )
-              ? ::holiday_refresh( $h2we, $when )
-              : 0;
-            if ( $b && $b ne "none" ) {
-                return 0 if ( $h2we eq "noWeekEnd" );
-                $we = 1 if ( $b && $b ne "none" );
-            }
-            $wf = 1 if ( $h2we eq "weekEnd" );
-        }
-    }
-    else {
-        $when = 'today' if ( $when =~ m/^(\d{4}-\d{2}-\d{2})$/ );
-    }
-
-    if ( !$wf && !$we ) {
-        $we = (
-            $when eq "yesterday"
-            ? ( $wday == 0 || $wday == 1 )
-            : (
-                $when eq "today"
-                ? ( $wday == 6 || $wday == 0 )
-
-                  # tomorrow
-                : ( $wday == 5 || $wday == 6 )
-            )
-        );
-    }
-    return $we ? 1 : 0;
 }
 
 # This is based on code from 95_holiday.pm / holiday_refresh()
