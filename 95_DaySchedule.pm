@@ -73,7 +73,7 @@ my %attrs = (
 "multiple-strict,none,MoonPhaseS,MoonRise,MoonSet,MoonSign,MoonTransit,ObsDate,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,DaySeasonalHr,Daytime,SunRise,SunSet,SunSign,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
     "InformativeDays" =>
 "multiple-strict,none,ValentinesDay,WalpurgisNight,AshWednesday,MothersDay,FathersDay,HarvestFestival,MartinSingEv,Martinmas,RemembranceDay,LastSundayBeforeAdvent,StNicholasDay,BiblicalMagi,InternationalWomensDay,StPatricksDay,LaborDay,LiberationDay,Ascension,Pentecost,CorpusChristi,AssumptionDay,WorldChildrensDay,GermanUnificationDay,ReformationDay,AllSaintsDay,AllSoulsDay,DayOfPrayerandRepentance",
-    "SocialSeasons" =>
+    "AnnualFestivities" =>
 "multiple-strict,none,Carnival,CarnivalLong,Fasching,FaschingLong,StrongBeerFestival,HolyWeek,Easter,EasterTraditional,Lenten,Oktoberfest,Halloween,Advent,AdventEarly,TurnOfTheYear,Christmas,ChristmasLong",
     "SeasonalHrs"     => undef,
     "timezone"        => undef,
@@ -101,7 +101,7 @@ our %transtable = (
         "dayevents"    => "Events during the day",
         "teasernext"   => "Teaser for next day",
         "daylight"     => "Daylight",
-        "daytype"      => "Day Type",
+        "daytype"      => "Day type",
         "description"  => "Description",
 
         #
@@ -151,12 +151,13 @@ our %transtable = (
         "week"      => "week",
         "remaining" => "remaining",
         "weekend"   => [ "Weekend", "W/E" ],
+        "timeoff"   => [ "Time off work", "Off" ],
         "holiday"   => [ "Holiday", "Hol" ],
         "vacation"  => [ "Vacation", "Vac" ],
         "workday"   => [ "Workday", "WD" ],
 
         #
-        "season"          => "Season",
+        "season"          => "Annual festivity",
         "seasonoftheyear" => "Season of the year",
         "metseason"       => "Meteorological Season",
 
@@ -325,6 +326,7 @@ our %transtable = (
         #
         "week"      => "Woche",
         "remaining" => "verbleibend",
+        "timeoff"   => [ "Freizeit", "AF" ],
         "weekend"   => [ "Wochenende", "WE" ],
         "holiday"   => [ "Feiertag", "FT" ],
         "vacation"  => [ "Urlaubstag", "UL" ],
@@ -499,13 +501,14 @@ our %transtable = (
         #
         "week"      => "Semana",
         "remaining" => "restantes",
+        "timeoff"   => [ "Ratos de ocio", "Oci" ],
         "weekend"   => [ "Fin de semana", "Fin" ],
         "holiday"   => [ "Día festivo", "Fes" ],
         "vacation"  => [ "Vacaciones", "Vac" ],
         "workday"   => [ "Trabajo", "Tra" ],
 
         #
-        "season"          => "Condimentar",
+        "season"          => "Fiesta anual",
         "seasonoftheyear" => "Temporada de año",
         "metseason"       => "Temporada Meteorológica",
 
@@ -674,13 +677,14 @@ our %transtable = (
         #
         "week"      => "Semaine",
         "remaining" => "restant",
+        "timeoff"   => [ "Temps libre", "Lib" ],
         "weekend"   => [ "Fin de semaine", "Fin" ],
         "holiday"   => [ "Férié", "Fér" ],
         "vacation"  => [ "Vacances", "Vac" ],
         "workday"   => [ "Ouvrable", "Ouv" ],
 
         #
-        "season"          => "Assaisonner",
+        "season"          => "Fête annuelle",
         "seasonoftheyear" => "Saison de l'année",
         "metseason"       => "Saison Météorologique",
 
@@ -850,13 +854,14 @@ our %transtable = (
         #
         "week"      => "Settimana",
         "remaining" => "rimanente",
+        "timeoff"   => [ "Tempo libero", "Lib" ],
         "weekend"   => [ "Fine settimana", "Fin" ],
         "holiday"   => [ "Vacanza", "Vac" ],
         "vacation"  => [ "Riposo", "Rip" ],
         "workday"   => [ "Lavorativo", "Lav" ],
 
         #
-        "season"          => "Periodo",
+        "season"          => "Festa annuale",
         "seasonoftheyear" => "Stagione dell'anno",
         "metseason"       => "Stagione Meteorologica",
 
@@ -1026,6 +1031,7 @@ our %transtable = (
         #
         "week"      => "Wee",
         "remaining" => "resterende",
+        "timeoff"   => [ "Niet-werktijd", "NW" ],
         "weekend"   => [ "Weekend", "We" ],
         "holiday"   => [ "Feestdag", "Fe" ],
         "vacation"  => [ "Snipperdag", "Sn" ],
@@ -1201,13 +1207,14 @@ our %transtable = (
         #
         "week"      => "Tydzień",
         "remaining" => "pozostały",
+        "timeoff"   => [ "Czas wolny", "WO" ],
         "weekend"   => [ "Weekend", "WE" ],
         "holiday"   => [ "Urlop", "UR" ],
         "vacation"  => [ "Wakacje", "WA" ],
         "workday"   => [ "Pracy", "PR" ],
 
         #
-        "season"          => "Sezon",
+        "season"          => "Roczne święto",
         "seasonoftheyear" => "Sezon roku",
         "metseason"       => "Sezon Meteorologiczny",
 
@@ -1489,10 +1496,10 @@ our %seasonppos = (
 );
 
 my @daytypes = (
-    [ 'workday',  chr(0x1F454) ],
-    [ 'vacation', chr(0x1F334) ],
-    [ 'weekend',  chr(0x1F4C6) ],
-    [ 'holiday',  chr(0x1F4C5) ]
+    [ 'workday',  chr(0x1F454), chr(0x1F3E2) ],
+    [ 'vacation', chr(0x1F334), chr(0x1F334) ],
+    [ 'weekend',  chr(0x1F4C6), chr(0x1F9D8) ],
+    [ 'holiday',  chr(0x1F4C5), chr(0x1F4C5) ]
 );
 
 # Run before package compilation
@@ -1605,7 +1612,7 @@ sub Define ($@) {
         $attr{$name}{recomputeAt} = 'NewDay,SeasonalHr';
         $attr{$name}{Schedule} =
 'MoonPhaseS,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,Daytime,SunRise,SunSet,SunSign,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning';
-        $attr{$name}{SocialSeasons} =
+        $attr{$name}{AnnualFestivities} =
 'Carnival,Easter,Oktoberfest,Halloween,Advent,TurnOfTheYear,Christmas';
         $attr{$name}{stateFormat} = 'Daytime';
     }
@@ -2435,10 +2442,10 @@ sub Get($@) {
                       . '">back to <span style="font-style:italic;">'
                       . AttrVal(
                         $name,
-                        'alias_' . uc($lang),
+                        'alias_' . uc( $lang ? $lang : 'EN' ),
                         AttrVal(
                             $name,
-                            'alias_' . lc($lang),
+                            'alias_' . lc( $lang ? $lang : 'EN' ),
                             AttrVal( $name, 'alias', $name )
                         )
                       )
@@ -2616,10 +2623,10 @@ sub Get($@) {
 
         my $aliasname = AttrVal(
             $name,
-            'alias_' . uc($lang),
+            'alias_' . uc( $lang ? $lang : 'EN' ),
             AttrVal(
                 $name,
-                'alias_' . lc($lang),
+                'alias_' . lc( $lang ? $lang : 'EN' ),
                 AttrVal( $name, 'alias', undef )
             )
         );
@@ -2639,15 +2646,32 @@ sub Get($@) {
             push @ret, $aliasname;
         }
 
-        push @ret,
-            $h3Open
-          . encode_utf8( $dschedule . $Schedule{DayDatetime} )
-          . $h3Close;
-
         ######## Overview Begin
 
         push @ret, $tOpen;
-        push @ret, $tCOpen . encode_utf8( $tt->{overview} ) . $tCClose;
+
+        if (
+            (
+                   !ref($h)
+                || !defined( $h->{dailyschedule} )
+                || $h->{dailyschedule} ne '0'
+            )
+            && defined( $Schedule{'.schedule'} )
+          )
+        {
+            push @ret,
+                $h3Open
+              . encode_utf8( $dschedule . $Schedule{DayDatetime} )
+              . $h3Close;
+
+            push @ret, $tCOpen . encode_utf8( $tt->{overview} ) . $tCClose;
+        }
+        else {
+            push @ret,
+                $tCOpen
+              . encode_utf8( $dschedule . $Schedule{DayDatetime} )
+              . $tCClose;
+        }
 
         push @ret, $tBOpen;
 
@@ -2681,7 +2705,7 @@ sub Get($@) {
             push @ret, $trClose;
         }
 
-        if ( $Schedule{DayDesc} ne '---' ) {
+        if ( $Schedule{DayDesc} ne $Schedule{DayType} ) {
             push @ret, $trOpenOdd;
             push @ret, $thOpen . encode_utf8( $tt->{description} ) . $thClose;
 
@@ -2806,11 +2830,8 @@ sub Get($@) {
                   )
                   . (
                     grep( /^MoonSign$/, @schedsch )
-                    ? (
-                        grep( /^SunSign$/, @schedsch )
-                        ? $astrott->{moon} . ':' . chr(0x00A0)
-                        : ''
-                      )
+                    ? $astrott->{moon} . ':'
+                      . chr(0x00A0)
                       . $Schedule{MoonSignSym}
                       . ( grep( /^SunSign$/, @schedsch ) ? '' : chr(0x00A0) )
                       . $Astro{MoonSign}
@@ -2821,17 +2842,19 @@ sub Get($@) {
               . $trClose;
         }
 
-        if ( defined( $Schedule{'.SeasonSocial'} ) ) {
+        if ( defined( $Schedule{'.AnnualFestivity'} ) ) {
             push @ret, $trOpenOdd;
             push @ret, $thOpen . encode_utf8( $tt->{season} ) . $thClose;
 
             push @ret, $tdOpen;
             my $l;
             my $i = 0;
-            foreach my $e ( @{ $Schedule{'.SeasonSocial'} } ) {
+            foreach my $e ( @{ $Schedule{'.AnnualFestivity'} } ) {
                 $l .= $lb if ($l);
                 $l .=
-                  encode_utf8( @{ $Schedule{'.SeasonSocialSym'} }[$i] . $e );
+                  encode_utf8( @{ $Schedule{'.AnnualFestivitySym'} }[$i]
+                      . chr(0x00A0)
+                      . $e );
                 $i++;
             }
             push @ret, $l . $tdClose;
@@ -2942,29 +2965,6 @@ sub Get($@) {
             push @ret, $tBClose . $tClose;
         }
 
-        # unless ( defined( $Schedule{'.SeasonSocial'} )
-        #     || defined( $Schedule{'.scheduleAllday'} )
-        #     || defined( $Schedule{'.scheduleDay'} )
-        #     || defined( $Schedule{'.schedule'} ) )
-        # {
-        #     push @ret, $tOpen;
-        #     push @ret, $tCOpen . encode_utf8( $tt->{dayschedule} ) . $tCClose;
-        #
-        #     push @ret, $tBOpen;
-        #
-        #     push @ret, $trOpen;
-        #     push @ret,
-        #         $tdOpen
-        #       . $lb
-        #       . encode_utf8( $tt->{noevents} )
-        #       . $lb
-        #       . $lb
-        #       . $tdClose;
-        #     push @ret, $trClose;
-        #
-        #     push @ret, $tBClose . $tClose;
-        # }
-
         # if ( defined( $Schedule{'.scheduleTom'} ) ) {
         #
         #     push @ret, $trOpen;
@@ -3007,7 +3007,7 @@ sub Get($@) {
         #         $linecount++;
         #     }
         #
-        #     if (   defined( $Schedule{'.SeasonSocial'} )
+        #     if (   defined( $Schedule{'.AnnualFestivity'} )
         #         || defined( $Schedule{'.schedule'} )
         #         || defined( $Schedule{'.scheduleDay'} )
         #         || defined( $Schedule{'.scheduleAllday'} ) )
@@ -3448,20 +3448,20 @@ sub Compute($;$$) {
         shift @infoDays;
         shift @infoDays;
     }
-    my @socialSeasons =
+    my @annualFestivities =
       split(
         ',',
         (
-            defined( $params->{"SocialSeasons"} )
-            ? $params->{"SocialSeasons"}
-            : AttrVal( $name, "SocialSeasons", $attrs{SocialSeasons} )
+            defined( $params->{"AnnualFestivities"} )
+            ? $params->{"AnnualFestivities"}
+            : AttrVal( $name, "AnnualFestivities", $attrs{AnnualFestivities} )
         )
       );
-    unless ( defined( $params->{"SocialSeasons"} )
-        || AttrVal( $name, "SocialSeasons", 0 ) )
+    unless ( defined( $params->{"AnnualFestivities"} )
+        || AttrVal( $name, "AnnualFestivities", 0 ) )
     {
-        shift @socialSeasons;
-        shift @socialSeasons;
+        shift @annualFestivities;
+        shift @annualFestivities;
     }
 
     # prepare Astro attributes
@@ -3764,10 +3764,10 @@ sub Compute($;$$) {
     }
 
     # social seasons
-    $S->{SeasonSocial}    = '---';
-    $S->{SeasonSocialSym} = chr(0x27B0);
-    unless ( grep ( /^none$/, @socialSeasons ) ) {
-        foreach my $season (@socialSeasons) {
+    $S->{AnnualFestivity}    = '---';
+    $S->{AnnualFestivitySym} = chr(0x27B0);
+    unless ( grep ( /^none$/, @annualFestivities ) ) {
+        foreach my $season (@annualFestivities) {
             my $r = $season;
 
             # alias names
@@ -3777,37 +3777,38 @@ sub Compute($;$$) {
                 || $season eq 'FaschingLong' );
             $r = 'Easter'
               if ( $season eq 'EasterTraditional'
-                && !grep ( /^Easter$/, @socialSeasons ) );
+                && !grep ( /^Easter$/, @annualFestivities ) );
             $r = 'Advent'
               if ( $season eq 'AdventEarly'
-                && !grep ( /^Advent$/, @socialSeasons ) );
+                && !grep ( /^Advent$/, @annualFestivities ) );
             $r = 'Christmas'
               if ( $season eq 'ChristmasLong'
-                && !grep ( /^Christmas$/, @socialSeasons ) );
+                && !grep ( /^Christmas$/, @annualFestivities ) );
 
-            $S->{ 'SeasonSocial' . $r } = 0
-              unless ( defined( $S->{ 'SeasonSocial' . $r } ) );
+            $S->{ 'AnnualFestivity' . $r } = 0
+              unless ( defined( $S->{ 'AnnualFestivity' . $r } ) );
             no strict "refs";
             my $ret =
               &{ 'IsSeason' . $season }( $D->{day}, $D->{month}, $D->{year} );
             use strict "refs";
             if ( $ret =~ /^([^0][^:]+)(?:: (.+))?$/ ) {
-                $S->{ 'SeasonSocial' . $r } = 1;
-                unless ( defined( $S->{'.SeasonSocial'} )
-                    && grep( /^$1$/, @{ $S->{'.SeasonSocial'} } ) )
+                $S->{ 'AnnualFestivity' . $r } = 1;
+                unless ( defined( $S->{'.AnnualFestivity'} )
+                    && grep( /^$1$/, @{ $S->{'.AnnualFestivity'} } ) )
                 {
-                    push @{ $S->{'.SeasonSocial'} }, $1;
-                    push @{ $S->{'.SeasonSocialSym'} },
+                    push @{ $S->{'.AnnualFestivity'} }, $1;
+                    push @{ $S->{'.AnnualFestivitySym'} },
                       $seasonssocialicon{$season};
                 }
                 AddToSchedule( $S, '*', $2 ) if ( defined($2) );
             }
         }
-        if ( defined( $S->{'.SeasonSocial'} )
-            && int( @{ $S->{'.SeasonSocial'} } ) > 0. )
+        if ( defined( $S->{'.AnnualFestivity'} )
+            && int( @{ $S->{'.AnnualFestivity'} } ) > 0. )
         {
-            $S->{SeasonSocial}    = join( ', ', @{ $S->{'.SeasonSocial'} } );
-            $S->{SeasonSocialSym} = join( '',   @{ $S->{'.SeasonSocialSym'} } );
+            $S->{AnnualFestivity} = join( ', ', @{ $S->{'.AnnualFestivity'} } );
+            $S->{AnnualFestivitySym} =
+              join( '', @{ $S->{'.AnnualFestivitySym'} } );
         }
     }
 
@@ -3898,11 +3899,14 @@ sub Compute($;$$) {
         if ( IsDevice( $dev, "holiday" ) ) {
             my $event = ::holiday_refresh( $dev, $date );
             if ( $event eq "none" ) {
-                $S->{DayTypeN} = 2;
+                $S->{DayTypeN} = 2 unless ( $S->{DayTypeN} == 3. );
             }
             else {
-                foreach my $e ( split( ',', $event ) ) {
-                    AddToSchedule( $S, '*', decode_utf8($e) );
+                $S->{DayTypeN} = 0;
+                unless ( $event =~ /workday/i ) {
+                    foreach my $e ( split( ',', $event ) ) {
+                        AddToSchedule( $S, '*', decode_utf8($e) );
+                    }
                 }
             }
         }
@@ -3921,12 +3925,19 @@ sub Compute($;$$) {
                     $event = substr( $event, 17 );
                     if ( $edate eq $dateISO ) {
                         $found = 1;
-                        foreach my $e ( split( ',', $event ) ) {
-                            AddToSchedule( $S, '*', decode_utf8($e) );
+                        unless ( $event =~ /workday/i ) {
+                            foreach my $e ( split( ',', $event ) ) {
+                                AddToSchedule( $S, '*', decode_utf8($e) );
+                            }
                         }
                     }
                 }
-                $S->{DayTypeN} = 2 unless ($found);
+                if ($found) {
+                    $S->{DayTypeN} = 0;
+                }
+                else {
+                    $S->{DayTypeN} = 2 unless ( $S->{DayTypeN} == 3. );
+                }
             }
         }
     }
@@ -3936,8 +3947,11 @@ sub Compute($;$$) {
     foreach my $dev ( split( ',', $weekendDevs ) ) {
         if ( IsDevice( $dev, "holiday" ) ) {
             my $event = ::holiday_refresh( $dev, $date );
-            if ( $event ne "none" ) {
-                $S->{DayTypeN} = 2;
+            if ( $event eq "none" ) {
+                $S->{DayTypeN} = 0;
+            }
+            else {
+                $S->{DayTypeN} = 2 unless ( $S->{DayTypeN} == 3. );
             }
         }
         elsif ( IsDevice( $dev, "Calendar" ) ) {
@@ -3953,16 +3967,36 @@ sub Compute($;$$) {
                     my $edate = substr( $event, 0, 10 );
                     $event = substr( $event, 17 );
                     if ( $edate eq $dateISO ) {
-                        $S->{DayTypeN} = 2;
+                        $S->{DayTypeN} = 2 unless ( $S->{DayTypeN} == 3. );
+                    }
+                    else {
+                        $S->{DayTypeN} = 0;
                     }
                 }
             }
         }
     }
 
-    $S->{DayType}    = $tt->{ $daytypes[ $S->{DayTypeN} ][0] }[0];
-    $S->{DayTypeS}   = $tt->{ $daytypes[ $S->{DayTypeN} ][0] }[1];
-    $S->{DayTypeSym} = $daytypes[ $S->{DayTypeN} ][1];
+    my $daytype = $daytypes[ $S->{DayTypeN} ][0];
+    if ( $workdayDevs eq '' && $weekendDevs eq '' ) {
+        $S->{DayTypeSym} = $daytypes[ $S->{DayTypeN} ][1];
+    }
+    else {
+        if ( $daytype eq 'weekend' && $D->{wday} != 0. && $D->{wday} != 6. ) {
+            $daytype = 'timeoff';
+            $S->{DayTypeSym} = $daytypes[ $S->{DayTypeN} ][2];
+        }
+        elsif ( $daytype eq 'weekend'
+            && ( $D->{wday} == 0. || $D->{wday} == 6. ) )
+        {
+            $S->{DayTypeSym} = $daytypes[ $S->{DayTypeN} ][1];
+        }
+        else {
+            $S->{DayTypeSym} = $daytypes[ $S->{DayTypeN} ][2];
+        }
+    }
+    $S->{DayType}  = $tt->{$daytype}[0];
+    $S->{DayTypeS} = $tt->{$daytype}[1];
 
     # add InformativeDevices to schedule
     my $informativeDevs = AttrVal( $name, "InformativeDevices", "" );
@@ -4801,7 +4835,7 @@ sub Compute($;$$) {
         $S->{DayDesc} = $l;
     }
     else {
-        $S->{DayDesc} = '---';
+        $S->{DayDesc} = $S->{DayType};
     }
 
     delete local $ENV{TZ};
@@ -5477,8 +5511,8 @@ sub AddToSchedule {
           unless (
             grep( m/^$n$/i, @{ $h->{".scheduleAllday"} } )
             || (   $n ne 'Halloween'
-                && defined( $h->{'.SeasonSocial'} )
-                && grep( m/^$n$/i, @{ $h->{'.SeasonSocial'} } ) )
+                && defined( $h->{'.AnnualFestivity'} )
+                && grep( m/^$n$/i, @{ $h->{'.AnnualFestivity'} } ) )
           );
     }
     elsif ( $e eq '?' ) {
