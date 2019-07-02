@@ -30,7 +30,7 @@ use FHEM::Meta;
 use GPUtils qw(GP_Import GP_Export);
 use HttpUtils;
 use Time::HiRes qw(gettimeofday);
-use Time::Local qw(timelocal_modern timegm_modern);
+use Time::Local;
 use UConv;
 use Data::Dumper;
 
@@ -2168,7 +2168,7 @@ sub Get($@) {
               if ( defined($9) && $9 > 59. );
 
             SetTime(
-                timelocal_modern(
+                _timelocal_modern(
                     defined($3) ? $3 : ( defined($9) ? $9 : 0 ),
                     defined($2) ? $2 : ( defined($8) ? $8 : 0 ),
                     defined($1) ? $1 : ( defined($7) ? $7 : 12 ),
@@ -3217,6 +3217,36 @@ sub _LoadPackagesWrapper {
     $json->allow_nonref;
     $json->shrink;
     $json->utf8;
+
+    # only available for Perl versions after 2018-06-09
+    eval {
+        import Time::Local 'timelocal_modern';
+        1;
+    };
+    eval {
+        import Time::Local 'timegm_modern';
+        1;
+    };
+}
+
+# wrapper to Perl versions before 2018-06-09
+sub _timelocal_modern {
+    return timelocal_modern(@_)
+      if ( exists &{'timelocal_modern'} );
+
+    my @r = @_;
+    $r[5] -= 1900;
+    return timelocal(@r);
+}
+
+# wrapper to Perl versions before 2018-06-09
+sub _timegm_modern {
+    return timegm_modern(@_)
+      if ( exists &{'timegm_modern'} );
+
+    my @r = @_;
+    $r[5] -= 1900;
+    return timegm(@r);
 }
 
 sub SetTime (;$$$$) {
@@ -3243,9 +3273,9 @@ sub SetTime (;$$$$) {
       localtime($time);
     $year += 1900;
 
-    my $daybegin = timegm_modern( 0,  0,  0,  $day, $month, $year );
-    my $daymid   = timegm_modern( 0,  0,  12, $day, $month, $year );
-    my $dayend   = timegm_modern( 59, 59, 23, $day, $month, $year );
+    my $daybegin = _timegm_modern( 0,  0,  0,  $day, $month, $year );
+    my $daymid   = _timegm_modern( 0,  0,  12, $day, $month, $year );
+    my $dayend   = _timegm_modern( 59, 59, 23, $day, $month, $year );
     my $isdstultimo = ( localtime($dayend) )[8];
     $month += 1;
     $D->{timestamp}   = $time;
@@ -4990,9 +5020,9 @@ sub IsSeasonAdventEarly($$;$$$) {
     $early = 1 unless ( defined($early) );
 
     my $now   = gettimeofday();
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+    my $today = _timegm_modern( 0, 0, 0, $d, $m - 1,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
-    my $christmas = timegm_modern( 0, 0, 0, 25, 11,
+    my $christmas = _timegm_modern( 0, 0, 0, 25, 11,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my $christmaseve = $christmas - 86400.;
     my ( $secC, $minC, $hourC, $dayC, $monthC, $yearC, $wdayC, $ydayC, $isdstC )
@@ -5002,7 +5032,7 @@ sub IsSeasonAdventEarly($$;$$$) {
     my $adv2 = $adv3 - 86400. * 7;
     my $adv1 = $adv2 - 86400. * 7;
 
-    my $advbeginearly = timegm_modern( 0, 0, 0, 27, 10,
+    my $advbeginearly = _timegm_modern( 0, 0, 0, 27, 10,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my $advbegin = $early ? $advbeginearly : $adv1;
 
@@ -5054,7 +5084,7 @@ sub IsSeasonCarnivalLong($$;$$$) {
     $long = 1 unless ( defined($long) );
 
     my $now   = gettimeofday();
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+    my $today = _timegm_modern( 0, 0, 0, $d, $m - 1,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
 
     my $easterSun     = GetWesternEaster($y);
@@ -5064,11 +5094,11 @@ sub IsSeasonCarnivalLong($$;$$$) {
     my $carnival4     = $carnival3 + 86400.;
     my $carnival5     = $carnival4 + 86400.;
     my $carnivalEnd   = $carnival5 + 86400.;
-    my $carnivalBegin = timegm_modern( 0, 0, 0, 11, 10,
+    my $carnivalBegin = _timegm_modern( 0, 0, 0, 11, 10,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
-    my $newyearseve = timegm_modern( 0, 0, 0, 31, 11,
+    my $newyearseve = _timegm_modern( 0, 0, 0, 31, 11,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
-    my $newyear = timegm_modern( 0, 0, 0, 1, 0,
+    my $newyear = _timegm_modern( 0, 0, 0, 1, 0,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
 
     if ($long) {
@@ -5131,14 +5161,14 @@ sub IsSeasonChristmasLong($$;$$$) {
     $long = 1 unless ( defined($long) );
 
     my $now   = gettimeofday();
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+    my $today = _timegm_modern( 0, 0, 0, $d, $m - 1,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
-    my $christmaseve = timegm_modern( 0, 0, 0, 24, 11,
+    my $christmaseve = _timegm_modern( 0, 0, 0, 24, 11,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my $christmas1  = $christmaseve + 86400.;
     my $christmas2  = $christmas1 + 86400.;
     my $newyearseve = $christmas2 + 86400. * 5.;
-    my $newyear     = timegm_modern( 0, 0, 0, 1, 0,
+    my $newyear     = _timegm_modern( 0, 0, 0, 1, 0,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my $christmasend = $newyear + 86400. * 5.;
 
@@ -5184,7 +5214,7 @@ sub IsSeasonEasterTraditional($$;$$) {
     my ( $d, $m, $y, $lang, $traditional ) = @_;
     $traditional = 1 unless ( defined($traditional) );
 
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+    my $today = _timegm_modern( 0, 0, 0, $d, $m - 1,
         ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
 
     my $easterSun       = GetWesternEaster($y);
@@ -5255,7 +5285,7 @@ sub IsSeasonHalloween($$;$$) {
 sub IsSeasonHolyWeek($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+    my $today = _timegm_modern( 0, 0, 0, $d, $m - 1,
         ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
 
     my $easterSun = GetWesternEaster($y);
@@ -5307,7 +5337,7 @@ sub IsSeasonRamadan($$;$$) {
 sub IsSeasonLent($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+    my $today = _timegm_modern( 0, 0, 0, $d, $m - 1,
         ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
 
     my $easterSun = GetWesternEaster($y);
@@ -5383,10 +5413,10 @@ sub IsSeasonStrongBeerFestival($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $now   = gettimeofday();
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1.,
+    my $today = _timegm_modern( 0, 0, 0, $d, $m - 1.,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
 
-    my $josef = timegm_modern( 0, 0, 0, 19, 2,
+    my $josef = _timegm_modern( 0, 0, 0, 19, 2,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my ( $secJ, $minJ, $hourJ, $dayJ, $monthJ, $yearJ, $wdayJ, $ydayJ, $isdstJ )
       = localtime($josef);
@@ -5417,12 +5447,12 @@ sub IsSeasonTurnOfTheYear($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $now   = gettimeofday();
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
+    my $today = _timegm_modern( 0, 0, 0, $d, $m - 1,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
-    my $turnbegin = timegm_modern( 0, 0, 0, 27, 11,
+    my $turnbegin = _timegm_modern( 0, 0, 0, 27, 11,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my $newyearseve = $turnbegin + 86400. * 4.;
-    my $newyear     = timegm_modern( 0, 0, 0, 1, 0,
+    my $newyear     = _timegm_modern( 0, 0, 0, 1, 0,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my $turnend = $newyear + 86400. * 5.;
 
@@ -5454,18 +5484,18 @@ sub IsSeasonOktoberfest($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $now   = gettimeofday();
-    my $today = timegm_modern( 0, 0, 0, $d, $m - 1.,
+    my $today = _timegm_modern( 0, 0, 0, $d, $m - 1.,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
 
-    my $midsept = timegm_modern( 0, 0, 0, 15, 8,
+    my $midsept = _timegm_modern( 0, 0, 0, 15, 8,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my ( $secS, $minS, $hourS, $dayS, $monthS, $yearS, $wdayS, $ydayS, $isdstS )
       = localtime($midsept);
-    my $oct1st = timegm_modern( 0, 0, 0, 1, 9,
+    my $oct1st = _timegm_modern( 0, 0, 0, 1, 9,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
     my ( $secO, $minO, $hourO, $dayO, $monthO, $yearO, $wdayO, $ydayO, $isdstO )
       = localtime($oct1st);
-    my $oct3rd = timegm_modern( 0, 0, 0, 3, 9,
+    my $oct3rd = _timegm_modern( 0, 0, 0, 3, 9,
         ( defined($y) ? $y : ( localtime($now) )[5] + 1900. ) );
 
     my $oktoberfestBegin =
@@ -5568,7 +5598,7 @@ sub GetWesternEaster(;$) {
 
     return wantarray
       ? ( $month, $day )
-      : timegm_modern( 0, 0, 0, $day, $month - 1, $year );
+      : _timegm_modern( 0, 0, 0, $day, $month - 1, $year );
 }
 
 sub Update($@) {
@@ -5629,7 +5659,7 @@ sub Update($@) {
     {
         if ( $comp eq 'NewDay' ) {
             push @next,
-              timelocal_modern(
+              _timelocal_modern(
                 0, 0, 0,
                 ( localtime( $now + 86400. ) )[ 3, 4 ],
                 ( localtime( $now + 86400. ) )[5] + 1900.
@@ -5642,7 +5672,7 @@ sub Update($@) {
         if ( defined( $Schedule{$k} )
             && $Schedule{$k} =~ /^\d+(?:\.\d+)?$/ )
         {
-            $t = timelocal_modern(
+            $t = _timelocal_modern(
                 0, 0, 0,
                 ( localtime($now) )[ 3, 4 ],
                 ( localtime($now) )[5] + 1900.
@@ -5651,7 +5681,7 @@ sub Update($@) {
             $t += 86400. if ( $t < $now );    # that is for tomorrow
         }
         elsif ( defined( $Astro{$k} ) && $Astro{$k} =~ /^\d+(?:\.\d+)?$/ ) {
-            $t = timelocal_modern(
+            $t = _timelocal_modern(
                 0, 0, 0,
                 ( localtime($now) )[ 3, 4 ],
                 ( localtime($now) )[5] + 1900.
