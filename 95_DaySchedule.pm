@@ -266,7 +266,7 @@ our %transtable = (
 
     DE => {
         "overview"     => "Überblick",
-        "dayschedule"  => "Tagesablaufplan",
+        "dayschedule"  => "Tagesablauf",
         "yesterday"    => "gestern",
         "today"        => "heute",
         "tomorrow"     => "morgen",
