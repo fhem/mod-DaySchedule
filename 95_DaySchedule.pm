@@ -73,7 +73,7 @@ my %attrs = (
 "multiple-strict,none,MoonPhaseS,MoonRise,MoonSet,MoonSign,MoonTransit,ObsDate,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,DaySeasonalHr,Daytime,SunRise,SunSet,SunSign,SunTransit,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning",
     "InformativeDays" =>
 "multiple-strict,none,ValentinesDay,WalpurgisNight,AshWednesday,MothersDay,FathersDay,HarvestFestival,MartinSingEv,Martinmas,RemembranceDay,LastSundayBeforeAdvent,StNicholasDay,BiblicalMagi,InternationalWomensDay,StPatricksDay,LaborDay,LiberationDay,Ascension,Pentecost,CorpusChristi,AssumptionDay,WorldChildrensDay,GermanUnificationDay,ReformationDay,AllSaintsDay,AllSoulsDay,DayOfPrayerandRepentance",
-    "AnnualFestivities" =>
+    "AnnualEvents" =>
 "multiple-strict,none,Carnival,CarnivalLong,Fasching,FaschingLong,StrongBeerFestival,HolyWeek,Easter,EasterTraditional,Lenten,Oktoberfest,Halloween,Advent,AdventEarly,TurnOfTheYear,Christmas,ChristmasLong",
     "SeasonalHrs"     => undef,
     "timezone"        => undef,
@@ -157,8 +157,8 @@ our %transtable = (
         "workday"   => [ "Workday", "WD" ],
 
         #
-        "season"          => "Annual festivity",
-        "seasonoftheyear" => "Season of the year",
+        "season"          => "Annual event",
+        "seasonoftheyear" => "Season",
         "metseason"       => "Meteorological Season",
 
         #
@@ -1612,7 +1612,7 @@ sub Define ($@) {
         $attr{$name}{recomputeAt} = 'NewDay,SeasonalHr';
         $attr{$name}{Schedule} =
 'MoonPhaseS,ObsIsDST,SeasonMeteo,SeasonPheno,ObsSeason,Daytime,SunRise,SunSet,SunSign,AstroTwilightEvening,AstroTwilightMorning,CivilTwilightEvening,CivilTwilightMorning,NauticTwilightEvening,NauticTwilightMorning,CustomTwilightEvening,CustomTwilightMorning';
-        $attr{$name}{AnnualFestivities} =
+        $attr{$name}{AnnualEvents} =
 'Carnival,Easter,Oktoberfest,Halloween,Advent,TurnOfTheYear,Christmas';
         $attr{$name}{stateFormat} = 'Daytime';
     }
@@ -2842,19 +2842,18 @@ sub Get($@) {
               . $trClose;
         }
 
-        if ( defined( $Schedule{'.AnnualFestivity'} ) ) {
+        if ( defined( $Schedule{'.AnnualEvent'} ) ) {
             push @ret, $trOpenOdd;
             push @ret, $thOpen . encode_utf8( $tt->{season} ) . $thClose;
 
             push @ret, $tdOpen;
             my $l;
             my $i = 0;
-            foreach my $e ( @{ $Schedule{'.AnnualFestivity'} } ) {
+            foreach my $e ( @{ $Schedule{'.AnnualEvent'} } ) {
                 $l .= $lb if ($l);
                 $l .=
-                  encode_utf8( @{ $Schedule{'.AnnualFestivitySym'} }[$i]
-                      . chr(0x00A0)
-                      . $e );
+                  encode_utf8(
+                    @{ $Schedule{'.AnnualEventSym'} }[$i] . chr(0x00A0) . $e );
                 $i++;
             }
             push @ret, $l . $tdClose;
@@ -3007,7 +3006,7 @@ sub Get($@) {
         #         $linecount++;
         #     }
         #
-        #     if (   defined( $Schedule{'.AnnualFestivity'} )
+        #     if (   defined( $Schedule{'.AnnualEvent'} )
         #         || defined( $Schedule{'.schedule'} )
         #         || defined( $Schedule{'.scheduleDay'} )
         #         || defined( $Schedule{'.scheduleAllday'} ) )
@@ -3448,20 +3447,20 @@ sub Compute($;$$) {
         shift @infoDays;
         shift @infoDays;
     }
-    my @annualFestivities =
+    my @annualEvents =
       split(
         ',',
         (
-            defined( $params->{"AnnualFestivities"} )
-            ? $params->{"AnnualFestivities"}
-            : AttrVal( $name, "AnnualFestivities", $attrs{AnnualFestivities} )
+            defined( $params->{"AnnualEvents"} )
+            ? $params->{"AnnualEvents"}
+            : AttrVal( $name, "AnnualEvents", $attrs{AnnualEvents} )
         )
       );
-    unless ( defined( $params->{"AnnualFestivities"} )
-        || AttrVal( $name, "AnnualFestivities", 0 ) )
+    unless ( defined( $params->{"AnnualEvents"} )
+        || AttrVal( $name, "AnnualEvents", 0 ) )
     {
-        shift @annualFestivities;
-        shift @annualFestivities;
+        shift @annualEvents;
+        shift @annualEvents;
     }
 
     # prepare Astro attributes
@@ -3764,10 +3763,10 @@ sub Compute($;$$) {
     }
 
     # social seasons
-    $S->{AnnualFestivity}    = '---';
-    $S->{AnnualFestivitySym} = chr(0x27B0);
-    unless ( grep ( /^none$/, @annualFestivities ) ) {
-        foreach my $season (@annualFestivities) {
+    $S->{AnnualEvent}    = '---';
+    $S->{AnnualEventSym} = chr(0x27B0);
+    unless ( grep ( /^none$/, @annualEvents ) ) {
+        foreach my $season (@annualEvents) {
             my $r = $season;
 
             # alias names
@@ -3777,38 +3776,38 @@ sub Compute($;$$) {
                 || $season eq 'FaschingLong' );
             $r = 'Easter'
               if ( $season eq 'EasterTraditional'
-                && !grep ( /^Easter$/, @annualFestivities ) );
+                && !grep ( /^Easter$/, @annualEvents ) );
             $r = 'Advent'
               if ( $season eq 'AdventEarly'
-                && !grep ( /^Advent$/, @annualFestivities ) );
+                && !grep ( /^Advent$/, @annualEvents ) );
             $r = 'Christmas'
               if ( $season eq 'ChristmasLong'
-                && !grep ( /^Christmas$/, @annualFestivities ) );
+                && !grep ( /^Christmas$/, @annualEvents ) );
 
-            $S->{ 'AnnualFestivity' . $r } = 0
-              unless ( defined( $S->{ 'AnnualFestivity' . $r } ) );
+            $S->{ 'AnnualEvent' . $r } = 0
+              unless ( defined( $S->{ 'AnnualEvent' . $r } ) );
             no strict "refs";
             my $ret =
               &{ 'IsSeason' . $season }( $D->{day}, $D->{month}, $D->{year} );
             use strict "refs";
             if ( $ret =~ /^([^0][^:]+)(?:: (.+))?$/ ) {
-                $S->{ 'AnnualFestivity' . $r } = 1;
-                unless ( defined( $S->{'.AnnualFestivity'} )
-                    && grep( /^$1$/, @{ $S->{'.AnnualFestivity'} } ) )
+                $S->{ 'AnnualEvent' . $r } = 1;
+                unless ( defined( $S->{'.AnnualEvent'} )
+                    && grep( /^$1$/, @{ $S->{'.AnnualEvent'} } ) )
                 {
-                    push @{ $S->{'.AnnualFestivity'} }, $1;
-                    push @{ $S->{'.AnnualFestivitySym'} },
+                    push @{ $S->{'.AnnualEvent'} }, $1;
+                    push @{ $S->{'.AnnualEventSym'} },
                       $seasonssocialicon{$season};
                 }
                 AddToSchedule( $S, '*', $2 ) if ( defined($2) );
             }
         }
-        if ( defined( $S->{'.AnnualFestivity'} )
-            && int( @{ $S->{'.AnnualFestivity'} } ) > 0. )
+        if ( defined( $S->{'.AnnualEvent'} )
+            && int( @{ $S->{'.AnnualEvent'} } ) > 0. )
         {
-            $S->{AnnualFestivity} = join( ', ', @{ $S->{'.AnnualFestivity'} } );
-            $S->{AnnualFestivitySym} =
-              join( '', @{ $S->{'.AnnualFestivitySym'} } );
+            $S->{AnnualEvent} = join( ', ', @{ $S->{'.AnnualEvent'} } );
+            $S->{AnnualEventSym} =
+              join( '', @{ $S->{'.AnnualEventSym'} } );
         }
     }
 
@@ -5511,8 +5510,8 @@ sub AddToSchedule {
           unless (
             grep( m/^$n$/i, @{ $h->{".scheduleAllday"} } )
             || (   $n ne 'Halloween'
-                && defined( $h->{'.AnnualFestivity'} )
-                && grep( m/^$n$/i, @{ $h->{'.AnnualFestivity'} } ) )
+                && defined( $h->{'.AnnualEvent'} )
+                && grep( m/^$n$/i, @{ $h->{'.AnnualEvent'} } ) )
           );
     }
     elsif ( $e eq '?' ) {
