@@ -74,7 +74,7 @@ my %attrs = (
     "InformativeDays" =>
 "multiple-strict,none,ValentinesDay,WalpurgisNight,AshWednesday,MothersDay,FathersDay,HarvestFestival,MartinSingEv,Martinmas,RemembranceDay,LastSundayBeforeAdvent,StNicholasDay,BiblicalMagi,InternationalWomensDay,StPatricksDay,LaborDay,LiberationDay,Ascension,Pentecost,CorpusChristi,AssumptionDay,WorldChildrensDay,GermanUnificationDay,ReformationDay,AllSaintsDay,AllSoulsDay,DayOfPrayerandRepentance",
     "AnnualEvents" =>
-"multiple-strict,none,Carnival,CarnivalLong,Fasching,FaschingLong,StrongBeerFestival,HolyWeek,Easter,EasterTraditional,Lenten,Oktoberfest,Halloween,Advent,AdventEarly,TurnOfTheYear,Christmas,ChristmasLong",
+"multiple-strict,none,Carnival,CarnivalLong,Fasching,FaschingLong,StrongBeerFestival,HolyWeek,Easter,EasterTraditional,Lent,Oktoberfest,Halloween,Advent,AdventEarly,TurnOfTheYear,Christmas,ChristmasLong",
     "SeasonalHrs"     => undef,
     "timezone"        => undef,
     "VacationDevices" => undef,
@@ -220,21 +220,21 @@ our %transtable = (
         "faschingseason5" => "Fasching: Carnival Monday",
         "faschingseason6" => "Fasching: Carnival",
         "faschingseason"  => "Fasching",
-        "lentenbegin"     => "Lenten: Beginning of Lent",
-        "lentenw1"        => "Lenten: Lent Week 1",
-        "lentenw2"        => "Lenten: Lent Week 2",
-        "lentenw3"        => "Lenten: Lent Week 3",
-        "lentenw4"        => "Lenten: Lent Week 4",
-        "lentenw5"        => "Lenten: Lent Week 5",
-        "lentenw6"        => "Lenten: Lent Week 6",
-        "lentenw7"        => "Lenten: Great Lent Week",
-        "lentensun1"      => "Lenten: 1st Lent Sunday",
-        "lentensun2"      => "Lenten: 2nd Lent Sunday",
-        "lentensun3"      => "Lenten: 3rd Lent Sunday",
-        "lentensun4"      => "Lenten: 4th Lent Sunday",
-        "lentensun5"      => "Lenten: 5th Lent Sunday",
-        "lentensun6"      => "Lenten: 6th Lent Sunday",
-        "lentenend"       => "Lenten: End of Lent",
+        "lentbegin"       => "Lent: Beginning of Lent",
+        "lentw1"          => "Lent: Lent Week 1",
+        "lentw2"          => "Lent: Lent Week 2",
+        "lentw3"          => "Lent: Lent Week 3",
+        "lentw4"          => "Lent: Lent Week 4",
+        "lentw5"          => "Lent: Lent Week 5",
+        "lentw6"          => "Lent: Lent Week 6",
+        "lentw7"          => "Lent: Great Lent Week",
+        "lentsun1"        => "Lent: 1st Lent Sunday",
+        "lentsun2"        => "Lent: 2nd Lent Sunday",
+        "lentsun3"        => "Lent: 3rd Lent Sunday",
+        "lentsun4"        => "Lent: 4th Lent Sunday",
+        "lentsun5"        => "Lent: 5th Lent Sunday",
+        "lentsun6"        => "Lent: 6th Lent Sunday",
+        "lentend"         => "Lent: End of Lent",
         "sbeerseasonbegin" =>
           "Strong Beer Festival: Beginning of Strong Beer Festival",
         "sbeerseason"       => "Strong Beer Festival",
@@ -396,21 +396,21 @@ our %transtable = (
         "faschingseason5"   => "Faschingszeit: Rosenmontag",
         "faschingseason6"   => "Faschingszeit: Fastnacht",
         "faschingseason"    => "Faschingszeit",
-        "lentenbegin"       => "Fastenzeit: Beginn der Fastenzeit",
-        "lentenw1"          => "Fastenzeit: Fastenwoche 1",
-        "lentenw2"          => "Fastenzeit: Fastenwoche 2",
-        "lentenw3"          => "Fastenzeit: Fastenwoche 3",
-        "lentenw4"          => "Fastenzeit: Fastenwoche 4",
-        "lentenw5"          => "Fastenzeit: Fastenwoche 5",
-        "lentenw6"          => "Fastenzeit: Fastenwoche 6",
-        "lentenw7"          => "Fastenzeit: Große Fastenwoche",
-        "lentensun1"        => "Fastenzeit: 1. Fastensonntag",
-        "lentensun2"        => "Fastenzeit: 2. Fastensonntag",
-        "lentensun3"        => "Fastenzeit: 3. Fastensonntag",
-        "lentensun4"        => "Fastenzeit: 4. Fastensonntag",
-        "lentensun5"        => "Fastenzeit: 5. Fastensonntag",
-        "lentensun6"        => "Fastenzeit: 6. Fastensonntag",
-        "lentenend"         => "Fastenzeit: Ende der Fastenzeit",
+        "lentbegin"         => "Fastenzeit: Beginn der Fastenzeit",
+        "lentw1"            => "Fastenzeit: Fastenwoche 1",
+        "lentw2"            => "Fastenzeit: Fastenwoche 2",
+        "lentw3"            => "Fastenzeit: Fastenwoche 3",
+        "lentw4"            => "Fastenzeit: Fastenwoche 4",
+        "lentw5"            => "Fastenzeit: Fastenwoche 5",
+        "lentw6"            => "Fastenzeit: Fastenwoche 6",
+        "lentw7"            => "Fastenzeit: Große Fastenwoche",
+        "lentsun1"          => "Fastenzeit: 1. Fastensonntag",
+        "lentsun2"          => "Fastenzeit: 2. Fastensonntag",
+        "lentsun3"          => "Fastenzeit: 3. Fastensonntag",
+        "lentsun4"          => "Fastenzeit: 4. Fastensonntag",
+        "lentsun5"          => "Fastenzeit: 5. Fastensonntag",
+        "lentsun6"          => "Fastenzeit: 6. Fastensonntag",
+        "lentend"           => "Fastenzeit: Ende der Fastenzeit",
         "sbeerseasonbegin"  => "Starkbierfest: Beginn des Starkbierfests",
         "sbeerseason"       => "Starkbierfest",
         "holyweekpalm"      => "Karwoche: Palm- und Passionssonntag",
@@ -571,21 +571,21 @@ our %transtable = (
         "faschingseason5" => "Fasching: Lunes de Carnaval",
         "faschingseason6" => "Fasching: Carnaval",
         "faschingseason"  => "Fasching",
-        "lentenbegin"     => "Cuaresma: Comienzo de la Cuaresma",
-        "lentenw1"        => "Cuaresma: Cuaresma semana 1",
-        "lentenw2"        => "Cuaresma: Cuaresma semana 2",
-        "lentenw3"        => "Cuaresma: Cuaresma semana 3",
-        "lentenw4"        => "Cuaresma: Cuaresma semana 4",
-        "lentenw5"        => "Cuaresma: Cuaresma semana 5",
-        "lentenw6"        => "Cuaresma: Cuaresma semana 6",
-        "lentenw7"        => "Cuaresma: Gran semana de Cuaresma",
-        "lentensun1"      => "Cuaresma: 1er Domingo de Cuaresma",
-        "lentensun2"      => "Cuaresma: 2º Domingo de Cuaresma",
-        "lentensun3"      => "Cuaresma: 3º Domingo de Cuaresma",
-        "lentensun4"      => "Cuaresma: 4º Domingo de Cuaresma",
-        "lentensun5"      => "Cuaresma: 5º Domingo de Cuaresma",
-        "lentensun6"      => "Cuaresma: 6º Domingo de Cuaresma",
-        "lentenend"       => "Cuaresma: Fin de la Cuaresma",
+        "lentbegin"       => "Cuaresma: Comienzo de la Cuaresma",
+        "lentw1"          => "Cuaresma: Cuaresma semana 1",
+        "lentw2"          => "Cuaresma: Cuaresma semana 2",
+        "lentw3"          => "Cuaresma: Cuaresma semana 3",
+        "lentw4"          => "Cuaresma: Cuaresma semana 4",
+        "lentw5"          => "Cuaresma: Cuaresma semana 5",
+        "lentw6"          => "Cuaresma: Cuaresma semana 6",
+        "lentw7"          => "Cuaresma: Gran semana de Cuaresma",
+        "lentsun1"        => "Cuaresma: 1er Domingo de Cuaresma",
+        "lentsun2"        => "Cuaresma: 2º Domingo de Cuaresma",
+        "lentsun3"        => "Cuaresma: 3º Domingo de Cuaresma",
+        "lentsun4"        => "Cuaresma: 4º Domingo de Cuaresma",
+        "lentsun5"        => "Cuaresma: 5º Domingo de Cuaresma",
+        "lentsun6"        => "Cuaresma: 6º Domingo de Cuaresma",
+        "lentend"         => "Cuaresma: Fin de la Cuaresma",
         "sbeerseasonbegin" =>
 "Fuerte festival de la cerveza: Comienzo de la Fiesta de la Cerveza Fuerte",
         "sbeerseason"       => "Fuerte festival de la cerveza",
@@ -747,21 +747,21 @@ our %transtable = (
         "faschingseason5" => "Fasching: Lundi de carnaval",
         "faschingseason6" => "Fasching: Carnaval",
         "faschingseason"  => "Fasching",
-        "lentenbegin"     => "Carême: Début du Carême",
-        "lentenw1"        => "Carême: Carême semaine 1",
-        "lentenw2"        => "Carême: Carême semaine 2",
-        "lentenw3"        => "Carême: Carême semaine 3",
-        "lentenw4"        => "Carême: Carême semaine 4",
-        "lentenw5"        => "Carême: Carême semaine 5",
-        "lentenw6"        => "Carême: Carême semaine 6",
-        "lentenw7"        => "Carême: Grande semaine de Carême",
-        "lentensun1"      => "Carême: 1er dimanche de Carême",
-        "lentensun2"      => "Carême: 2e dimanche de Carême",
-        "lentensun3"      => "Carême: 3e dimanche de Carême",
-        "lentensun4"      => "Carême: 4e dimanche de Carême",
-        "lentensun5"      => "Carême: 5e dimanche de Carême",
-        "lentensun6"      => "Carême: 6e dimanche de Carême",
-        "lentenend"       => "Carême: Fin du Carême",
+        "lentbegin"       => "Carême: Début du Carême",
+        "lentw1"          => "Carême: Carême semaine 1",
+        "lentw2"          => "Carême: Carême semaine 2",
+        "lentw3"          => "Carême: Carême semaine 3",
+        "lentw4"          => "Carême: Carême semaine 4",
+        "lentw5"          => "Carême: Carême semaine 5",
+        "lentw6"          => "Carême: Carême semaine 6",
+        "lentw7"          => "Carême: Grande semaine de Carême",
+        "lentsun1"        => "Carême: 1er dimanche de Carême",
+        "lentsun2"        => "Carême: 2e dimanche de Carême",
+        "lentsun3"        => "Carême: 3e dimanche de Carême",
+        "lentsun4"        => "Carême: 4e dimanche de Carême",
+        "lentsun5"        => "Carême: 5e dimanche de Carême",
+        "lentsun6"        => "Carême: 6e dimanche de Carême",
+        "lentend"         => "Carême: Fin du Carême",
         "sbeerseasonbegin" =>
           "Fête de la bière forte: Début de la Fête de la bière forte",
         "sbeerseason" => "Fête de la bière forte",
@@ -924,21 +924,21 @@ our %transtable = (
         "faschingseason5" => "Fasching: Lunedì di Carnevale",
         "faschingseason6" => "Fasching: Carnevale",
         "faschingseason"  => "Fasching",
-        "lentenbegin"     => "Quaresima: Inizio di Quaresima",
-        "lentenw1"        => "Quaresima: 1° Settimana di Quaresima",
-        "lentenw2"        => "Quaresima: 2° Settimana di Quaresima",
-        "lentenw3"        => "Quaresima: 3° Settimana di Quaresima",
-        "lentenw4"        => "Quaresima: 4° Settimana di Quaresima",
-        "lentenw5"        => "Quaresima: 5° Settimana di Quaresima",
-        "lentenw6"        => "Quaresima: 6° Settimana di Quaresima",
-        "lentenw7"        => "Quaresima: Grande Settimana di Quaresima",
-        "lentensun1"      => "Quaresima: 1° Domenica di Quaresima",
-        "lentensun2"      => "Quaresima: 2° Domenica di Quaresima",
-        "lentensun3"      => "Quaresima: 3° Domenica di Quaresima",
-        "lentensun4"      => "Quaresima: 4° Domenica di Quaresima",
-        "lentensun5"      => "Quaresima: 5° Domenica di Quaresima",
-        "lentensun6"      => "Quaresima: 6° Domenica di Quaresima",
-        "lentenend"       => "Quaresima: Fine della Quaresima",
+        "lentbegin"       => "Quaresima: Inizio di Quaresima",
+        "lentw1"          => "Quaresima: 1° Settimana di Quaresima",
+        "lentw2"          => "Quaresima: 2° Settimana di Quaresima",
+        "lentw3"          => "Quaresima: 3° Settimana di Quaresima",
+        "lentw4"          => "Quaresima: 4° Settimana di Quaresima",
+        "lentw5"          => "Quaresima: 5° Settimana di Quaresima",
+        "lentw6"          => "Quaresima: 6° Settimana di Quaresima",
+        "lentw7"          => "Quaresima: Grande Settimana di Quaresima",
+        "lentsun1"        => "Quaresima: 1° Domenica di Quaresima",
+        "lentsun2"        => "Quaresima: 2° Domenica di Quaresima",
+        "lentsun3"        => "Quaresima: 3° Domenica di Quaresima",
+        "lentsun4"        => "Quaresima: 4° Domenica di Quaresima",
+        "lentsun5"        => "Quaresima: 5° Domenica di Quaresima",
+        "lentsun6"        => "Quaresima: 6° Domenica di Quaresima",
+        "lentend"         => "Quaresima: Fine della Quaresima",
         "sbeerseasonbegin" =>
           "Festa della birra forte: Inizio del Festival della birra forte",
         "sbeerseason" => "Festa della birra forte",
@@ -1101,21 +1101,21 @@ our %transtable = (
         "faschingseason5" => "Fasching: Vette maandag",
         "faschingseason6" => "Fasching: Carnaval",
         "faschingseason"  => "Fasching",
-        "lentenbegin"     => "Vasten: Begin van de vastentijd",
-        "lentenw1"        => "Vasten: Vastenweek 1",
-        "lentenw2"        => "Vasten: Vastenweek 2",
-        "lentenw3"        => "Vasten: Vastenweek 3",
-        "lentenw4"        => "Vasten: Vastenweek 4",
-        "lentenw5"        => "Vasten: Vastenweek 5",
-        "lentenw6"        => "Vasten: Vastenweek 6",
-        "lentenw7"        => "Vasten: Grote vastenweek",
-        "lentensun1"      => "Vasten: 1ste zondag van de vastentijd",
-        "lentensun2"      => "Vasten: 2e zondag van de vastentijd",
-        "lentensun3"      => "Vasten: 3de zondag van de vastentijd",
-        "lentensun4"      => "Vasten: 4e zondag van de vastentijd",
-        "lentensun5"      => "Vasten: 5e zondag van de vastentijd",
-        "lentensun6"      => "Vasten: 6e zondag van de vastentijd",
-        "lentenend"       => "Vasten: Einde van de vastentijd",
+        "lentbegin"       => "Vasten: Begin van de vastentijd",
+        "lentw1"          => "Vasten: Vastenweek 1",
+        "lentw2"          => "Vasten: Vastenweek 2",
+        "lentw3"          => "Vasten: Vastenweek 3",
+        "lentw4"          => "Vasten: Vastenweek 4",
+        "lentw5"          => "Vasten: Vastenweek 5",
+        "lentw6"          => "Vasten: Vastenweek 6",
+        "lentw7"          => "Vasten: Grote vastenweek",
+        "lentsun1"        => "Vasten: 1ste zondag van de vastentijd",
+        "lentsun2"        => "Vasten: 2e zondag van de vastentijd",
+        "lentsun3"        => "Vasten: 3de zondag van de vastentijd",
+        "lentsun4"        => "Vasten: 4e zondag van de vastentijd",
+        "lentsun5"        => "Vasten: 5e zondag van de vastentijd",
+        "lentsun6"        => "Vasten: 6e zondag van de vastentijd",
+        "lentend"         => "Vasten: Einde van de vastentijd",
         "sbeerseasonbegin" =>
           "Sterke Bier Festival: Begin van het Sterke Bier Festival",
         "sbeerseason"       => "Sterke Bier Festival",
@@ -1277,21 +1277,21 @@ our %transtable = (
         "faschingseason5" => "Fasching: Poniedziałek karnawałowy",
         "faschingseason6" => "Fasching: Karnawał",
         "faschingseason"  => "Fasching",
-        "lentenbegin"     => "Wielki Post: Początek postu",
-        "lentenw1"        => "Wielki Post: Tydzień postu 1",
-        "lentenw2"        => "Wielki Post: Tydzień postu 2",
-        "lentenw3"        => "Wielki Post: Tydzień postu 3",
-        "lentenw4"        => "Wielki Post: Tydzień postu 4",
-        "lentenw5"        => "Wielki Post: Tydzień postu 5",
-        "lentenw6"        => "Wielki Post: Tydzień postu 6",
-        "lentenw7"        => "Wielki Post: Wielki tydzień postu",
-        "lentensun1"      => "Wielki Post: 1. szybka niedziela",
-        "lentensun2"      => "Wielki Post: 2. szybka niedziela",
-        "lentensun3"      => "Wielki Post: 3. szybka niedziela",
-        "lentensun4"      => "Wielki Post: 4. szybka niedziela",
-        "lentensun5"      => "Wielki Post: 5. szybka niedziela",
-        "lentensun6"      => "Wielki Post: 6. szybka niedziela",
-        "lentenend"       => "Wielki Post: Koniec postu",
+        "lentbegin"       => "Wielki Post: Początek postu",
+        "lentw1"          => "Wielki Post: Tydzień postu 1",
+        "lentw2"          => "Wielki Post: Tydzień postu 2",
+        "lentw3"          => "Wielki Post: Tydzień postu 3",
+        "lentw4"          => "Wielki Post: Tydzień postu 4",
+        "lentw5"          => "Wielki Post: Tydzień postu 5",
+        "lentw6"          => "Wielki Post: Tydzień postu 6",
+        "lentw7"          => "Wielki Post: Wielki tydzień postu",
+        "lentsun1"        => "Wielki Post: 1. szybka niedziela",
+        "lentsun2"        => "Wielki Post: 2. szybka niedziela",
+        "lentsun3"        => "Wielki Post: 3. szybka niedziela",
+        "lentsun4"        => "Wielki Post: 4. szybka niedziela",
+        "lentsun5"        => "Wielki Post: 5. szybka niedziela",
+        "lentsun6"        => "Wielki Post: 6. szybka niedziela",
+        "lentend"         => "Wielki Post: Koniec postu",
         "sbeerseasonbegin" =>
           "Mocny Festiwal Piwa: Początek Festiwalu Piwa Mocnego",
         "sbeerseason"       => "Mocny Festiwal Piwa",
@@ -1467,7 +1467,7 @@ our %seasonssocialicon = (
     HolyWeek           => '✝️',
     Easter             => chr(0x1F430),
     EasterTraditional  => chr(0x1F95A),
-    Lenten             => chr(0x1F957),
+    Lent               => chr(0x1F957),
     Oktoberfest        => chr(0x1F3A1),
     Halloween          => chr(0x1F383),
     Advent             => chr(0x1F56F),
@@ -5304,24 +5304,24 @@ sub IsSeasonRamadan($$;$$) {
     return 0;
 }
 
-sub IsSeasonLenten($$;$$) {
+sub IsSeasonLent($$;$$) {
     my ( $d, $m, $y, $lang ) = @_;
 
     my $today = timegm_modern( 0, 0, 0, $d, $m - 1,
         ( defined($y) ? $y : ( localtime( gettimeofday() ) )[5] + 1900. ) );
 
-    my $easterSun   = GetWesternEaster($y);
-    my $lentenBegin = $easterSun - 86400. * 46;
-    my $lentenW1    = $easterSun - 86400. * 45;
-    my $lentenW2    = $easterSun - 86400. * 42;
-    my $lentenW3    = $lentenW2 + 86400. * 7.;
-    my $lentenW4    = $lentenW3 + 86400. * 7.;
-    my $lentenW5    = $lentenW4 + 86400. * 7.;
-    my $lentenW6    = $lentenW5 + 86400. * 7.;
-    my $lentenW7    = $lentenW6 + 86400. * 7.;
-    my $lentenEnd   = $easterSun - 86400.;
+    my $easterSun = GetWesternEaster($y);
+    my $lentBegin = $easterSun - 86400. * 46;
+    my $lentW1    = $easterSun - 86400. * 45;
+    my $lentW2    = $easterSun - 86400. * 42;
+    my $lentW3    = $lentW2 + 86400. * 7.;
+    my $lentW4    = $lentW3 + 86400. * 7.;
+    my $lentW5    = $lentW4 + 86400. * 7.;
+    my $lentW6    = $lentW5 + 86400. * 7.;
+    my $lentW7    = $lentW6 + 86400. * 7.;
+    my $lentEnd   = $easterSun - 86400.;
 
-    return 0 unless ( $today >= $lentenBegin && $today <= $lentenEnd );
+    return 0 unless ( $today >= $lentBegin && $today <= $lentEnd );
 
     if ($lang) {
         if ( exists( $transtable{ uc($lang) } ) ) {
@@ -5332,50 +5332,50 @@ sub IsSeasonLenten($$;$$) {
         }
     }
 
-    if ( $today == $lentenBegin ) {
-        return ref($tt) ? $tt->{lentenbegin} : 2;
+    if ( $today == $lentBegin ) {
+        return ref($tt) ? $tt->{lentbegin} : 2;
     }
-    elsif ( $today == $lentenW2 ) {
-        return ref($tt) ? $tt->{lentensun1} : 4;
+    elsif ( $today == $lentW2 ) {
+        return ref($tt) ? $tt->{lentsun1} : 4;
     }
-    elsif ( $today == $lentenW3 ) {
-        return ref($tt) ? $tt->{lentensun2} : 6;
+    elsif ( $today == $lentW3 ) {
+        return ref($tt) ? $tt->{lentsun2} : 6;
     }
-    elsif ( $today == $lentenW4 ) {
-        return ref($tt) ? $tt->{lentensun3} : 8;
+    elsif ( $today == $lentW4 ) {
+        return ref($tt) ? $tt->{lentsun3} : 8;
     }
-    elsif ( $today == $lentenW5 ) {
-        return ref($tt) ? $tt->{lentensun4} : 10;
+    elsif ( $today == $lentW5 ) {
+        return ref($tt) ? $tt->{lentsun4} : 10;
     }
-    elsif ( $today == $lentenW6 ) {
-        return ref($tt) ? $tt->{lentensun5} : 12;
+    elsif ( $today == $lentW6 ) {
+        return ref($tt) ? $tt->{lentsun5} : 12;
     }
-    elsif ( $today == $lentenW7 ) {
-        return ref($tt) ? $tt->{lentensun6} : 14;
+    elsif ( $today == $lentW7 ) {
+        return ref($tt) ? $tt->{lentsun6} : 14;
     }
-    elsif ( $today >= $lentenW1 && $today < $lentenW2 ) {
-        return ref($tt) ? $tt->{lentenw1} : 3;
+    elsif ( $today >= $lentW1 && $today < $lentW2 ) {
+        return ref($tt) ? $tt->{lentw1} : 3;
     }
-    elsif ( $today >= $lentenW2 && $today < $lentenW3 ) {
-        return ref($tt) ? $tt->{lentenw2} : 5;
+    elsif ( $today >= $lentW2 && $today < $lentW3 ) {
+        return ref($tt) ? $tt->{lentw2} : 5;
     }
-    elsif ( $today >= $lentenW3 && $today < $lentenW4 ) {
-        return ref($tt) ? $tt->{lentenw3} : 7;
+    elsif ( $today >= $lentW3 && $today < $lentW4 ) {
+        return ref($tt) ? $tt->{lentw3} : 7;
     }
-    elsif ( $today >= $lentenW4 && $today < $lentenW5 ) {
-        return ref($tt) ? $tt->{lentenw4} : 9;
+    elsif ( $today >= $lentW4 && $today < $lentW5 ) {
+        return ref($tt) ? $tt->{lentw4} : 9;
     }
-    elsif ( $today >= $lentenW5 && $today < $lentenW6 ) {
-        return ref($tt) ? $tt->{lentenw5} : 11;
+    elsif ( $today >= $lentW5 && $today < $lentW6 ) {
+        return ref($tt) ? $tt->{lentw5} : 11;
     }
-    elsif ( $today >= $lentenW6 && $today < $lentenW7 ) {
-        return ref($tt) ? $tt->{lentenw6} : 13;
+    elsif ( $today >= $lentW6 && $today < $lentW7 ) {
+        return ref($tt) ? $tt->{lentw6} : 13;
     }
-    elsif ( $today >= $lentenW7 && $today < $lentenEnd ) {
-        return ref($tt) ? $tt->{lentenw7} : 15;
+    elsif ( $today >= $lentW7 && $today < $lentEnd ) {
+        return ref($tt) ? $tt->{lentw7} : 15;
     }
     else {
-        return ref($tt) ? $tt->{lentenend} : 16;
+        return ref($tt) ? $tt->{lentend} : 16;
     }
 }
 
