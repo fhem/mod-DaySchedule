@@ -5145,32 +5145,50 @@ sub Compute($;$$) {
 # more generic return like FhemIsWe()
 sub IsWe(;$$) {
     my ( $when, $wday ) = @_;
+    return FhemIsWe( $when, $wday )
+      if ( !exists( $modules{DaySchedule}{global} ) || $wday );
     my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
     return ( $n ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
     return $n ? 1 : 0;
 }
 
-sub IsWorkday(;$$) {
-    my ( $when, $wday ) = @_;
-    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
+sub IsWorkday(;$$$) {
+    my ( $when, $wday, $hash ) = @_;
+    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday, $hash );
+    return undef unless ( defined($we) );
     return ( $n == 0. ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
     return $n == 0. ? 1 : 0;
 }
 
-sub IsVacation(;$$) {
-    my ( $when, $wday ) = @_;
-    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
+sub IsVacation(;$$$) {
+    my ( $when, $wday, $hash ) = @_;
+    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday, $hash );
+    return undef unless ( defined($we) );
     return ( $n == 1. ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
     return $n == 1. ? 1 : 0;
 }
 
 # explicit return if day is really on a weekend
-sub IsWeekend(;$$) {
-    my ( $when, $wday ) = @_;
+sub IsWeekend(;$$$) {
+    my ( $when, $wday, $hash ) = @_;
     return FhemIsWe( $when, $wday )
-      if ( !exists( $modules{DaySchedule}{global} ) || $wday );
+      if ( !$hash && ( !exists( $modules{DaySchedule}{global} ) || $wday ) );
 
-    my $hash = $modules{DaySchedule}{global};
+    # find device hash reference
+    $hash = $modules{DaySchedule}{global} unless ( defined($hash) );
+    $hash = exists( $defs{$hash} ) ? $defs{$hash} : $hash unless ( ref($hash) );
+
+    if ( !ref($hash) ) {
+        $@ =
+          '[FHEM::DaySchedule::IsWeekend] ERROR: $hash is not a defined device';
+        return undef;
+    }
+    elsif ( !defined( $hash->{TYPE} ) || $hash->{TYPE} ne 'DaySchedule' ) {
+        $@ =
+'[FHEM::DaySchedule::IsWeekend] ERROR: $hash->{NAME} is not a DaySchedule device';
+        return undef;
+    }
+
     my $name = $hash->{NAME};
 
     my $AstroDev = AttrVal( $name, "AstroDevice", "" );
@@ -5227,9 +5245,10 @@ sub IsWeekend(;$$) {
     return $Schedule{DayTypeN} == 2. ? 1 : 0;
 }
 
-sub IsHoliday(;$$) {
-    my ( $when, $wday ) = @_;
-    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
+sub IsHoliday(;$$$) {
+    my ( $when, $wday, $hash ) = @_;
+    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday, $hash );
+    return undef unless ( defined($we) );
     return ( $n == 3. ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
     return $n == 3. ? 1 : 0;
 }
