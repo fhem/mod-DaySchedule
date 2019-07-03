@@ -1454,7 +1454,7 @@ our %holidaysicon = (
     'reformationday'           => '✝️',
     'allsaintsday'             => '✝️',
     'newyearseve'              => chr(0x1F386),
-    'newyear'                  => chr(0x2618),
+    'newyear'                  => chr(0x1F340),
 );
 
 our %seasonssocialicon = (
@@ -1513,6 +1513,7 @@ BEGIN {
           AttrVal
           CommandAttr
           CommandDefine
+          CommandGet
           data
           Debug
           defs
@@ -1520,7 +1521,6 @@ BEGIN {
           FW_hiddenroom
           FW_webArgs
           IsDevice
-          IsWe
           FmtDateTime
           GetType
           goodDeviceName
@@ -1544,6 +1544,10 @@ BEGIN {
           urlEncode
           )
     );
+
+    no strict qw/refs/;
+    *{'FHEM::DaySchedule::FhemIsWe'} = *{'main::IsWe'};
+    use strict qw/refs/;
 
     # Export to main context
     GP_Export(
@@ -1593,11 +1597,23 @@ sub Initialize ($) {
 
 sub Define ($@) {
     my ( $hash, $a, $h ) = @_;
-    my $name = shift @$a;
-    my $type = shift @$a;
+    my $name   = shift @$a;
+    my $type   = shift @$a;
+    my $global = shift @$a;
 
     return $@ unless ( FHEM::Meta::SetInternals($hash) );
     use version 0.77; our $VERSION = FHEM::Meta::Get( $hash, 'version' );
+
+    if ($global) {
+        return
+"Device $modules{$type}{global}{NAME} is already defined to act in global scope for holiday2we"
+          if ( defined( $modules{$type}{global} ) );
+        $modules{$type}{global} = $hash;
+        no strict qw/refs/;
+        *{'main::IsWe'} = *{'FHEM::DaySchedule::IsWe'};
+        use strict qw/refs/;
+        $hash->{SCOPE} = 'global';
+    }
 
     $hash->{NOTIFYDEV} = "global";
     $hash->{INTERVAL}  = 3600;
@@ -1621,8 +1637,20 @@ sub Define ($@) {
 
 sub Undef ($$) {
     my ( $hash, $arg ) = @_;
+    my $name = $hash->{NAME};
+    my $type = $hash->{TYPE};
 
     RemoveInternalTimer($hash);
+
+    if ( defined( $modules{$type}{global} )
+        && $modules{$type}{global}{NAME} eq $name )
+    {
+        no strict qw/refs/;
+        *{'main::IsWe'} = *{'FHEM::DaySchedule::FhemIsWe'};
+        use strict qw/refs/;
+
+        delete $modules{$type}{global};
+    }
 
     return undef;
 }
@@ -1714,7 +1742,7 @@ sub Attr(@) {
 
                 # check value
                 return
-                  "$do $name attribute $key must be a float number >= 0 meters"
+                  "$do $name attribute: $key must be a float number >= 0 meters"
                   unless ( $value =~ m/^(\d+(?:\.\d+)?)$/ && $1 >= 0. );
             };
 
@@ -1723,7 +1751,7 @@ sub Attr(@) {
 
                 # check value
                 return
-                  "$do $name attribute $key has invalid device name format"
+                  "$do $name attribute: $key has invalid device name format"
                   unless ( goodDeviceName($value) );
 
                 if ( $init_done && scalar keys %Astro > 0. ) {
@@ -1741,9 +1769,14 @@ sub Attr(@) {
                 # check value
                 foreach ( split( ",", $value ) ) {
                     return
-                      "$do $name attribute $key has invalid device name format "
+"$do $name attribute: $key has invalid device name format "
                       . $_
                       unless ( goodDeviceName($_) );
+                    return
+"$do $name attribute: $key can not contain devices of type 'holiday' in global mode. Use global attribute holiday2we instead."
+                      . $_
+                      if ( $hash->{SCOPE} eq 'global'
+                        && IsDevice( $_, 'holiday' ) );
                 }
             };
 
@@ -1753,7 +1786,7 @@ sub Attr(@) {
                 shift @skel;
 
                 # check value 1/2
-                return "$do $name attribute $key must be one or many of "
+                return "$do $name attribute: $key must be one or many of "
                   . join( ',', @skel )
                   if ( !$value || $value eq "" );
 
@@ -1761,7 +1794,7 @@ sub Attr(@) {
                 my @vals = split( ',', $value );
                 foreach my $val (@vals) {
                     return
-"$do $name attribute value $val is invalid, must be one or many of "
+"$do $name attribute: value $val is invalid, must be one or many of "
                       . join( ',', @skel )
                       unless ( grep( m/^$val$/, @skel ) );
                 }
@@ -1773,7 +1806,7 @@ sub Attr(@) {
                 # check value
                 foreach ( split( ",", $value ) ) {
                     return
-                      "$do $name attribute $key has invalid device name format "
+"$do $name attribute: $key has invalid device name format "
                       . $_
                       unless ( goodDeviceName($_) );
                 }
@@ -1785,7 +1818,7 @@ sub Attr(@) {
                 # check value
                 foreach ( split( ",", $value ) ) {
                     return
-                      "$do $name attribute $key has invalid device name format "
+"$do $name attribute: $key has invalid device name format "
                       . $_
                       unless ( goodDeviceName($_) );
                 }
@@ -1797,7 +1830,7 @@ sub Attr(@) {
                 # check value
                 foreach ( split( ",", $value ) ) {
                     return
-                      "$do $name attribute $key has invalid device name format "
+"$do $name attribute: $key has invalid device name format "
                       . $_
                       unless ( goodDeviceName($_) );
                 }
@@ -1809,7 +1842,7 @@ sub Attr(@) {
                 # check value
                 foreach ( split( ",", $value ) ) {
                     return
-                      "$do $name attribute $key has invalid device name format "
+"$do $name attribute: $key has invalid device name format "
                       . $_
                       unless ( goodDeviceName($_) );
                 }
@@ -1819,7 +1852,7 @@ sub Attr(@) {
             $key eq "disable" and do {
 
                 # check value
-                return "$do $name attribute $key can only be 1 or 0"
+                return "$do $name attribute: $key can only be 1 or 0"
                   unless ( $value =~ m/^(1|0)$/ );
                 readingsSingleUpdate( $hash, "state",
                     $value ? "inactive" : "Initialized", $init_done );
@@ -1830,7 +1863,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"$do $name attribute $key must be in format <month>-<day> while <month> can only be 08 or 09"
+"$do $name attribute: $key must be in format <month>-<day> while <month> can only be 08 or 09"
                   unless ( $value =~ m/^(0[8-9])-(0[1-9]|[12]\d|30|31)$/ );
             };
 
@@ -1839,7 +1872,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"$do $name attribute $key must be in format <month>-<day> while <month> can only be 02 or 03"
+"$do $name attribute: $key must be in format <month>-<day> while <month> can only be 02 or 03"
                   unless ( $value =~ m/^(0[2-3])-(0[1-9]|[12]\d|30|31)$/ );
             };
 
@@ -1848,7 +1881,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"$do $name attribute $key must be a float number >= -45 and <= 45 degrees"
+"$do $name attribute: $key must be a float number >= -45 and <= 45 degrees"
                   unless (
                        $value =~ m/^(-?\d+(?:\.\d+)?)(?::(-?\d+(?:\.\d+)?))?$/
                     && $1 >= -45.
@@ -1860,7 +1893,7 @@ sub Attr(@) {
             $key eq "interval" and do {
 
                 # check value
-                return "$do $name attribute $key must be >= 0 seconds"
+                return "$do $name attribute: $key must be >= 0 seconds"
                   unless ( $value =~ m/^\d+$/ );
 
                 # update timer
@@ -1872,7 +1905,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"$do $name attribute $key must be float number >= -90 and <= 90 degrees"
+"$do $name attribute: $key must be float number >= -90 and <= 90 degrees"
                   unless ( $value =~ m/^(-?\d+(?:\.\d+)?)$/
                     && $1 >= -90.
                     && $1 <= 90. );
@@ -1883,7 +1916,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"$do $name attribute $key must be float number >= -180 and <= 180 degrees"
+"$do $name attribute: $key must be float number >= -180 and <= 180 degrees"
                   unless ( $value =~ m/^(-?\d+(?:\.\d+)?)$/
                     && $1 >= -180.
                     && $1 <= 180. );
@@ -1895,7 +1928,7 @@ sub Attr(@) {
                 shift @skel;
 
                 # check value 1/2
-                return "$do $name attribute $key must be one or many of "
+                return "$do $name attribute: $key must be one or many of "
                   . join( ',', @skel )
                   if ( !$value || $value eq "" );
 
@@ -1903,7 +1936,7 @@ sub Attr(@) {
                 my @vals = split( ',', $value );
                 foreach my $val (@vals) {
                     return
-"$do $name attribute value $val is invalid, must be one or many of "
+"$do $name attribute: value $val is invalid, must be one or many of "
                       . join( ',', @skel )
                       unless ( grep( m/^$val$/, @skel ) );
                 }
@@ -1916,7 +1949,7 @@ sub Attr(@) {
                 shift @skel;
 
                 # check value 1/2
-                return "$do $name attribute $key must be one or many of "
+                return "$do $name attribute: $key must be one or many of "
                   . join( ',', @skel )
                   if ( !$value || $value eq "" );
 
@@ -1924,7 +1957,7 @@ sub Attr(@) {
                 my @vals = split( ',', $value );
                 foreach my $val (@vals) {
                     return
-"$do $name attribute value $val is invalid, must be one or many of "
+"$do $name attribute: value $val is invalid, must be one or many of "
                       . join( ',', @skel )
                       unless ( grep( m/^$val$/, @skel ) );
                 }
@@ -1935,7 +1968,7 @@ sub Attr(@) {
 
                 # check value
                 return
-"$do $name attribute $key must be an integer number >= 1 and <= 24 hours"
+"$do $name attribute: $key must be an integer number >= 1 and <= 24 hours"
                   unless ( $value =~ m/^(\d+)(?::(\d+))?$/
                     && $1 >= 1.
                     && $1 <= 24.
@@ -2520,6 +2553,10 @@ sub Get($@) {
         my $colorClose  = '';
         my $h3Open      = '';
         my $h3Close     = '';
+        my $ulOpen      = '';
+        my $ulClose     = '';
+        my $liOpen      = '';
+        my $liClose     = '';
 
         if ($html) {
             $blockOpen   = '<div class="makeTable wide internals">';
@@ -2560,6 +2597,10 @@ sub Get($@) {
             $colorClose  = '</span>';
             $h3Open      = '<h3 style="margin-top:0;">';
             $h3Close     = '</h3>';
+            $ulOpen      = '<ul style="list-style:none;">';
+            $ulClose     = '</ul>';
+            $liOpen      = '<li>';
+            $liClose     = '</li>';
         }
 
         my $space = $html ? '&nbsp;' : ' ';
@@ -2704,19 +2745,123 @@ sub Get($@) {
             push @ret, $trClose;
         }
 
-        if ( $Schedule{DayDesc} ne $Schedule{DayType} ) {
+        if (   defined( $Schedule{'.scheduleAllday'} )
+            || defined( $Schedule{'.scheduleDay'} ) )
+        {
             push @ret, $trOpenOdd;
             push @ret, $thOpen . encode_utf8( $tt->{description} ) . $thClose;
 
-            my $desc = $Schedule{DayDesc};
-            if ( $html && $desc =~ /\n/ ) {
-                $desc =~ s/^(.+)/<li>$1/gm;
-                $desc =~ s/\n/<\/li>/gm;
-                $desc .= '</li>' unless ( $desc =~ /<\/li>$/ );
-                $desc = '<ul>' . $desc . '</ul>';
+            my $l = $ulOpen;
+
+            if ( defined( $Schedule{'.scheduleAllday'} ) ) {
+                my $i = 0;
+                foreach my $e ( @{ $Schedule{'.scheduleAllday'} } ) {
+                    $l .= $liOpen;
+
+                    if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+                        if ( defined( $Astro{$1} ) ) {
+                            $l .= (
+                                defined( $Schedule{'.scheduleAlldaySym'} )
+                                  && defined(
+                                    @{ $Schedule{'.scheduleAlldaySym'} }[$i]
+                                  )
+                                ? @{ $Schedule{'.scheduleAlldaySym'} }[$i]
+                                : 'ℹ️'
+                              )
+                              . chr(0x00A0)
+                              . decode_utf8 FHEM::Astro::FormatReading( $1,
+                                { long => 3 },
+                                $lc_numeric, defined($2) ? $2 : '' );
+                        }
+                        elsif ( defined( $Schedule{$1} ) ) {
+                            $l .= (
+                                defined( $Schedule{'.scheduleAlldaySym'} )
+                                  && defined(
+                                    @{ $Schedule{'.scheduleAlldaySym'} }[$i]
+                                  )
+                                ? @{ $Schedule{'.scheduleAlldaySym'} }[$i]
+                                : 'ℹ️'
+                              )
+                              . chr(0x00A0)
+                              . decode_utf8 FormatReading( $1, { long => 3 },
+                                $lc_numeric, defined($2) ? $2 : '' );
+                        }
+                        else {
+                            $l .= (
+                                defined( $Schedule{'.scheduleAlldaySym'} )
+                                  && defined(
+                                    @{ $Schedule{'.scheduleAlldaySym'} }[$i]
+                                  )
+                                ? @{ $Schedule{'.scheduleAlldaySym'} }[$i]
+                                : 'ℹ️'
+                              )
+                              . chr(0x00A0)
+                              . $e;
+                        }
+                    }
+
+                    $l .= $liClose;
+
+                    $i++;
+                }
             }
 
-            push @ret, $tdOpen . encode_utf8($desc) . $tdClose;
+            if ( defined( $Schedule{'.scheduleDay'} ) ) {
+                my $i = 0;
+                foreach my $e ( @{ $Schedule{'.scheduleDay'} } ) {
+                    $l .= $liOpen;
+
+                    if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
+                        if ( defined( $Astro{$1} ) ) {
+                            $l .= (
+                                defined( $Schedule{'.scheduleDaySym'} )
+                                  && defined(
+                                    @{ $Schedule{'.scheduleDaySym'} }[$i]
+                                  )
+                                ? @{ $Schedule{'.scheduleDaySym'} }[$i]
+                                : 'ℹ️'
+                              )
+                              . chr(0x00A0)
+                              . decode_utf8 FHEM::Astro::FormatReading( $1,
+                                { long => 3 },
+                                $lc_numeric, defined($2) ? $2 : '' );
+                        }
+                        elsif ( defined( $Schedule{$1} ) ) {
+                            $l .= (
+                                defined( $Schedule{'.scheduleDaySym'} )
+                                  && defined(
+                                    @{ $Schedule{'.scheduleDaySym'} }[$i]
+                                  )
+                                ? @{ $Schedule{'.scheduleDaySym'} }[$i]
+                                : 'ℹ️'
+                              )
+                              . chr(0x00A0)
+                              . decode_utf8 FormatReading( $1, { long => 3 },
+                                $lc_numeric, defined($2) ? $2 : '' );
+                        }
+                        else {
+                            $l .= (
+                                defined( $Schedule{'.scheduleDaySym'} )
+                                  && defined(
+                                    @{ $Schedule{'.scheduleDaySym'} }[$i]
+                                  )
+                                ? @{ $Schedule{'.scheduleDaySym'} }[$i]
+                                : 'ℹ️'
+                              )
+                              . chr(0x00A0)
+                              . $e;
+                        }
+                    }
+
+                    $l .= $liClose;
+
+                    $i++;
+                }
+            }
+
+            $l .= $ulClose;
+
+            push @ret, $tdOpen . encode_utf8($l) . $tdClose;
 
             push @ret, $trClose;
         }
@@ -3246,6 +3391,11 @@ sub _timegm_modern {
     my @r = @_;
     $r[5] -= 1900;
     return timegm(@r);
+}
+
+sub _uniq {
+    my %seen;
+    return grep { !$seen{$_}++ } @_;
 }
 
 sub SetTime (;$$$$) {
@@ -3932,12 +4082,17 @@ sub Compute($;$$) {
     my $workdayDevs = AttrVal( $name, "WorkdayDevices", "" );
     my $weekendDevs = AttrVal( $name, "WeekendDevices", "" );
     if ( $workdayDevs eq '' && $weekendDevs eq '' ) {
-        $S->{DayTypeN} = 2 if ( IsWe($date) );
+        $S->{DayTypeN} = 2 if ( FhemIsWe( $date, $D->{wday} ) );
     }
 
     # add HolidayDevices to schedule
-    my $holidayDevs = AttrVal( $name, "HolidayDevices", "" );
-    foreach my $dev ( split( ',', $holidayDevs ) ) {
+    my $holidayDevs =
+      $hash->{SCOPE} eq 'global' ? AttrVal( 'global', 'holiday2we', '' ) : ',';
+    $holidayDevs .= AttrVal( $name, "HolidayDevices", "" );
+    my @holidayDevsA = _uniq split( ',', $holidayDevs );
+    foreach my $dev (@holidayDevsA) {
+        next unless ( defined($dev) );
+
         if ( IsDevice( $dev, "holiday" ) ) {
             my $event = ::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
@@ -4082,7 +4237,7 @@ sub Compute($;$$) {
             my $event = ::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
                 foreach my $e ( split( ',', $event ) ) {
-                    AddToSchedule( $S, '*', decode_utf8($e), chr(0x2139) );
+                    AddToSchedule( $S, '*', decode_utf8($e), chr(0x1F5D3) );
                 }
             }
         }
@@ -4099,7 +4254,7 @@ sub Compute($;$$) {
                     if ( $edate eq $dateISO ) {
                         foreach my $e ( split( ',', $event ) ) {
                             AddToSchedule( $S, '*', decode_utf8($e),
-                                chr(0x2139) );
+                                chr(0x1F5D3) );
                         }
                     }
                 }
@@ -4203,7 +4358,10 @@ sub Compute($;$$) {
     $S->{YearRemainD}      = $D->{yearremdays};
     $S->{Month}            = $D->{monthl};
     $S->{MonthS}           = $D->{months};
+    $S->{MonthN}           = $D->{month};
     $S->{WeekdayN}         = $D->{wday};
+    $S->{DayN}             = $D->{day};
+    $S->{Day}              = lc( $tt->{today} );
     $S->{MonthRemainD}     = $D->{monthremdays};
     $S->{".YearProgress"}  = $D->{yearprogress};
     $S->{".MonthProgress"} = $D->{monthprogress};
@@ -4886,34 +5044,28 @@ sub Compute($;$$) {
     {
         my $l;
 
-        if ( defined( $Schedule{'.scheduleAllday'} ) ) {
+        if ( defined( $S->{'.scheduleAllday'} ) ) {
             my $i = 0;
-            foreach my $e ( @{ $Schedule{'.scheduleAllday'} } ) {
+            foreach my $e ( @{ $S->{'.scheduleAllday'} } ) {
                 $l .= "\n" if ($l);
 
                 if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
                     if ( defined( $Astro{$1} ) ) {
                         $l .= (
-                            defined( $Schedule{'.scheduleAlldaySym'} )
-                              && defined(
-                                @{ $Schedule{'.scheduleAlldaySym'} }[$i]
-                              )
-                            ? @{ $Schedule{'.scheduleAlldaySym'} }[$i]
-                              . chr(0x00A0)
+                            defined( $S->{'.scheduleAlldaySym'} )
+                              && defined( @{ $S->{'.scheduleAlldaySym'} }[$i] )
+                            ? @{ $S->{'.scheduleAlldaySym'} }[$i] . chr(0x00A0)
                             : ''
                           )
                           . decode_utf8 FHEM::Astro::FormatReading( $1,
                             { long => 3 },
                             $lc_numeric, defined($2) ? $2 : '' );
                     }
-                    elsif ( defined( $Schedule{$1} ) ) {
+                    elsif ( defined( $S->{$1} ) ) {
                         $l .= (
-                            defined( $Schedule{'.scheduleAlldaySym'} )
-                              && defined(
-                                @{ $Schedule{'.scheduleAlldaySym'} }[$i]
-                              )
-                            ? @{ $Schedule{'.scheduleAlldaySym'} }[$i]
-                              . chr(0x00A0)
+                            defined( $S->{'.scheduleAlldaySym'} )
+                              && defined( @{ $S->{'.scheduleAlldaySym'} }[$i] )
+                            ? @{ $S->{'.scheduleAlldaySym'} }[$i] . chr(0x00A0)
                             : ''
                           )
                           . decode_utf8 FormatReading( $1, { long => 3 },
@@ -4921,12 +5073,9 @@ sub Compute($;$$) {
                     }
                     else {
                         $l .= (
-                            defined( $Schedule{'.scheduleAlldaySym'} )
-                              && defined(
-                                @{ $Schedule{'.scheduleAlldaySym'} }[$i]
-                              )
-                            ? @{ $Schedule{'.scheduleAlldaySym'} }[$i]
-                              . chr(0x00A0)
+                            defined( $S->{'.scheduleAlldaySym'} )
+                              && defined( @{ $S->{'.scheduleAlldaySym'} }[$i] )
+                            ? @{ $S->{'.scheduleAlldaySym'} }[$i] . chr(0x00A0)
                             : ''
                         ) . $e;
                     }
@@ -4935,30 +5084,28 @@ sub Compute($;$$) {
             }
         }
 
-        if ( defined( $Schedule{'.scheduleDay'} ) ) {
+        if ( defined( $S->{'.scheduleDay'} ) ) {
             my $i = 0;
-            foreach my $e ( @{ $Schedule{'.scheduleDay'} } ) {
+            foreach my $e ( @{ $S->{'.scheduleDay'} } ) {
                 $l .= "\n" if ($l);
 
                 if ( $e =~ m/^(\S+)(?: (.+))?$/ ) {
                     if ( defined( $Astro{$1} ) ) {
                         $l .= (
-                            defined( $Schedule{'.scheduleDaySym'} )
-                              && defined(
-                                @{ $Schedule{'.scheduleDaySym'} }[$i] )
-                            ? @{ $Schedule{'.scheduleDaySym'} }[$i] . ' '
+                            defined( $S->{'.scheduleDaySym'} )
+                              && defined( @{ $S->{'.scheduleDaySym'} }[$i] )
+                            ? @{ $S->{'.scheduleDaySym'} }[$i] . ' '
                             : ''
                           )
                           . decode_utf8 FHEM::Astro::FormatReading( $1,
                             { long => 3 },
                             $lc_numeric, defined($2) ? $2 : '' );
                     }
-                    elsif ( defined( $Schedule{$1} ) ) {
+                    elsif ( defined( $S->{$1} ) ) {
                         $l .= (
-                            defined( $Schedule{'.scheduleDaySym'} )
-                              && defined(
-                                @{ $Schedule{'.scheduleDaySym'} }[$i] )
-                            ? @{ $Schedule{'.scheduleDaySym'} }[$i] . ' '
+                            defined( $S->{'.scheduleDaySym'} )
+                              && defined( @{ $S->{'.scheduleDaySym'} }[$i] )
+                            ? @{ $S->{'.scheduleDaySym'} }[$i] . ' '
                             : ''
                           )
                           . decode_utf8 FormatReading( $1, { long => 3 },
@@ -4966,10 +5113,9 @@ sub Compute($;$$) {
                     }
                     else {
                         $l .= (
-                            defined( $Schedule{'.scheduleDaySym'} )
-                              && defined(
-                                @{ $Schedule{'.scheduleDaySym'} }[$i] )
-                            ? @{ $Schedule{'.scheduleDaySym'} }[$i] . ' '
+                            defined( $S->{'.scheduleDaySym'} )
+                              && defined( @{ $S->{'.scheduleDaySym'} }[$i] )
+                            ? @{ $S->{'.scheduleDaySym'} }[$i] . ' '
                             : ''
                         ) . $e;
                     }
@@ -4990,6 +5136,68 @@ sub Compute($;$$) {
     return $A, $S
       if ($dayOffset);
     return (undef);
+}
+
+sub IsWe(;$$) {
+    my ( $when, $wday ) = @_;
+    return FhemIsWe( $when, $wday )
+      if ( !exists( $modules{DaySchedule}{global} ) || $wday );
+
+    my $hash = $modules{DaySchedule}{global};
+    my $name = $hash->{NAME};
+
+    my $AstroDev = AttrVal( $name, "AstroDevice", "" );
+    my $tz = AttrVal(
+        $name,
+        "timezone",
+        AttrVal(
+            $AstroDev, "timezone", AttrVal( "global", "timezone", undef )
+        )
+    );
+    my $lang = AttrVal(
+        $name,
+        "language",
+        AttrVal(
+            $AstroDev, "language", AttrVal( "global", "language", undef )
+        )
+    );
+    my $lc_time = AttrVal(
+        $name,
+        "lc_time",
+        AttrVal(
+            $AstroDev,
+            "lc_time",
+            AttrVal( "global", "lc_time",
+                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef ) )
+
+        )
+    );
+
+    my $time = gettimeofday();
+
+    if (   $when
+        && $when =~ m/^(?:(\d{4})-)?([01]\d)-([0-3]\d)|(yesterday|tomorrow)$/ )
+    {
+        $time = _timelocal_modern(
+            0, 0, 12,
+            ( defined($3) ? ( $3, $2 - 1. ) : ( localtime($time) )[ 3, 4 ] ),
+            (
+                defined($1)
+                ? $1
+                : ( localtime($time) )[5] + 1900.
+            )
+          ) +
+          86400. * ( defined($4) ? ( $4 eq 'yesterday' ? -1. : 1. ) : 0 );
+    }
+
+    SetTime( $time, $tz, $lc_time );
+    Compute($hash);
+
+    return (
+        $Schedule{DayTypeN}, $Schedule{DayType},
+        $Schedule{DayTypeS}, $Schedule{DayTypeSym}
+    ) if (wantarray);
+    return $Schedule{DayTypeN} ? 1 : 0;
 }
 
 # This is based on code from 95_holiday.pm / holiday_refresh()
@@ -5411,14 +5619,14 @@ sub IsSeasonEasterTraditional($$;$$) {
         return ( 'Easter', 3, chr(0x1F430) );
     }
     elsif ( $today == $easterSat ) {
-        return ( $tt->{easterseason}, $tt->{eastersat}, chr(0x1F430) )
+        return ( $tt->{easterseason}, $tt->{eastersat}, chr(0x1F95A) )
           if ( ref($tt) );
-        return ( 'Easter', 4, chr(0x1F430) );
+        return ( 'Easter', 4, chr(0x1F95A) );
     }
     elsif ( $today == $easterWSun ) {
-        return ( $tt->{easterseason}, $tt->{easterwhitesun}, chr(0x1F430) )
+        return ( $tt->{easterseason}, $tt->{easterwhitesun}, chr(0x1F95A) )
           if ( ref($tt) );
-        return ( 'Easter', 5, chr(0x1F430) );
+        return ( 'Easter', 5, chr(0x1F95A) );
     }
     else {
         return ( $tt->{easterseason} )
@@ -5695,9 +5903,9 @@ sub IsSeasonTurnOfTheYear($$;$$) {
         return ( 'TurnOfTheYear', 2, chr(0x1F37B) );
     }
     elsif ( $today == $newyear ) {
-        return ( $tt->{turnoftheyear}, $tt->{newyear}, chr(0x1F389) )
+        return ( $tt->{turnoftheyear}, $tt->{newyear}, chr(0x1F340) )
           if ( ref($tt) );
-        return ( 'TurnOfTheYear', 3, chr(0x1F37B) );
+        return ( 'TurnOfTheYear', 3, chr(0x1F340) );
     }
     else {
         return ref($tt) ? $tt->{turnoftheyear} : 1;
@@ -5985,7 +6193,7 @@ sub Update($@) {
         Define
       </h4>
       <p>
-        <code>define &lt;name&gt; DaySchedule</code><br>
+        <code>define &lt;name&gt; DaySchedule [global]</code><br>
         Defines the DaySchedule device.
       </p>
       <p>
