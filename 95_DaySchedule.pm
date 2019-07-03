@@ -1609,10 +1609,14 @@ sub Define ($@) {
 "Device $modules{$type}{global}{NAME} is already defined to act in global scope for holiday2we"
           if ( defined( $modules{$type}{global} ) );
         $modules{$type}{global} = $hash;
-        no strict qw/refs/;
-        *{'main::IsWe'} = *{'FHEM::DaySchedule::IsWe'};
-        use strict qw/refs/;
         $hash->{SCOPE} = 'global';
+        no strict qw/refs/;
+        *{'main::IsWe'}       = *{'FHEM::DaySchedule::IsWe'};
+        *{'main::IsWeekend'}  = *{'FHEM::DaySchedule::IsWeekend'};
+        *{'main::IsWorkday'}  = *{'FHEM::DaySchedule::IsWorkday'};
+        *{'main::IsVacation'} = *{'FHEM::DaySchedule::IsVacation'};
+        *{'main::IsHoliday'}  = *{'FHEM::DaySchedule::IsHoliday'};
+        use strict qw/refs/;
     }
 
     $hash->{NOTIFYDEV} = "global";
@@ -5138,7 +5142,30 @@ sub Compute($;$$) {
     return (undef);
 }
 
+# more generic return like FhemIsWe()
 sub IsWe(;$$) {
+    my ( $when, $wday ) = @_;
+    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
+    return ( $n ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
+    return $n ? 1 : 0;
+}
+
+sub IsWorkday(;$$) {
+    my ( $when, $wday ) = @_;
+    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
+    return ( $n == 0. ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
+    return $n == 0. ? 1 : 0;
+}
+
+sub IsVacation(;$$) {
+    my ( $when, $wday ) = @_;
+    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
+    return ( $n == 1. ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
+    return $n == 1. ? 1 : 0;
+}
+
+# explicit return if day is really on a weekend
+sub IsWeekend(;$$) {
     my ( $when, $wday ) = @_;
     return FhemIsWe( $when, $wday )
       if ( !exists( $modules{DaySchedule}{global} ) || $wday );
@@ -5193,11 +5220,18 @@ sub IsWe(;$$) {
     SetTime( $time, $tz, $lc_time );
     Compute($hash);
 
-    return (
+    return ( $Schedule{DayTypeN} == 2. ? 1 : 0,
         $Schedule{DayTypeN}, $Schedule{DayType},
-        $Schedule{DayTypeS}, $Schedule{DayTypeSym}
-    ) if (wantarray);
-    return $Schedule{DayTypeN} ? 1 : 0;
+        $Schedule{DayTypeS}, $Schedule{DayTypeSym} )
+      if (wantarray);
+    return $Schedule{DayTypeN} == 2. ? 1 : 0;
+}
+
+sub IsHoliday(;$$) {
+    my ( $when, $wday ) = @_;
+    my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
+    return ( $n == 3. ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
+    return $n == 3. ? 1 : 0;
 }
 
 # This is based on code from 95_holiday.pm / holiday_refresh()
