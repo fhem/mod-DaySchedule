@@ -1612,7 +1612,7 @@ sub Define ($@) {
           . " to act in global scope for holiday2we"
           if ( defined( $modules{$type}{global} ) );
         Log3 undef, 3,
-          "[FHEM::DaySchedule] $name is running in global scope to replace IsWe() from fhem.pl";
+"[FHEM::DaySchedule] $name is running in global scope to replace IsWe() from fhem.pl";
         $modules{$type}{global} = $hash;
         $hash->{SCOPE} = 'global';
         no strict qw/refs/;
@@ -2673,15 +2673,42 @@ sub Get($@) {
 
         push @ret, $blockOpen;
 
-        my $aliasname = AttrVal(
-            $name,
-            'alias_' . uc( $lang ? $lang : 'EN' ),
+        my $aliasname =
+          defined( $h->{backlink} ) && IsDevice( $h->{backlink} )
+          ? (
+            AttrVal(
+                $h->{backlink},
+                'alias_' . uc( $lang ? $lang : 'EN' ),
+                AttrVal(
+                    $h->{backlink},
+                    'alias_' . lc( $lang ? $lang : 'EN' ),
+                    AttrVal(
+                        $h->{backlink},
+                        'alias',
+                        AttrVal(
+                            $name,
+                            'alias_' . uc( $lang ? $lang : 'EN' ),
+                            AttrVal(
+                                $name,
+                                'alias_' . lc( $lang ? $lang : 'EN' ),
+                                AttrVal( $name, 'alias', undef )
+                            )
+                        )
+                    )
+                )
+            )
+          )
+          : (
             AttrVal(
                 $name,
-                'alias_' . lc( $lang ? $lang : 'EN' ),
-                AttrVal( $name, 'alias', undef )
+                'alias_' . uc( $lang ? $lang : 'EN' ),
+                AttrVal(
+                    $name,
+                    'alias_' . lc( $lang ? $lang : 'EN' ),
+                    AttrVal( $name, 'alias', undef )
+                )
             )
-        );
+          );
 
         if (   defined( $h->{backlink} )
             && $html
@@ -3220,7 +3247,8 @@ sub FormatReading($$;$$) {
           )
         {
             $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrLenDay" );
-            $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrLenNight" );
+            $ret .= chr(0x00A0) . "h"
+              if ( $r eq "DaySeasonalHrLenNight" );
             $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrsDay" );
             $ret .= chr(0x00A0) . "h" if ( $r eq "DaySeasonalHrsNight" );
             $ret .= chr(0x00A0) . "%" if ( $r eq "MonthProgress" );
@@ -3250,7 +3278,8 @@ sub FormatReading($$;$$) {
               . $sep
               . $ret
               if ( $r eq "DaySeasonalHr" );
-            $ret = $tt->{"az"} . $sep . $ret if ( $r eq "DaySeasonalHrLenDay" );
+            $ret = $tt->{"az"} . $sep . $ret
+              if ( $r eq "DaySeasonalHrLenDay" );
             $ret = $tt->{"dec"} . $sep . $ret
               if ( $r eq "DaySeasonalHrLenNight" );
             $ret = $tt->{"diameter"} . $sep . $ret
@@ -3265,8 +3294,9 @@ sub FormatReading($$;$$) {
               if ( $r eq "DaySeasonalHrsNight" );
             $ret = $tt->{"dayphase"} . $sep . $ret if ( $r eq "Daytime" );
             $ret = $tt->{"phase"} . $sep . $ret    if ( $r eq "DaytimeN" );
-            $ret = $tt->{"phase"} . $sep . $ret    if ( $r eq "MonthProgress" );
-            $ret = $tt->{"ra"} . $sep . $ret       if ( $r eq "MonthRemainD" );
+            $ret = $tt->{"phase"} . $sep . $ret
+              if ( $r eq "MonthProgress" );
+            $ret = $tt->{"ra"} . $sep . $ret if ( $r eq "MonthRemainD" );
             $ret = $tt->{"cardinaldirection"} . $sep . $ret
               if ( $r eq "MoonCompass" );
             $ret = $tt->{"cardinaldirection"} . $sep . $ret
@@ -3278,13 +3308,17 @@ sub FormatReading($$;$$) {
               if ( $r eq "SchedLast" );
             $ret = $tt->{"twilightnautic"} . $sep . $ret
               if ( $r eq "SchedLastT" );
-            $ret = $ret . $sep . $tt->{"altitude"} if ( $r eq "SchedNext" );
-            $ret = $tt->{"date"} . $sep . $ret     if ( $r eq "SchedNextT" );
+            $ret = $ret . $sep . $tt->{"altitude"}
+              if ( $r eq "SchedNext" );
+            $ret = $tt->{"date"} . $sep . $ret if ( $r eq "SchedNextT" );
             $ret = $ret . $sep . $tt->{"dayofyear"}
               if ( $r eq "SchedRecent" );
-            $ret = $tt->{"alt"} . $sep . $ret if ( $r eq "SchedUpcoming" );
-            $ret = $tt->{"metseason"} . $sep . $ret  if ( $r eq "SeasonMeteo" );
-            $ret = $tt->{"phenseason"} . $sep . $ret if ( $r eq "SeasonPheno" );
+            $ret = $tt->{"alt"} . $sep . $ret
+              if ( $r eq "SchedUpcoming" );
+            $ret = $tt->{"metseason"} . $sep . $ret
+              if ( $r eq "SeasonMeteo" );
+            $ret = $tt->{"phenseason"} . $sep . $ret
+              if ( $r eq "SeasonPheno" );
             $ret = $tt->{"cardinaldirection"} . $sep . $ret
               if ( $r eq "SunCompass" );
             $ret = $tt->{"cardinaldirection"} . $sep . $ret
@@ -3484,7 +3518,8 @@ sub SetTime (;$$$$) {
         my $i = $dayOffset * -1.;
         while ( $i < $dayOffset + 1. ) {
             if ( $i != 0. ) {
-                $D->{$i} = SetTime( $time + ( 86400. * $i ), $tz, $lc_time, 0 );
+                $D->{$i} =
+                  SetTime( $time + ( 86400. * $i ), $tz, $lc_time, 0 );
                 $D->{$i}{'000000'} =
                   SetTime( $daybegin + ( 86400. * $i ), $tz, $lc_time, 0 );
                 $D->{$i}{'120000'} =
@@ -3548,8 +3583,15 @@ sub Compute($;$$) {
         AttrVal(
             $AstroDev,
             "lc_numeric",
-            AttrVal( "global", "lc_numeric",
-                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef ) )
+            AttrVal(
+                "global",
+                "lc_numeric",
+                (
+                    $lang
+                    ? lc($lang) . "_" . uc($lang) . ".UTF-8"
+                    : undef
+                )
+              )
 
         )
     );
@@ -3561,8 +3603,15 @@ sub Compute($;$$) {
         AttrVal(
             $AstroDev,
             "lc_time",
-            AttrVal( "global", "lc_time",
-                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef ) )
+            AttrVal(
+                "global",
+                "lc_time",
+                (
+                    $lang
+                    ? lc($lang) . "_" . uc($lang) . ".UTF-8"
+                    : undef
+                )
+              )
 
         )
     );
@@ -3585,7 +3634,8 @@ sub Compute($;$$) {
     if ( defined( $params->{"language"} )
         && exists( $FHEM::Astro::transtable{ uc( $params->{"language"} ) } ) )
     {
-        $astrott = $FHEM::Astro::transtable{ uc( $params->{"language"} ) };
+        $astrott =
+          $FHEM::Astro::transtable{ uc( $params->{"language"} ) };
     }
     elsif ( exists( $FHEM::Astro::transtable{ uc($lang) } ) ) {
         $astrott = $FHEM::Astro::transtable{ uc($lang) };
@@ -3681,9 +3731,13 @@ sub Compute($;$$) {
     if ($dayOffset) {
         $A = $json->decode(
             Astro_Get(
-                ( IsDevice( $AstroDev, "Astro" ) ? $defs{$AstroDev} : $hash ),
+                (
+                    IsDevice( $AstroDev, "Astro" ) ? $defs{$AstroDev}
+                    : $hash
+                ),
                 [
-                    IsDevice( $AstroDev, "Astro" ) ? "Astro" : "DaySchedule",
+                    IsDevice( $AstroDev, "Astro" ) ? "Astro"
+                    : "DaySchedule",
                     "json",
                     sprintf(
                         "%04d-%02d-%02d %02d:%02d:%02d",
@@ -3741,7 +3795,9 @@ sub Compute($;$$) {
     if ( defined( $params->{"Earlyfall"} ) ) {
         $earlyfall = $params->{"Earlyfall"};
     }
-    elsif ( defined( $attr{$name} ) && defined( $attr{$name}{"Earlyfall"} ) ) {
+    elsif (defined( $attr{$name} )
+        && defined( $attr{$name}{"Earlyfall"} ) )
+    {
         $earlyfall = $attr{$name}{"Earlyfall"};
     }
     else {
@@ -4099,7 +4155,9 @@ sub Compute($;$$) {
 
     # add HolidayDevices to schedule
     my $holidayDevs =
-      $hash->{SCOPE} eq 'global' ? AttrVal( 'global', 'holiday2we', '' ) : ',';
+      $hash->{SCOPE} eq 'global'
+      ? AttrVal( 'global', 'holiday2we', '' )
+      : ',';
     $holidayDevs .= AttrVal( $name, "HolidayDevices", "" );
     my @holidayDevsA = _uniq split( ',', $holidayDevs );
     foreach my $dev (@holidayDevsA) {
@@ -4211,7 +4269,8 @@ sub Compute($;$$) {
                     my $edate = substr( $event, 0, 10 );
                     $event = substr( $event, 17 );
                     if ( $edate eq $dateISO ) {
-                        $S->{DayTypeN} = 2 unless ( $S->{DayTypeN} == 3. );
+                        $S->{DayTypeN} = 2
+                          unless ( $S->{DayTypeN} == 3. );
                     }
                     else {
                         $S->{DayTypeN} = 0;
@@ -4226,7 +4285,10 @@ sub Compute($;$$) {
         $S->{DayTypeSym} = $daytypes[ $S->{DayTypeN} ][1];
     }
     else {
-        if ( $daytype eq 'weekend' && $D->{wday} != 0. && $D->{wday} != 6. ) {
+        if (   $daytype eq 'weekend'
+            && $D->{wday} != 0.
+            && $D->{wday} != 6. )
+        {
             $daytype = 'timeoff';
             $S->{DayTypeSym} = $daytypes[ $S->{DayTypeN} ][2];
         }
@@ -4484,11 +4546,13 @@ sub Compute($;$$) {
     #   regular day w/ sunrise and sunset
     elsif ( $daypartTNow < $A->{".SunRise"} )
     {    # after newCalDay but before sunrise
-        $daypart = ( $nightparts + 1 ) * -1. +
+        $daypart =
+          ( $nightparts + 1 ) * -1. +
           ceil( ( $daypartTNow + 24. - $A->{".SunSet"} ) / $nightpartlen );
     }
     elsif ( $daypartTNow < $A->{".SunSet"} ) { # after sunrise but before sunset
-        $daypart = ceil( ( $daypartTNow - $A->{".SunRise"} ) / $daypartlen );
+        $daypart =
+          ceil( ( $daypartTNow - $A->{".SunRise"} ) / $daypartlen );
     }
     else {    # after sunset but before newCalDay
         $daypart = ( $nightparts + 1 ) * -1. +
@@ -4643,7 +4707,8 @@ sub Compute($;$$) {
             )
           )
         {
-            my $k = $FHEM::Astro::seasons{ $A->{ObsLat} < 0 ? 'S' : 'N' }[$i];
+            my $k =
+              $FHEM::Astro::seasons{ $A->{ObsLat} < 0 ? 'S' : 'N' }[$i];
             $S->{SeasonMeteo}    = $astrott->{$k};
             $S->{SeasonMeteoN}   = $i;
             $S->{SeasonMeteoSym} = $seasonsicon[$i];
@@ -4805,7 +4870,8 @@ sub Compute($;$$) {
     $S->{DayChangeSeason}      = 0 unless ( $S->{DayChangeSeason} );
     $S->{DayChangeSeasonMeteo} = 0 unless ( $S->{DayChangeSeasonMeteo} );
     $S->{DayChangeSeasonPheno} = 0
-      unless ( !defined( $S->{SeasonPhenoN} ) || $S->{DayChangeSeasonPheno} );
+      unless ( !defined( $S->{SeasonPhenoN} )
+        || $S->{DayChangeSeasonPheno} );
     $S->{DayChangeIsDST} = 0 unless ( $S->{DayChangeIsDST} );
 
     #  Astronomical season is going to change tomorrow
@@ -4990,7 +5056,8 @@ sub Compute($;$$) {
                 $S->{".SchedLastT"} = $e == 24. ? 0 : $e;
                 $S->{SchedLastT} = $e == 0.
                   || $e == 24. ? '00:00:00' : FHEM::Astro::HHMMSS($e);
-                $S->{SchedLast} = join( ", ", @{ $S->{".schedule"}{$e} } );
+                $S->{SchedLast} =
+                  join( ", ", @{ $S->{".schedule"}{$e} } );
                 $S->{SchedRecent} =
                   join( ", ", reverse @{ $S->{".schedule"}{$e} } )
                   . (
@@ -5037,7 +5104,8 @@ sub Compute($;$$) {
                 $S->{".SchedNextT"} = $e == 24. ? 0 : $e;
                 $S->{SchedNextT} = $e == 0.
                   || $e == 24. ? '00:00:00' : FHEM::Astro::HHMMSS($e);
-                $S->{SchedNext} = join( ", ", @{ $S->{".scheduleTom"}{$e} } );
+                $S->{SchedNext} =
+                  join( ", ", @{ $S->{".scheduleTom"}{$e} } );
                 $S->{SchedUpcoming} = $S->{SchedNext};
             }
         }
@@ -5052,7 +5120,8 @@ sub Compute($;$$) {
     }
 
     # DayDesc
-    if ( defined( $S->{'.scheduleAllday'} ) || defined( $S->{'.scheduleDay'} ) )
+    if (   defined( $S->{'.scheduleAllday'} )
+        || defined( $S->{'.scheduleDay'} ) )
     {
         my $l;
 
@@ -5171,6 +5240,16 @@ sub IsWorkday(;$$$) {
     return $n == 0. ? 1 : 0;
 }
 
+# #TODO: the opposite of IsWeekend where it shall say
+#         Monday-Saturday as a default
+# sub IsWeekday(;$$$) {
+#     my ( $when, $wday, $hash ) = @_;
+#     my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday, $hash );
+#     return undef unless ( defined($we) );
+#     return ( $n == 0. ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
+#     return $n == 0. ? 1 : 0;
+# }
+
 sub IsVacation(;$$$) {
     my ( $when, $wday, $hash ) = @_;
     my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday, $hash );
@@ -5183,11 +5262,13 @@ sub IsVacation(;$$$) {
 sub IsWeekend(;$$$) {
     my ( $when, $wday, $hash ) = @_;
     return MainIsWe( $when, $wday )
-      if ( !$hash && ( !exists( $modules{DaySchedule}{global} ) || $wday ) );
+      if ( !$hash
+        && ( !exists( $modules{DaySchedule}{global} ) || $wday ) );
 
     # find device hash reference
     $hash = $modules{DaySchedule}{global} unless ( defined($hash) );
-    $hash = exists( $defs{$hash} ) ? $defs{$hash} : $hash unless ( ref($hash) );
+    $hash = exists( $defs{$hash} ) ? $defs{$hash} : $hash
+      unless ( ref($hash) );
 
     if ( !ref($hash) ) {
         $@ =
@@ -5223,8 +5304,15 @@ sub IsWeekend(;$$$) {
         AttrVal(
             $AstroDev,
             "lc_time",
-            AttrVal( "global", "lc_time",
-                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef ) )
+            AttrVal(
+                "global",
+                "lc_time",
+                (
+                    $lang
+                    ? lc($lang) . "_" . uc($lang) . ".UTF-8"
+                    : undef
+                )
+              )
 
         )
     );
@@ -5236,7 +5324,11 @@ sub IsWeekend(;$$$) {
     {
         $time = _timelocal_modern(
             0, 0, 12,
-            ( defined($3) ? ( $3, $2 - 1. ) : ( localtime($time) )[ 3, 4 ] ),
+            (
+                defined($3)
+                ? ( $3, $2 - 1. )
+                : ( localtime($time) )[ 3, 4 ]
+            ),
             (
                 defined($1)
                 ? $1
@@ -5269,7 +5361,8 @@ sub IsHoliday(;$$$) {
 sub IsSpecificDay($$$;$) {
     my ( $l, $d, $m, $y ) = @_;
 
-    $y = ( localtime( gettimeofday() ) )[5] + 1900. unless ( defined($y) );
+    $y = ( localtime( gettimeofday() ) )[5] + 1900.
+      unless ( defined($y) );
     my $fordate = sprintf( "%02d-%02d", $m, $d );
     my @fd = localtime( mktime( 1, 1, 1, $d, $m - 1, $y - 1900., 0, 0, -1 ) );
 
@@ -5522,43 +5615,43 @@ sub IsSeasonCarnivalLong($$;$$$) {
     my $prefix = $fasching ? 'fasching' : 'carnival';
     if ( $today == $carnival1 ) {
         my $icon = $fasching ? chr(0x1F46F) : chr(0x1F46F);
-        return ( $tt->{ $prefix . 'season' }, $tt->{ $prefix . 'season1' },
-            $icon )
+        return ( $tt->{ $prefix . 'season' },
+            $tt->{ $prefix . 'season1' }, $icon )
           if ( ref($tt) );
         return ( 'Carnival', 2, $icon );
     }
     elsif ( $today == $carnival2 ) {
         my $icon = $fasching ? chr(0x1F388) : chr(0x1F388);
-        return ( $tt->{ $prefix . 'season' }, $tt->{ $prefix . 'season2' },
-            $icon )
+        return ( $tt->{ $prefix . 'season' },
+            $tt->{ $prefix . 'season2' }, $icon )
           if ( ref($tt) );
         return ( 'Carnival', 3, $icon );
     }
     elsif ( $today == $carnival3 ) {
         my $icon = $fasching ? chr(0x1F33A) : chr(0x1F33A);
-        return ( $tt->{ $prefix . 'season' }, $tt->{ $prefix . 'season3' },
-            $icon )
+        return ( $tt->{ $prefix . 'season' },
+            $tt->{ $prefix . 'season3' }, $icon )
           if ( ref($tt) );
         return ( 'Carnival', 4, $icon );
     }
     elsif ( $today == $carnival4 ) {
         my $icon = $fasching ? chr(0x1F337) : chr(0x1F337);
-        return ( $tt->{ $prefix . 'season' }, $tt->{ $prefix . 'season4' },
-            $icon )
+        return ( $tt->{ $prefix . 'season' },
+            $tt->{ $prefix . 'season4' }, $icon )
           if ( ref($tt) );
         return ( 'Carnival', 5, $icon );
     }
     elsif ( $today == $carnival5 ) {
         my $icon = $fasching ? chr(0x1F339) : chr(0x1F339);
-        return ( $tt->{ $prefix . 'season' }, $tt->{ $prefix . 'season5' },
-            $icon )
+        return ( $tt->{ $prefix . 'season' },
+            $tt->{ $prefix . 'season5' }, $icon )
           if ( ref($tt) );
         return ( 'Carnival', 6, $icon );
     }
     elsif ( $today == $carnivalEnd ) {
         my $icon = $fasching ? chr(0x1F338) : chr(0x1F338);
-        return ( $tt->{ $prefix . 'season' }, $tt->{ $prefix . 'season6' },
-            $icon )
+        return ( $tt->{ $prefix . 'season' },
+            $tt->{ $prefix . 'season6' }, $icon )
           if ( ref($tt) );
         return ( 'Carnival', 7, $icon );
     }
@@ -6066,7 +6159,8 @@ sub AddToSchedule {
     elsif ( $e =~ /^y(.+)/ ) {
         my $t = $1;
         $t = 24. unless ( $t =~ /^\d/ );
-        $h->{".scheduleYest"}{$t} = ( $icon ? $icon . chr(0x00A0) : '' ) . $n;
+        $h->{".scheduleYest"}{$t} =
+          ( $icon ? $icon . chr(0x00A0) : '' ) . $n;
     }
 }
 
@@ -6143,8 +6237,13 @@ sub Update($@) {
             $AstroDevice,
             "lc_time",
             AttrVal(
-                "global", "lc_time",
-                ( $lang ? lc($lang) . "_" . uc($lang) . ".UTF-8" : undef )
+                "global",
+                "lc_time",
+                (
+                    $lang
+                    ? lc($lang) . "_" . uc($lang) . ".UTF-8"
+                    : undef
+                )
             )
         )
     );
