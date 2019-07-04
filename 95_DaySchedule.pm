@@ -1545,8 +1545,9 @@ BEGIN {
           )
     );
 
+    # Import from main context under different names
     no strict qw/refs/;
-    *{'FHEM::DaySchedule::FhemIsWe'} = *{'main::IsWe'};
+    *{'FHEM::DaySchedule::MainIsWe'} = *{'main::IsWe'};
     use strict qw/refs/;
 
     # Export to main context
@@ -1592,6 +1593,8 @@ sub Initialize ($) {
 
     $hash->{parseParams} = 1;
 
+    $hash->{NotifyOrderPrefix} = '00-';    # we are a data provider
+
     return FHEM::Meta::InitMod( __FILE__, $hash );
 }
 
@@ -1605,17 +1608,17 @@ sub Define ($@) {
     use version 0.77; our $VERSION = FHEM::Meta::Get( $hash, 'version' );
 
     if ($global) {
-        return
-"Device $modules{$type}{global}{NAME} is already defined to act in global scope for holiday2we"
+        return "$type device $modules{$type}{global}{NAME} is already defined"
+          . " to act in global scope for holiday2we"
           if ( defined( $modules{$type}{global} ) );
         $modules{$type}{global} = $hash;
         $hash->{SCOPE} = 'global';
         no strict qw/refs/;
-        *{'main::IsWe'}       = *{'FHEM::DaySchedule::IsWe'};
-        *{'main::IsWeekend'}  = *{'FHEM::DaySchedule::IsWeekend'};
-        *{'main::IsWorkday'}  = *{'FHEM::DaySchedule::IsWorkday'};
-        *{'main::IsVacation'} = *{'FHEM::DaySchedule::IsVacation'};
-        *{'main::IsHoliday'}  = *{'FHEM::DaySchedule::IsHoliday'};
+        *{'main::IsWe'}       = *{ 'FHEM::' . $type . '::IsWe' };
+        *{'main::IsWeekend'}  = *{ 'FHEM::' . $type . '::IsWeekend' };
+        *{'main::IsWorkday'}  = *{ 'FHEM::' . $type . '::IsWorkday' };
+        *{'main::IsVacation'} = *{ 'FHEM::' . $type . '::IsVacation' };
+        *{'main::IsHoliday'}  = *{ 'FHEM::' . $type . '::IsHoliday' };
         use strict qw/refs/;
     }
 
@@ -1646,11 +1649,12 @@ sub Undef ($$) {
 
     RemoveInternalTimer($hash);
 
+    # restore FHEM default subroutines
     if ( defined( $modules{$type}{global} )
         && $modules{$type}{global}{NAME} eq $name )
     {
         no strict qw/refs/;
-        *{'main::IsWe'} = *{'FHEM::DaySchedule::FhemIsWe'};
+        *{'main::IsWe'} = *{ 'FHEM::' . $type . '::MainIsWe' };
         use strict qw/refs/;
 
         delete $modules{$type}{global};
@@ -1668,6 +1672,8 @@ sub Notify ($$) {
 
     # Update attribute values
     Initialize( $modules{$TYPE} );
+
+    return "" if ( IsDisabled($name) );
 
     if ( $devName eq "global" ) {
         my $events = deviceEvents( $dev, 1 );
@@ -4086,7 +4092,7 @@ sub Compute($;$$) {
     my $workdayDevs = AttrVal( $name, "WorkdayDevices", "" );
     my $weekendDevs = AttrVal( $name, "WeekendDevices", "" );
     if ( $workdayDevs eq '' && $weekendDevs eq '' ) {
-        $S->{DayTypeN} = 2 if ( FhemIsWe( $date, $D->{wday} ) );
+        $S->{DayTypeN} = 2 if ( MainIsWe( $date, $D->{wday} ) );
     }
 
     # add HolidayDevices to schedule
@@ -5142,11 +5148,14 @@ sub Compute($;$$) {
     return (undef);
 }
 
-# more generic return like FhemIsWe()
+# more generic return like MainIsWe()
 sub IsWe(;$$) {
     my ( $when, $wday ) = @_;
-    return FhemIsWe( $when, $wday )
+    return MainIsWe( $when, $wday )
       if ( !exists( $modules{DaySchedule}{global} ) || $wday );
+    Log3 undef, 5,
+      "[FHEM::DaySchedule::IsWe] $name: "
+      . "Computing weekend status in compatibility mode";
     my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
     return ( $n ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
     return $n ? 1 : 0;
@@ -5171,7 +5180,7 @@ sub IsVacation(;$$$) {
 # explicit return if day is really on a weekend
 sub IsWeekend(;$$$) {
     my ( $when, $wday, $hash ) = @_;
-    return FhemIsWe( $when, $wday )
+    return MainIsWe( $when, $wday )
       if ( !$hash && ( !exists( $modules{DaySchedule}{global} ) || $wday ) );
 
     # find device hash reference
