@@ -1611,6 +1611,8 @@ sub Define ($@) {
         return "$type device $modules{$type}{global}{NAME} is already defined"
           . " to act in global scope for holiday2we"
           if ( defined( $modules{$type}{global} ) );
+        Log3 undef, 3,
+          "[FHEM::DaySchedule] $name is running in global scope to replace IsWe() from fhem.pl";
         $modules{$type}{global} = $hash;
         $hash->{SCOPE} = 'global';
         no strict qw/refs/;
