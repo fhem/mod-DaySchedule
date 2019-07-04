@@ -5154,7 +5154,7 @@ sub IsWe(;$$) {
     return MainIsWe( $when, $wday )
       if ( !exists( $modules{DaySchedule}{global} ) || $wday );
     Log3 undef, 5,
-      "[FHEM::DaySchedule::IsWe] $name: "
+      "[FHEM::DaySchedule::IsWe] "
       . "Computing weekend status in compatibility mode";
     my ( $we, $n, $l, $s, $sym ) = IsWeekend( $when, $wday );
     return ( $n ? 1 : 0, $n, $l, $s, $sym ) if (wantarray);
