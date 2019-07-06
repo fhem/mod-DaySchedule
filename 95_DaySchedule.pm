@@ -1612,7 +1612,7 @@ sub Define ($@) {
           . " to act in global scope for holiday2we"
           if ( defined( $modules{$type}{global} ) );
         return $@
-          unless redirectMainFn( 'IsWe', 'FHEM::' . $type . '::IsWe', undef,
+          unless _redirectMainFn( 'IsWe', 'FHEM::' . $type . '::IsWe', undef,
             $name );
         $modules{$type}{global} = $hash;
         $hash->{SCOPE} = 'global';
@@ -1644,7 +1644,8 @@ sub Define ($@) {
     return undef;
 }
 
-sub redirectMainFn ($$;$$) {
+sub _redirectMainFn ($$;$$) {
+    return unless ( caller(0) eq __PACKAGE__ );
     my ( $func, $fnew, $fren, $dev ) = @_;
     my $pkg = caller(0);
     $func = 'main::' . $func unless ( $func =~ /^main::/ );
@@ -1710,13 +1711,14 @@ sub redirectMainFn ($$;$$) {
           )
           . "Main subroutine $func() was redirected to use subroutine $fnew()"
           . ( $pkg ne 'main' ? " by FHEM module $pkg" : '' ) . "."
-          . " Original subroutine is still available under $fnew().";
+          . " Original subroutine is still available as $fnew().";
     }
 
     return $fren;
 }
 
-sub restoreMainFn {
+sub _restoreMainFn {
+  return unless ( caller(0) eq __PACKAGE__ );
     my ($func) = @_;
     $func = 'main::' . $func unless ( $func =~ /^main::/ );
     no strict qw/refs/;
@@ -1800,7 +1802,7 @@ sub Undef ($$) {
         && $modules{$type}{global}{NAME} eq $name )
     {
         delete $modules{$type}{global};
-        return $@ unless restoreMainFn('IsWe');
+        return $@ unless _restoreMainFn('IsWe');
     }
 
     return undef;
