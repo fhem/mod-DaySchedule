@@ -1611,14 +1611,10 @@ sub Define ($@) {
         return "$type device $modules{$type}{global}{NAME} is already defined"
           . " to act in global scope for holiday2we"
           if ( defined( $modules{$type}{global} ) );
-        Log3 undef, 3,
-"[FHEM::DaySchedule] $name is running in global scope to replace IsWe() from fhem.pl";
+        return $@ unless redirectMainFn( 'IsWe', 'FHEM::' . $type . '::IsWe' );
         $modules{$type}{global} = $hash;
-        $hash->{SCOPE}          = 'global';
-        $data{replacedFn}{IsWe} = 'FHEM::' . $type . '::IsWe';
-        $data{renamedFn}{IsWe}  = 'FHEM::' . $type . '::MainIsWe';
+        $hash->{SCOPE} = 'global';
         no strict qw/refs/;
-        *{'main::IsWe'}       = *{ 'FHEM::' . $type . '::IsWe' };
         *{'main::IsWeekend'}  = *{ 'FHEM::' . $type . '::IsWeekend' };
         *{'main::IsWorkday'}  = *{ 'FHEM::' . $type . '::IsWorkday' };
         *{'main::IsVacation'} = *{ 'FHEM::' . $type . '::IsVacation' };
@@ -1646,6 +1642,113 @@ sub Define ($@) {
     return undef;
 }
 
+sub redirectMainFn ($$;$) {
+    my ( $func, $fnew, $fren ) = @_;
+    my $pkg = caller(0);
+    $func = 'main::' . $func unless ( $func =~ /^main::/ );
+    $fnew = $pkg . '::'      unless ( $fnew =~ /::/ );
+    if ( !$fren && $func =~ /::([^:]+)$/ ) {
+        $fren = 'main::Main_' . $1;
+    }
+
+    no strict qw/refs/;
+    if ( !defined( *{$func} ) ) {
+        $@ =
+            "ERROR: Main subroutine $func() cannot be redirected"
+          . ' because it does not exist';
+    }
+    elsif (defined( $main::data{redirectedMainFn} )
+        && defined( $main::data{redirectedMainFn}{$func} )
+        && $main::data{redirectedMainFn}{$func} ne $fnew )
+    {
+        $@ =
+            "ERROR: Cannot redirect subroutine $func()"
+          . ' because it already links to '
+          . $main::data{redirectedMainFn}{$func} . '()';
+    }
+    elsif (defined( $main::data{renamedMainFn} )
+        && defined( $main::data{renamedMainFn}{$func} )
+        && $main::data{renamedMainFn}{$func} ne $fren )
+    {
+        $@ =
+            "ERROR: Main subroutine $func() can not be renamed to $fren()"
+          . ' because it was already renamed to subroutine '
+          . $main::data{renamedMainFn}{$func}
+          . '() by '
+          . $main::data{redirectedMainFn}{$func} . '()';
+    }
+    return 0 if ($@);
+
+    # only rename once
+    unless ( defined( $main::data{renamedMainFn} )
+        && $main::data{renamedMainFn}{$func} )
+    {
+        *{$fren} = *{$func};
+        $main::data{renamedMainFn}{$func} = $fren;
+    }
+
+    # only link once
+    unless ( defined( $main::data{redirectedMainFn} )
+        && $main::data{redirectedMainFn}{$func} )
+    {
+        *{$func} = *{$fnew};
+        $main::data{redirectedMainFn}{$func} = $fnew;
+        main::Log3 undef, 3,
+"INFO: Main subroutine $func() was redirected to use subroutine $fnew()"
+          . ( $pkg ne 'main' ? " by FHEM module $pkg" : '' ) . "."
+          . " Original subroutine is still available under $fnew().";
+    }
+
+    return $fren;
+}
+
+sub restoreMainFn {
+    my ($func) = @_;
+    $func = 'main::' . $func unless ( $func =~ /^main::/ );
+    no strict qw/refs/;
+    return 0 unless ( defined( *{$func} ) );
+    if (   defined( $main::data{renamedMainFn} )
+        && defined( $main::data{renamedMainFn}{$func} ) )
+    {
+        *{$func} = *{ $main::data{renamedMainFn}{$func} };
+        delete $main::data{redirectedMainFn}{$func};
+        delete $main::data{renamedMainFn}{$func};
+        delete $main::data{redirectedMainFn}
+          unless ( defined( $main::data{redirectedMainFn} ) );
+        delete $main::data{renamedMainFn}
+          unless ( defined( $main::data{renamedMainFn} ) );
+    }
+    if (   defined( $main::data{redirectedMainFn} )
+        && defined( $main::data{redirectedMainFn}{$func} ) )
+    {
+        $@ = "Failed to restore main function $func()";
+        main::Log3 undef, 3, "ERROR: " . $@;
+        return 0;
+    }
+    return $func;
+}
+
+sub IsRedirectedFn($) {
+    my ($func) = @_;
+    $func = 'main::' . $func unless ( $func =~ /^main::/ );
+    no strict qw/refs/;
+    return undef unless ( defined( *{$func} ) );
+    return wantarray
+      ? (
+        $main::data{redirectedMainFn}{$func},
+        (
+            defined( $main::data{renamedMainFn} )
+              && defined( $main::data{renamedMainFn}{$func} )
+            ? $main::data{renamedMainFn}{$func}
+            : undef
+        )
+      )
+      : 1
+      if ( defined( $main::data{redirectedMainFn} )
+        && defined( $main::data{redirectedMainFn}{$func} ) );
+    return 0;
+}
+
 sub Undef ($$) {
     my ( $hash, $arg ) = @_;
     my $name = $hash->{NAME};
@@ -1657,13 +1760,8 @@ sub Undef ($$) {
     if ( defined( $modules{$type}{global} )
         && $modules{$type}{global}{NAME} eq $name )
     {
-        delete $data{replacedFn}{IsWe};
-        delete $data{renamedFn}{IsWe};
-        no strict qw/refs/;
-        *{'main::IsWe'} = *{ 'FHEM::' . $type . '::MainIsWe' };
-        use strict qw/refs/;
-
         delete $modules{$type}{global};
+        return $@ unless restoreMainFn('IsWe');
     }
 
     return undef;
@@ -2471,7 +2569,9 @@ sub Get($@) {
         $h->{long} = 3 unless ( defined( $h->{long} ) );
         $h->{html} = $html if ($html);
 
-        if ( $html && defined( $hash->{CL} ) && $hash->{CL}{TYPE} eq "FHEMWEB" )
+        if (   $html
+            && defined( $hash->{CL} )
+            && $hash->{CL}{TYPE} eq "FHEMWEB" )
         {
             $header = '<html>';
             $footer = '</html>';
@@ -2922,7 +3022,9 @@ sub Get($@) {
                 $Astro{SunRise} ne '---' || $Astro{SunSet} ne '---'
                 ? (
                     (
-                        $Astro{SunRise} ne '---' ? $Astro{SunRise} : chr(0x221E)
+                          $Astro{SunRise} ne '---'
+                        ? $Astro{SunRise}
+                        : chr(0x221E)
                     )
                     . chr(0x2013)
                       . (
@@ -5268,9 +5370,6 @@ sub IsVacation(;$$$) {
 # explicit return if day is really on a weekend
 sub IsWeekend(;$$$) {
     my ( $when, $wday, $hash ) = @_;
-    return MainIsWe( $when, $wday )
-      if ( !$hash
-        && ( !exists( $modules{DaySchedule}{global} ) || $wday ) );
 
     # find device hash reference
     $hash = $modules{DaySchedule}{global} unless ( defined($hash) );
