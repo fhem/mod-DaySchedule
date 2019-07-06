@@ -1711,7 +1711,7 @@ sub _redirectMainFn ($$;$$) {
           )
           . "Main subroutine $func() was redirected to use subroutine $fnew()"
           . ( $pkg ne 'main' ? " by FHEM module $pkg" : '' ) . "."
-          . " Original subroutine is still available as $fnew().";
+          . " Original subroutine is still available as $fren().";
     }
 
     return $fren;
