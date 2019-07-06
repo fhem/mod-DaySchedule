@@ -1699,18 +1699,15 @@ sub _redirectMainFn ($$;$$) {
         $main::data{redirectedMainFnDev}{$func} = $dev
           if ( main::IsDevice($dev) );
 
-        my $type = main::IsDevice($dev) ? main::GetType($dev) : undef;
-        if ( $type && $modules{$type}{DefFn} =~ /^(.+)::[^:]+$/ ) {
-            $type = $1;
-        }
         main::Log3 undef, 3,
-          (
-            $type
-            ? "[$type] $dev: "
-            : 'INFO: '
+            '['
+          . ( caller(1) )[3] . '] '
+          . (
+            main::IsDevice($dev)
+            ? "$dev: "
+            : ''
           )
-          . "Main subroutine $func() was redirected to use subroutine $fnew()"
-          . ( $pkg ne 'main' ? " by FHEM module $pkg" : '' ) . "."
+          . "Main subroutine $func() was redirected to use subroutine $fnew()."
           . " Original subroutine is still available as $fren().";
     }
 
@@ -1718,7 +1715,7 @@ sub _redirectMainFn ($$;$$) {
 }
 
 sub _restoreMainFn {
-  return unless ( caller(0) eq __PACKAGE__ );
+    return unless ( caller(0) eq __PACKAGE__ );
     my ($func) = @_;
     $func = 'main::' . $func unless ( $func =~ /^main::/ );
     no strict qw/refs/;
@@ -1734,15 +1731,13 @@ sub _restoreMainFn {
           && main::IsDevice( $main::data{redirectedMainFnDev}{$func} )
           ? $main::data{redirectedMainFnDev}{$func}
           : undef;
-        my $type = $dev ? main::GetType($dev) : undef;
-        if ( $type && $modules{$type}{DefFn} =~ /^(.+)::[^:]+$/ ) {
-            $type = $1;
-        }
         main::Log3 undef, 3,
-          (
-            $type
-            ? "[$type] $dev: "
-            : 'INFO: '
+            '['
+          . ( caller(1) )[3] . '] '
+          . (
+            $dev
+            ? "$dev: "
+            : ''
           )
           . "Original main subroutine $func() was restored and unlinked from "
           . $main::data{redirectedMainFn}{$func};
