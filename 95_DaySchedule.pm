@@ -1614,7 +1614,9 @@ sub Define ($@) {
         Log3 undef, 3,
 "[FHEM::DaySchedule] $name is running in global scope to replace IsWe() from fhem.pl";
         $modules{$type}{global} = $hash;
-        $hash->{SCOPE} = 'global';
+        $hash->{SCOPE}          = 'global';
+        $data{replacedFn}{IsWe} = 'FHEM::' . $type . '::IsWe';
+        $data{renamedFn}{IsWe}  = 'FHEM::' . $type . '::MainIsWe';
         no strict qw/refs/;
         *{'main::IsWe'}       = *{ 'FHEM::' . $type . '::IsWe' };
         *{'main::IsWeekend'}  = *{ 'FHEM::' . $type . '::IsWeekend' };
@@ -1655,6 +1657,8 @@ sub Undef ($$) {
     if ( defined( $modules{$type}{global} )
         && $modules{$type}{global}{NAME} eq $name )
     {
+        delete $data{replacedFn}{IsWe};
+        delete $data{renamedFn}{IsWe};
         no strict qw/refs/;
         *{'main::IsWe'} = *{ 'FHEM::' . $type . '::MainIsWe' };
         use strict qw/refs/;
@@ -4155,10 +4159,13 @@ sub Compute($;$$) {
 
     # add HolidayDevices to schedule
     my $holidayDevs =
-      $hash->{SCOPE} eq 'global'
-      ? AttrVal( 'global', 'holiday2we', '' )
+      defined( $hash->{SCOPE} )
+      && $hash->{SCOPE} eq 'global'
+      ? AttrVal( 'global', 'holiday2we', ',' )
       : ',';
-    $holidayDevs .= AttrVal( $name, "HolidayDevices", "" );
+    $holidayDevs .=
+      AttrVal( $name, "HolidayDevices",
+        AttrVal( 'global', 'holiday2we', ',' ) );
     my @holidayDevsA = _uniq split( ',', $holidayDevs );
     foreach my $dev (@holidayDevsA) {
         next unless ( defined($dev) );
