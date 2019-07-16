@@ -1609,11 +1609,9 @@ sub Define ($@) {
 
     if ($global) {
         return "$type device $modules{$type}{global}{NAME} is already defined"
-          . " to act in global scope for holiday2we"
-          if ( defined( $modules{$type}{global} ) );
-        return $@
-          unless _redirectMainFn( 'IsWe', 'FHEM::' . $type . '::IsWe', undef,
-            $name );
+          . " as global"
+          if ( defined( $modules{$type}{global} )
+            && $modules{$type}{global}{NAME} ne $name );
         $modules{$type}{global} = $hash;
         $hash->{SCOPE} = 'global';
         no strict qw/refs/;
@@ -1628,7 +1626,7 @@ sub Define ($@) {
     $hash->{INTERVAL}  = 3600;
     readingsSingleUpdate( $hash, "state", "Initialized", $init_done );
 
-    $modules{DaySchedule}{defptr}{$name} = $hash;
+    $modules{$type}{defptr}{$name} = $hash;
 
     # for the very first definition, set some default attributes
     if ( $init_done && !defined( $hash->{OLDDEF} ) ) {
@@ -1659,6 +1657,11 @@ sub _redirectMainFn ($$;$$) {
         $@ =
             "ERROR: Main subroutine $func() cannot be redirected"
           . ' because it does not exist';
+    }
+    elsif ( !defined( *{$fnew} ) ) {
+        $@ =
+            "ERROR: Main subroutine $func() cannot be redirected"
+          . " because target subroutine $fnew() does not exist";
     }
     elsif (defined( $main::data{redirectedMainFn} )
         && defined( $main::data{redirectedMainFn}{$func} )
@@ -1792,6 +1795,8 @@ sub Undef ($$) {
 
     RemoveInternalTimer($hash);
 
+    delete $modules{$type}{defptr}{$name};
+
     # restore FHEM default subroutines
     if ( defined( $modules{$type}{global} )
         && $modules{$type}{global}{NAME} eq $name )
@@ -1884,11 +1889,11 @@ sub Attr(@) {
     my $hash = $defs{$name};
     my $ret;
 
-    if ( $do eq "set" ) {
+    if ( "$do" eq "set" ) {
       ARGUMENT_HANDLER: {
 
             # altitude modified at runtime
-            $key eq "altitude" and do {
+            "$key" eq "altitude" and do {
 
                 # check value
                 return
@@ -1897,7 +1902,7 @@ sub Attr(@) {
             };
 
             # AstroDevice modified at runtime
-            $key eq "AstroDevice" and do {
+            "$key" eq "AstroDevice" and do {
 
                 # check value
                 return
@@ -1914,7 +1919,7 @@ sub Attr(@) {
             };
 
             # HolidayDevices modified at runtime
-            $key eq "HolidayDevices" and do {
+            "$key" eq "HolidayDevices" and do {
 
                 # check value
                 foreach ( split( ",", $value ) ) {
@@ -1931,7 +1936,7 @@ sub Attr(@) {
             };
 
             # InformativeDays modified at runtime
-            $key eq "InformativeDays" and do {
+            "$key" eq "InformativeDays" and do {
                 my @skel = split( ',', $attrs{InformativeDays} );
                 shift @skel;
 
@@ -1951,7 +1956,7 @@ sub Attr(@) {
             };
 
             # InformativeDevices modified at runtime
-            $key eq "InformativeDevices" and do {
+            "$key" eq "InformativeDevices" and do {
 
                 # check value
                 foreach ( split( ",", $value ) ) {
@@ -1963,7 +1968,7 @@ sub Attr(@) {
             };
 
             # VacationDevices modified at runtime
-            $key eq "VacationDevices" and do {
+            "$key" eq "VacationDevices" and do {
 
                 # check value
                 foreach ( split( ",", $value ) ) {
@@ -1975,7 +1980,7 @@ sub Attr(@) {
             };
 
             # WeekendDevices modified at runtime
-            $key eq "WeekendDevices" and do {
+            "$key" eq "WeekendDevices" and do {
 
                 # check value
                 foreach ( split( ",", $value ) ) {
@@ -1987,7 +1992,7 @@ sub Attr(@) {
             };
 
             # WorkdayDevices modified at runtime
-            $key eq "WorkdayDevices" and do {
+            "$key" eq "WorkdayDevices" and do {
 
                 # check value
                 foreach ( split( ",", $value ) ) {
@@ -1999,7 +2004,7 @@ sub Attr(@) {
             };
 
             # disable modified at runtime
-            $key eq "disable" and do {
+            "$key" eq "disable" and do {
 
                 # check value
                 return "$do $name attribute: $key can only be 1 or 0"
@@ -2009,7 +2014,7 @@ sub Attr(@) {
             };
 
             # Earlyfall modified at runtime
-            $key eq "Earlyfall" and do {
+            "$key" eq "Earlyfall" and do {
 
                 # check value
                 return
@@ -2018,7 +2023,7 @@ sub Attr(@) {
             };
 
             # Earlyspring modified at runtime
-            $key eq "Earlyspring" and do {
+            "$key" eq "Earlyspring" and do {
 
                 # check value
                 return
@@ -2027,7 +2032,7 @@ sub Attr(@) {
             };
 
             # horizon modified at runtime
-            $key eq "horizon" and do {
+            "$key" eq "horizon" and do {
 
                 # check value
                 return
@@ -2040,7 +2045,7 @@ sub Attr(@) {
             };
 
             # interval modified at runtime
-            $key eq "interval" and do {
+            "$key" eq "interval" and do {
 
                 # check value
                 return "$do $name attribute: $key must be >= 0 seconds"
@@ -2051,7 +2056,7 @@ sub Attr(@) {
             };
 
             # latitude modified at runtime
-            $key eq "latitude" and do {
+            "$key" eq "latitude" and do {
 
                 # check value
                 return
@@ -2062,7 +2067,7 @@ sub Attr(@) {
             };
 
             # longitude modified at runtime
-            $key eq "longitude" and do {
+            "$key" eq "longitude" and do {
 
                 # check value
                 return
@@ -2073,7 +2078,7 @@ sub Attr(@) {
             };
 
             # recomputeAt modified at runtime
-            $key eq "recomputeAt" and do {
+            "$key" eq "recomputeAt" and do {
                 my @skel = split( ',', $attrs{recomputeAt} );
                 shift @skel;
 
@@ -2094,7 +2099,7 @@ sub Attr(@) {
             };
 
             # Schedule modified at runtime
-            $key eq "Schedule" and do {
+            "$key" eq "Schedule" and do {
                 my @skel = split( ',', $attrs{Schedule} );
                 shift @skel;
 
@@ -2114,7 +2119,7 @@ sub Attr(@) {
             };
 
             # SeasonalHrs modified at runtime
-            $key eq "SeasonalHrs" and do {
+            "$key" eq "SeasonalHrs" and do {
 
                 # check value
                 return
@@ -2129,13 +2134,13 @@ sub Attr(@) {
 
     elsif ( $do eq "del" ) {
         readingsSingleUpdate( $hash, "state", "Initialized", $init_done )
-          if ( $key eq "disable" );
+          if ( "$key" eq "disable" );
         $hash->{INTERVAL} = 3600
-          if ( $key eq "interval" );
+          if ( "$key" eq "interval" );
         $hash->{NOTIFYDEV} = "global"
-          if ( $key eq "AstroDevice" );
+          if ( "$key" eq "AstroDevice" );
         delete $hash->{RECOMPUTEAT}
-          if ( $key eq "recomputeAt" );
+          if ( "$key" eq "recomputeAt" );
     }
 
     if (
@@ -3596,7 +3601,7 @@ sub SetTime (;$$$$) {
 
     # readjust timezone
     local $ENV{TZ} = $tz if ($tz);
-    tzset();
+    tzset() if ( exists &{'tzset'} );
 
     $time = gettimeofday() unless ( defined($time) );
 
@@ -3677,7 +3682,7 @@ sub SetTime (;$$$$) {
     }
 
     delete local $ENV{TZ};
-    tzset();
+    tzset() if ( exists &{'tzset'} );
 
     setlocale( LC_TIME, "" );
     setlocale( LC_TIME, $old_lctime );
@@ -3797,7 +3802,7 @@ sub Compute($;$$) {
     $tz = $params->{"timezone"}
       if ( defined( $params->{"timezone"} ) );
     local $ENV{TZ} = $tz if ($tz);
-    tzset();
+    tzset() if ( exists &{'tzset'} );
 
     # load schemata
     my @schedsch =
@@ -4256,8 +4261,10 @@ sub Compute($;$$) {
     # add VacationDevices to schedule
     my $vacationDevs = AttrVal( $name, "VacationDevices", "" );
     foreach my $dev ( split( ',', $vacationDevs ) ) {
-        if ( IsDevice( $dev, "holiday" ) ) {
-            my $event = ::holiday_refresh( $dev, $date );
+        if ( IsDevice( $dev, "holiday" )
+            && exists( &{'main::holiday_refresh'} ) )
+        {
+            my $event = main::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
                 $S->{DayTypeN} = 1;
                 foreach my $e ( split( ',', $event ) ) {
@@ -4265,10 +4272,12 @@ sub Compute($;$$) {
                 }
             }
         }
-        elsif ( IsDevice( $dev, "Calendar" ) ) {
+        elsif ( IsDevice( $dev, "Calendar" )
+            && exists( &{'main::Calendar_Get'} ) )
+        {
             my $date =
               sprintf( '%02d.%02d.%04d', $D->{day}, $D->{month}, $D->{year} );
-            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+            my $list = main::Calendar_Get( $defs{$dev}, "get", "events",
                 "format:text filter:mode=~'alarm|start|upcoming'" );
             if ($list) {
                 chomp($list);
@@ -4308,8 +4317,10 @@ sub Compute($;$$) {
     foreach my $dev (@holidayDevsA) {
         next unless ( defined($dev) );
 
-        if ( IsDevice( $dev, "holiday" ) ) {
-            my $event = ::holiday_refresh( $dev, $date );
+        if ( IsDevice( $dev, "holiday" )
+            && exists( &{'main::holiday_refresh'} ) )
+        {
+            my $event = main::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
                 $S->{DayTypeN} = 3;
                 foreach my $e ( split( ',', $event ) ) {
@@ -4317,8 +4328,10 @@ sub Compute($;$$) {
                 }
             }
         }
-        elsif ( IsDevice( $dev, "Calendar" ) ) {
-            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+        elsif ( IsDevice( $dev, "Calendar" )
+            && exists( &{'main::Calendar_Get'} ) )
+        {
+            my $list = main::Calendar_Get( $defs{$dev}, "get", "events",
                 "format:text filter:mode=~'alarm|start|upcoming'" );
             if ($list) {
                 chomp($list);
@@ -4342,8 +4355,10 @@ sub Compute($;$$) {
     # add WorkdayDevices to schedule:
     #  handle every entry as being a working day
     foreach my $dev ( split( ',', $workdayDevs ) ) {
-        if ( IsDevice( $dev, "holiday" ) ) {
-            my $event = ::holiday_refresh( $dev, $date );
+        if ( IsDevice( $dev, "holiday" )
+            && exists( &{'main::holiday_refresh'} ) )
+        {
+            my $event = main::holiday_refresh( $dev, $date );
             if ( $event eq "none" ) {
                 $S->{DayTypeN} = 2 unless ( $S->{DayTypeN} == 3. );
             }
@@ -4356,10 +4371,12 @@ sub Compute($;$$) {
                 }
             }
         }
-        elsif ( IsDevice( $dev, "Calendar" ) ) {
+        elsif ( IsDevice( $dev, "Calendar" )
+            && exists( &{'main::Calendar_Get'} ) )
+        {
             my $date =
               sprintf( '%02d.%02d.%04d', $D->{day}, $D->{month}, $D->{year} );
-            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+            my $list = main::Calendar_Get( $defs{$dev}, "get", "events",
                 "format:text filter:mode=~'alarm|start|upcoming'" );
             if ($list) {
                 chomp($list);
@@ -4392,8 +4409,10 @@ sub Compute($;$$) {
     # add WeekendDevices to schedule:
     #  handle every entry as being a weekend day
     foreach my $dev ( split( ',', $weekendDevs ) ) {
-        if ( IsDevice( $dev, "holiday" ) ) {
-            my $event = ::holiday_refresh( $dev, $date );
+        if ( IsDevice( $dev, "holiday" )
+            && exists( &{'main::holiday_refresh'} ) )
+        {
+            my $event = main::holiday_refresh( $dev, $date );
             if ( $event eq "none" ) {
                 $S->{DayTypeN} = 0;
             }
@@ -4401,10 +4420,12 @@ sub Compute($;$$) {
                 $S->{DayTypeN} = 2 unless ( $S->{DayTypeN} == 3. );
             }
         }
-        elsif ( IsDevice( $dev, "Calendar" ) ) {
+        elsif ( IsDevice( $dev, "Calendar" )
+            && exists( &{'main::Calendar_Get'} ) )
+        {
             my $date =
               sprintf( '%02d.%02d.%04d', $D->{day}, $D->{month}, $D->{year} );
-            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+            my $list = main::Calendar_Get( $defs{$dev}, "get", "events",
                 "format:text filter:mode=~'alarm|start|upcoming'" );
             if ($list) {
                 chomp($list);
@@ -4452,16 +4473,20 @@ sub Compute($;$$) {
     # add InformativeDevices to schedule
     my $informativeDevs = AttrVal( $name, "InformativeDevices", "" );
     foreach my $dev ( split( ',', $informativeDevs ) ) {
-        if ( IsDevice( $dev, "holiday" ) ) {
-            my $event = ::holiday_refresh( $dev, $date );
+        if ( IsDevice( $dev, "holiday" )
+            && exists( &{'main::holiday_refresh'} ) )
+        {
+            my $event = main::holiday_refresh( $dev, $date );
             if ( $event ne "none" ) {
                 foreach my $e ( split( ',', $event ) ) {
                     AddToSchedule( $S, '*', decode_utf8($e), chr(0x1F5D3) );
                 }
             }
         }
-        elsif ( IsDevice( $dev, "Calendar" ) ) {
-            my $list = Calendar_Get( $defs{$dev}, "get", "events",
+        elsif ( IsDevice( $dev, "Calendar" )
+            && exists( &{'main::Calendar_Get'} ) )
+        {
+            my $list = main::Calendar_Get( $defs{$dev}, "get", "events",
                 "format:text filter:mode=~'alarm|start|upcoming'" );
             if ($list) {
                 chomp($list);
@@ -5357,7 +5382,7 @@ sub Compute($;$$) {
     }
 
     delete local $ENV{TZ};
-    tzset();
+    tzset() if ( exists &{'tzset'} );
 
     return $A, $S
       if ($dayOffset);
