@@ -4226,6 +4226,7 @@ sub Compute($;$$) {
     $S->{AnnualEventSym} = chr(0x27B0);
     unless ( grep ( /^none$/, @annualEvents ) ) {
         foreach my $season (@annualEvents) {
+            next unless ( exists( &{ 'IsSeason' . $season } ) );
             my $r = $season;
 
             # alias names
