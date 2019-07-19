@@ -1901,6 +1901,26 @@ sub Attr(@) {
                   unless ( $value =~ m/^(\d+(?:\.\d+)?)$/ && $1 >= 0. );
             };
 
+            # AnnualEvents modified at runtime
+            "$key" eq "AnnualEvents" and do {
+                my @skel = split( ',', $attrs{AnnualEvents} );
+                shift @skel;
+
+                # check value 1/2
+                return "$do $name attribute: $key must be one or many of "
+                  . join( ',', @skel )
+                  if ( !$value || $value eq "" );
+
+                # check value 2/2
+                my @vals = split( ',', $value );
+                foreach my $val (@vals) {
+                    return
+"$do $name attribute: value $val is invalid, must be one or many of "
+                      . join( ',', @skel )
+                      unless ( grep( m/^$val$/, @skel ) );
+                }
+            };
+
             # AstroDevice modified at runtime
             "$key" eq "AstroDevice" and do {
 
